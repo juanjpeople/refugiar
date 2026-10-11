@@ -21,6 +21,8 @@ export class CloudError extends Error { constructor(public status: number) { sup
 
 export const getErrorMessage = (error: unknown) => error instanceof Error ? error.message : translate("operator.error");
 
+export const date = (value: string | number | null) => (value === null ? "—" : new Date(value).toLocaleString("es-AR"));
+
 export async function api<T>(method: string, path: string, body?: unknown): Promise<T> {
 
   const response = await fetch(path, { method, credentials: "same-origin", redirect: "error", cache: "no-store", headers: { "X-Refugiar-Operator": "browser", ...(body === undefined ? {} : { "Content-Type": "application/json" }) }, body: body === undefined ? undefined : JSON.stringify(body) });

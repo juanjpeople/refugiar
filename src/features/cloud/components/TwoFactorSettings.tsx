@@ -43,15 +43,14 @@ export function TwoFactorSettings() {
         )}
       </SettingRow>
       {enabled && (
-        <>
-          <SettingRow label={t("cloud.twoFactor.backupNewTitle")} description={t("cloud.twoFactor.backupNewText")}>
-            <Button icon={<KeyRound />} onClick={() => setDialog("codes")}>{t("cloud.twoFactor.backupNew")}</Button>
-          </SettingRow>
-          <SettingRow label={t("cloud.twoFactor.passkeysTitle")} description={t("cloud.twoFactor.passkeysText")} stacked last>
-            <Passkeys />
-          </SettingRow>
-        </>
+        <SettingRow label={t("cloud.twoFactor.backupNewTitle")} description={t("cloud.twoFactor.backupNewText")}>
+          <Button icon={<KeyRound />} onClick={() => setDialog("codes")}>{t("cloud.twoFactor.backupNew")}</Button>
+        </SettingRow>
       )}
+      {/* Con o sin los dos pasos: una llave que abre los datos entra sin contraseña. Al apagarlos, se vuelve a leer la lista. */}
+      <SettingRow label={t("cloud.twoFactor.passkeysTitle")} description={t("cloud.twoFactor.passkeysText")} stacked last>
+        <Passkeys key={String(enabled)} />
+      </SettingRow>
       <EnableModal open={dialog === "enable"} onClose={() => setDialog(null)} />
       <PasswordModal
         open={dialog === "disable"}
@@ -249,8 +248,8 @@ function Passkeys() {
   async function add(values: { name: string; password: string }) {
     setBusy(true);
     try {
-      await service.addPasskey(session!, values);
-      message.success(t("cloud.twoFactor.passkeyAdded"));
+      const { unlocks } = await service.addPasskey(session!, values);
+      message.success(t(unlocks ? "cloud.twoFactor.passkeyAdded" : "cloud.twoFactor.passkeyAddedSecondStep"));
       setAdding(false);
       setVersion((current) => current + 1);
     } catch (error) {
@@ -290,9 +289,14 @@ function Passkeys() {
           </span>
           <Flex vertical style={{ flex: 1, minWidth: 0 }}>
             <Typography.Text strong ellipsis>{passkey.name || t("cloud.twoFactor.passkeyUnnamed")}</Typography.Text>
-            <Typography.Text type="secondary" style={{ fontSize: token.fontSizeSM }}>
-              {t("cloud.twoFactor.passkeyAddedOn", { date: format.date(passkey.createdAt, { day: "numeric", month: "short", year: "numeric" }) })}
-            </Typography.Text>
+            <Flex align="center" gap={8} wrap>
+              <Tag color={passkey.unlocks ? "success" : "default"} style={{ margin: 0 }}>
+                {t(passkey.unlocks ? "cloud.twoFactor.passkeyUnlocks" : "cloud.twoFactor.passkeySecondStep")}
+              </Tag>
+              <Typography.Text type="secondary" style={{ fontSize: token.fontSizeSM }}>
+                {t("cloud.twoFactor.passkeyAddedOn", { date: format.date(passkey.createdAt, { day: "numeric", month: "short", year: "numeric" }) })}
+              </Typography.Text>
+            </Flex>
           </Flex>
           <Tooltip title={t("cloud.twoFactor.passkeyRemove")}>
             <Button type="text" danger icon={<Trash2 />} aria-label={t("cloud.twoFactor.passkeyRemove")} onClick={() => remove(passkey)} />

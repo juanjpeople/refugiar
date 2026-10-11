@@ -49,6 +49,9 @@ export const changePasswordInput = z.object({ currentPassword: authKey, newPassw
 
 export const recoveryKitInput = z.object({ password: authKey, recoveryPrivateKeys: box(), recoveryVerifier: b64(64) });
 
+/** La copia de las claves privadas que abre una llave de acceso (cifrada en el dispositivo con su PRF). */
+export const passkeyUnlockInput = z.object({ password: authKey, privateKeys: box() });
+
 /** Sacar a alguien: claves nuevas de los niveles que tenía, para cada uno de los que quedan. */
 export const removeMemberInput = z.object({
   encryptedName: box(1_024),
@@ -103,6 +106,9 @@ export const feedbackInput = z.object({
 export const feedbackStatusInput = z.object({ status: z.enum(["open", "resolved"]) });
 
 export const deleteHouseholdInput = z.object({ confirm: uuid });
+
+/** Borrar una cuenta desde el panel: se confirma con su email. */
+export const deleteUserInput = z.object({ confirm: email });
 
 export const inactivityNoticeStatusInput = z.object({ status: z.enum(["sent", "cancelled"]) });
 

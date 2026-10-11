@@ -4,6 +4,7 @@ import { Alert, App, Button, Divider, Drawer, Flex, Popconfirm, Segmented, Tag, 
 import { FingerprintPattern as Fingerprint, KeyRound, Lock, Trash2 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { PinPad, type PinPadHandle } from "@/components/auth/PinPad";
+import { SettingRow } from "@/components/ui";
 import { usePreferences, useSetPreference } from "@/hooks/usePreferences";
 import { useI18n } from "@/i18n";
 import { usePermission } from "@/lib/auth/hooks";
@@ -41,6 +42,18 @@ export function SecurityDrawer({ member, onClose }: { member: Member | null; onC
       )}
     </Drawer>
   );
+}
+
+export function ProfileSecuritySettings() {
+  const { t } = useI18n();
+  const member = useCurrentUser();
+  const [open, setOpen] = useState(false);
+  return <>
+    <SettingRow label={t("security.local.title")} description={t("security.local.text")} last>
+      <Button icon={<Fingerprint />} disabled={!member} onClick={() => setOpen(true)}>{t("security.local.configure")}</Button>
+    </SettingRow>
+    <SecurityDrawer member={open ? member : null} onClose={() => setOpen(false)} />
+  </>;
 }
 
 function SectionTitle({ icon, title, text }: { icon: React.ReactNode; title: string; text: string }) {
@@ -125,8 +138,15 @@ function BiometricSection({ member, isOwner }: { member: Member; isOwner: boolea
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
-    getBiometricSupport().then(setSupport);
-  }, []);
+    let cancelled = false;
+    getBiometricSupport().then(value => { if (!cancelled) setSupport(value); }).catch(() => {
+      if (!cancelled) {
+        setSupport("unsupported");
+        message.error(t("security.biometric.failed"));
+      }
+    });
+    return () => { cancelled = true; };
+  }, [message, t]);
 
   async function register() {
     setBusy(true);
@@ -142,6 +162,7 @@ function BiometricSection({ member, isOwner }: { member: Member; isOwner: boolea
   return (
     <div>
       <SectionTitle icon={<Fingerprint />} title={t("security.biometric.title")} text={t("security.biometric.text")} />
+      {isOwner && !member.pin && <Alert type="warning" showIcon title={t("security.local.backup")} style={{ marginBottom: token.marginSM }} />}
       <Flex vertical gap={8}>
         {(member.credentials ?? []).map((credential) => (
           <Flex key={credential.id} align="center" justify="space-between" gap={8}>
