@@ -9,6 +9,8 @@ export interface CloudUser {
   email: string;
   /** Verificación en dos pasos encendida (además de la contraseña, un código o una llave de acceso). */
   twoFactorEnabled?: boolean;
+  /** El celular de un chico: sin email ni contraseña, entra con la llave del dispositivo. */
+  device?: boolean;
 }
 
 /** Cómo se completa el segundo paso al entrar. */
@@ -44,6 +46,8 @@ export interface CloudMember {
   joinedAt: number;
   encPublicKey: string | null;
   signPublicKey: string | null;
+  /** El celular de un chico (sin email): se muestra con el nombre de su perfil. */
+  device?: boolean | number;
 }
 
 /** Alguien que dejó la casa: queda su rol de entonces y su clave de firma, para verificar sus cambios viejos. */
@@ -79,6 +83,8 @@ export interface JoinRequest {
   email: string;
   role: CloudRole;
   createdAt: number;
+  /** Lo pide el celular de un chico (sin email). */
+  device?: boolean | number;
 }
 
 /** El perfil de la casa para el que es una invitación (viaja cifrado con el secreto del link). */
@@ -94,6 +100,8 @@ export interface InvitePreview {
   inviterName: string;
   role: CloudRole;
   expiresAt: number;
+  /** Código para vincular el celular de un chico: entra sin email ni contraseña. */
+  device?: boolean;
 }
 
 export const PASSWORD_MIN_LENGTH = 12;

@@ -25,7 +25,7 @@ export function ProfilePicker() {
   const t = useT();
   const signIn = useSessionStore((s) => s.signIn);
   // Con la casa en la nube, solo el perfil propio y los que no tienen cuenta (ver `pickableProfiles`).
-  const members = pickableProfiles(useMembersStore((s) => s.members) ?? [], getSyncLink()?.userId ?? null);
+  const members = pickableProfiles(useMembersStore((s) => s.members) ?? [], getSyncLink()?.userId ?? null, getSyncLink()?.device);
 
   return (
     <Flex

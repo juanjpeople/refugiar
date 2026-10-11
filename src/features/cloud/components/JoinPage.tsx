@@ -1,7 +1,7 @@
 "use client";
 
 import { App, Button, Flex, Grid, Input, Segmented, Tag, Typography, theme } from "antd";
-import { Hourglass, Link2, MailOpen } from "lucide-react";
+import { Hourglass, Link2, MailOpen, Smartphone } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { PublicLayout } from "@/components/layout/PublicLayout";
@@ -13,7 +13,7 @@ import { getErrorMessage } from "@/lib/errors";
 import type { Member } from "@/features/members/domain";
 import type { CloudHousehold, InvitePreview } from "../domain";
 import { useCloudActions, useCloudSession, useCloudStore } from "../hooks";
-import { parseInviteLink, previewInvite } from "../service";
+import { parseInviteLink, previewInvite, refreshHouseholds } from "../service";
 import { chooseProfile, claimableMembers, downloadHouse, hasLocalHouse } from "../sync";
 import { AuthForm } from "./AuthForm";
 import { ChooseProfile } from "./ChooseProfile";
@@ -60,7 +60,7 @@ export function JoinPage() {
   const { token } = theme.useToken();
   const router = useRouter();
   const { status, session } = useCloudSession();
-  const { acceptInvite, refresh } = useCloudActions();
+  const { acceptInvite, linkDevice, refresh } = useCloudActions();
   const { message } = App.useApp();
   const [checking, setChecking] = useState(false);
   const hydrated = useHydrated();
@@ -77,6 +77,22 @@ export function JoinPage() {
   // Se decide una vez: después de bajar la casa, este dispositivo ya no es "local".
   const [replacesLocal] = useState(hasLocalHouse);
   const transfer = useTransfer();
+
+  // Esperando la aprobación: pregunta sola cada 5 segundos (el adulto suele aprobar en el momento).
+  // Cuando aprueban, el botón pasa a "Entrar a la casa".
+  const waitingFor = view.kind === "pending" && session ? view.preview.householdId : null;
+  const approved = Boolean(waitingFor && session?.households.some((entry) => entry.id === waitingFor));
+  useEffect(() => {
+    if (!waitingFor || approved) return;
+    const timer = setInterval(() => {
+      const current = useCloudStore.getState().session;
+      if (!current) return;
+      refreshHouseholds(current)
+        .then((households) => useCloudStore.getState().setSession({ ...current, households }))
+        .catch(() => {});
+    }, 5_000);
+    return () => clearInterval(timer);
+  }, [waitingFor, approved]);
 
   // Se borra el secreto de la barra de direcciones (y del historial) apenas se lee.
   useEffect(() => {
@@ -115,6 +131,17 @@ export function JoinPage() {
     setView({ kind: "pending", preview });
   }
 
+  /** El celular de un chico: crea sus claves acá y pide entrar, sin email ni contraseña. */
+  async function linkThisDevice(preview: InvitePreview) {
+    if (!link) return;
+    setJoining(true);
+    const linked = await linkDevice(link.id, link.secret);
+    setJoining(false);
+    if (!linked) return;
+    savePending(preview);
+    setView({ kind: "pending", preview });
+  }
+
   /** "Ya me aprobó": si la casa ya aparece en su cuenta, se baja; si no, sigue esperando. */
   async function checkApproval(preview: InvitePreview) {
     setChecking(true);
@@ -137,6 +164,11 @@ export function JoinPage() {
     // Una invitación para un perfil entra directo como esa persona.
     if (preview.member && candidates.some((candidate) => candidate.id === preview.member!.id)) {
       await chooseProfile(current, household, preview.member.id);
+      return setView({ kind: "joined", preview });
+    }
+    // El celular de un chico es para su perfil: si ya no está libre, se crea uno con su nombre.
+    if (preview.device) {
+      await chooseProfile(current, household, null, preview.member?.name);
       return setView({ kind: "joined", preview });
     }
     if (candidates.length > 0) return setView({ kind: "profile", preview, household, candidates });
@@ -184,7 +216,35 @@ export function JoinPage() {
               </Flex>
             )}
 
-            {view.kind === "preview" && (
+            {view.kind === "preview" && view.preview.device && (
+              <Flex vertical gap={20}>
+                <div style={{ textAlign: "center" }}>
+                  <Typography.Text type="secondary">{t("cloud.join.invitedBy", { name: view.preview.inviterName })}</Typography.Text>
+                  <Typography.Title level={2} style={{ margin: "6px 0", letterSpacing: "-0.02em" }}>
+                    {view.preview.householdName}
+                  </Typography.Title>
+                  <Tag color="blue">{t("cloud.join.asMember", { name: view.preview.member?.name ?? t("roles.kid") })}</Tag>
+                </div>
+                <Typography.Text type="secondary" style={{ textAlign: "center" }}>
+                  {t("cloud.device.joinText", { name: view.preview.member?.name ?? t("roles.kid") })}
+                </Typography.Text>
+                {replacesLocal && <Callout tone="warning" title={t("cloud.transfer.replaceTitle")}>{t("cloud.transfer.replaceText", { name: view.preview.householdName })}</Callout>}
+                {status === "restoring" ? (
+                  <LoadingSkeleton paragraph={{ rows: 2 }} />
+                ) : session ? (
+                  // Un dispositivo con una cuenta abierta no se convierte en el celular de un chico.
+                  <Callout tone="warning" title={t("cloud.device.signedInTitle")}>
+                    {t("cloud.device.signedInText", { name: view.preview.member?.name ?? t("roles.kid") })}
+                  </Callout>
+                ) : (
+                  <Button type="primary" size="large" block icon={<Smartphone />} loading={joining} onClick={() => linkThisDevice(view.preview)}>
+                    {t("cloud.device.joinButton")}
+                  </Button>
+                )}
+              </Flex>
+            )}
+
+            {view.kind === "preview" && !view.preview.device && (
               <Flex vertical gap={20}>
                 <div style={{ textAlign: "center" }}>
                   <Typography.Text type="secondary">{t("cloud.join.invitedBy", { name: view.preview.inviterName })}</Typography.Text>
@@ -249,9 +309,14 @@ export function JoinPage() {
 
             {view.kind === "pending" && (
               <Flex vertical gap={16}>
-                <PanelHeader icon={Hourglass} color="gold" title={t("cloud.join.pendingTitle")} description={t("cloud.join.pendingText", { name: view.preview.inviterName, house: view.preview.householdName })} />
+                <PanelHeader
+                  icon={Hourglass}
+                  color="gold"
+                  title={approved ? t("cloud.join.approvedTitle") : t("cloud.join.pendingTitle")}
+                  description={approved ? t("cloud.join.approvedText", { house: view.preview.householdName }) : t("cloud.join.pendingText", { name: view.preview.inviterName, house: view.preview.householdName })}
+                />
                 <Button type="primary" size="large" block loading={checking} disabled={!session} onClick={() => checkApproval(view.preview)}>
-                  {t("cloud.join.pendingCheck")}
+                  {approved ? t("cloud.join.enter") : t("cloud.join.pendingCheck")}
                 </Button>
               </Flex>
             )}

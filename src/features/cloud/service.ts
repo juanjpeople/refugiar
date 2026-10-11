@@ -5,8 +5,10 @@
  */
 import { api, CloudError } from "@/lib/cloud/api";
 import { ValidationError } from "@/lib/errors";
-import { clearVault, loadIdentity, saveIdentity } from "@/lib/cloud/vault";
+import { clearVault, loadDeviceAccount, loadIdentity, saveIdentity } from "@/lib/cloud/vault";
+import { deviceSignInData } from "@/lib/cloud/device-protocol";
 import {
+  createDeviceIdentity,
   createIdentity,
   derivePasswordKeys,
   envelopeContext,
@@ -25,6 +27,7 @@ import {
   seal,
   sealEnvelope,
   sha256,
+  signWithDevice,
   unlockIdentity,
   unlockWithPasskey,
   wrapForPasskey,
@@ -219,8 +222,21 @@ export async function unlockAuthenticatedSession(password: string): Promise<Clou
  * `null` = no hay sesión. Sin conexión (o con el servidor caído) lanza: no es lo mismo que no tener sesión.
  */
 export async function restoreSession(): Promise<CloudSession | null> {
-  const me = await api<MeResponse>("GET", "/me");
-  if (!me.user) return null;
+  let me = await api<MeResponse>("GET", "/me");
+  if (!me.user) {
+    // El celular de un chico no tiene contraseña: si venció la sesión, vuelve a entrar con su llave.
+    const device = await loadDeviceAccount();
+    if (!device) return null;
+    try {
+      await deviceSignIn(device.userId, device.deviceKey);
+    } catch (error) {
+      // Lo desvincularon: queda sin sesión hasta que lo vuelvan a vincular.
+      if (error instanceof CloudError && error.status === 401) return null;
+      throw error;
+    }
+    me = await api<MeResponse>("GET", "/me");
+    if (!me.user) return null;
+  }
   const stored = await loadIdentity(me.user.id);
   if (!stored) return null;
   return { user: me.user, identity: stored.identity, households: await decryptHouseholds({ ...me, user: me.user }, stored.identity) };
@@ -269,7 +285,14 @@ export async function createHousehold(session: CloudSession, name: string, acces
  * Una invitación de un solo uso. Con `member`, es para ese perfil de la casa: quien la abre entra
  * directo como esa persona (el perfil viaja cifrado con el secreto del link, el servidor no lo ve).
  */
-export async function createInvite(session: CloudSession, household: CloudHousehold, role: CloudRole, origin: string, member?: InviteMember): Promise<{ link: string; expiresAt: number }> {
+export async function createInvite(
+  session: CloudSession,
+  household: CloudHousehold,
+  role: CloudRole,
+  origin: string,
+  member?: InviteMember,
+  { device = false }: { device?: boolean } = {},
+): Promise<{ id: string; link: string; expiresAt: number }> {
   const id = crypto.randomUUID();
   const secrets = await inviteSecrets();
   const carried: Record<string, unknown> = { name: household.encryptedName };
@@ -285,8 +308,9 @@ export async function createInvite(session: CloudSession, household: CloudHouseh
     tokenHash: await sha256(secrets.authToken),
     wrappedKeys: JSON.stringify(carried),
     expiresInDays: 7,
+    kind: device ? "device" : "account",
   });
-  return { link: `${origin}/unirme#${id}.${secrets.secret}`, expiresAt: result.expiresAt };
+  return { id, link: `${origin}/unirme#${id}.${secrets.secret}`, expiresAt: result.expiresAt };
 }
 
 /** Lee el link de invitación (`…/unirme#<id>.<secreto>`). */
@@ -298,6 +322,7 @@ export function parseInviteLink(hash: string): { id: string; secret: string } | 
 interface PreviewResponse {
   householdId: string;
   role: CloudRole;
+  kind?: "account" | "device";
   wrappedKeys: string;
   inviterName: string;
   expiresAt: number;
@@ -316,6 +341,7 @@ export async function previewInvite(id: string, secret: string): Promise<InviteP
     inviterName: preview.inviterName,
     role: preview.role,
     expiresAt: preview.expiresAt,
+    device: preview.kind === "device",
   };
 }
 
@@ -324,17 +350,49 @@ export async function previewInvite(id: string, secret: string): Promise<InviteP
 export async function acceptInvite(session: CloudSession, id: string, secret: string): Promise<string> {
   const secrets = await inviteSecrets(secret);
   const preview = await api<PreviewResponse>("POST", `/invites/${id}/preview`, { authToken: secrets.authToken });
+  const envelopes = await envelopesFromInvite(id, secrets.wrapKey, preview, session.identity.encPublicKey, session.user.id);
+  await api("POST", `/invites/${id}/accept`, { authToken: secrets.authToken, envelopes });
+  return preview.householdId;
+}
+
+/** Abre las claves que trae la invitación y las vuelve a ensobrar para quien entra (más su Privado nuevo). */
+async function envelopesFromInvite(id: string, wrapKey: CryptoKey, preview: PreviewResponse, encPublicKey: string, userId: string) {
   const carried = JSON.parse(preview.wrappedKeys) as Partial<Record<Scope, { version: number; key: string }>>;
   const envelopes = [];
   for (const scope of scopesFor(preview.role)) {
     const entry = carried[scope];
-    const raw = scope === "private" ? newScopeKey() : entry ? await open(secrets.wrapKey, entry.key, inviteContext(id, scope)) : null;
+    const raw = scope === "private" ? newScopeKey() : entry ? await open(wrapKey, entry.key, inviteContext(id, scope)) : null;
     if (!raw) continue;
     const version = scope === "private" ? 1 : entry!.version;
-    envelopes.push({ scope, version, envelope: await sealEnvelope(raw, session.identity.encPublicKey, envelopeContext(preview.householdId, scope, version, session.user.id)) });
+    envelopes.push({ scope, version, envelope: await sealEnvelope(raw, encPublicKey, envelopeContext(preview.householdId, scope, version, userId)) });
   }
-  await api("POST", `/invites/${id}/accept`, { authToken: secrets.authToken, envelopes });
-  return preview.householdId;
+  return envelopes;
+}
+
+/** Entra con la llave del celular: el servidor manda un desafío y el celular lo firma. */
+async function deviceSignIn(userId: string, deviceKey: CryptoKey) {
+  const { challenge } = await api<{ challenge: string }>("POST", "/auth/device/challenge", { userId });
+  await api("POST", "/auth/device/sign-in", { userId, challenge, signature: await signWithDevice(deviceKey, deviceSignInData(userId, challenge)) });
+}
+
+/**
+ * Vincula este celular al perfil de un chico, con el código que mostró un adulto. Crea acá sus
+ * claves y su llave para entrar (no se pueden exportar) y sube solo lo público: no hay email ni
+ * contraseña. Como una invitación, queda esperando que un admin lo apruebe.
+ */
+export async function linkDevice(id: string, secret: string): Promise<CloudSession> {
+  const secrets = await inviteSecrets(secret);
+  const preview = await api<PreviewResponse>("POST", `/invites/${id}/preview`, { authToken: secrets.authToken });
+  const { identity, deviceKey, devicePublicKey } = await createDeviceIdentity();
+  const userId = crypto.randomUUID();
+  const envelopes = await envelopesFromInvite(id, secrets.wrapKey, preview, identity.encPublicKey, userId);
+  await api("POST", "/devices/link", { inviteId: id, authToken: secrets.authToken, userId, devicePublicKey, encPublicKey: identity.encPublicKey, signPublicKey: identity.signPublicKey, envelopes });
+  // Sin otra cuenta abierta acá (la pantalla lo exige): lo que quedara en el llavero es viejo.
+  await clearVault();
+  // Primero se guarda la llave: si se corta acá, la próxima vez entra igual.
+  await saveIdentity({ userId, email: "", identity, deviceKey, savedAt: Date.now() });
+  await deviceSignIn(userId, deviceKey);
+  return sessionFrom(await api<MeResponse>("GET", "/me"), identity);
 }
 
 /** Miembros actuales y los que se fueron (estos, para verificar sus cambios viejos). */

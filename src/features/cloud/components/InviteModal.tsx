@@ -1,7 +1,7 @@
 "use client";
 
 import { App, Button, Flex, Input, Modal, Segmented, Tag, Tooltip, Typography, theme } from "antd";
-import { Cloud, Copy, House, Link2, MessageCircle, Share2, ShieldCheck, UserPlus } from "lucide-react";
+import { Cloud, Copy, House, Link2, MessageCircle, Share2, ShieldCheck, Smartphone, UserPlus } from "lucide-react";
 import Link from "next/link";
 import QRCode from "qrcode";
 import { useState } from "react";
@@ -14,10 +14,12 @@ import type { Member } from "@/features/members/domain";
 import type { CloudHousehold, CloudRole } from "../domain";
 import { useCloudSession, useCloudStore } from "../hooks";
 import * as service from "../service";
+import { DeviceLinkModal } from "./DeviceLinkModal";
 
 /**
  * Invitar a alguien a la casa: sale un link de un solo uso (y su QR). Sin `member` se elige el rol;
- * con `member`, el link es para ese perfil y entra con su rol.
+ * con `member`, el link es para ese perfil y entra con su rol. Para entrar con email se elige adulto
+ * o admin: un chico no tiene email, su celular se vincula aparte (`DeviceLinkModal`).
  */
 export function InviteModal({ open, household, member, onClose, onCreated }: { open: boolean; household: CloudHousehold; member?: Member; onClose: () => void; onCreated?: () => void }) {
   const { t, format } = useI18n();
@@ -57,7 +59,7 @@ export function InviteModal({ open, household, member, onClose, onCreated }: { o
                 block
                 value={role}
                 onChange={setChosen}
-                options={(["adult", "kid", "admin"] as CloudRole[]).map((value) => ({ value, label: t(`roles.${value}`) }))}
+                options={(["adult", "admin"] as CloudRole[]).map((value) => ({ value, label: t(`roles.${value}`) }))}
               />
             </>
           )}
@@ -113,7 +115,8 @@ export function useAdminHousehold(): CloudHousehold | null {
 
 /**
  * "Compartir acceso" en la tarjeta de cada persona. Con la casa en la nube, crea un link para ese
- * perfil; si la casa todavía vive solo en este dispositivo, explica cómo pasarla a la nube.
+ * perfil; si la casa todavía vive solo en este dispositivo, explica cómo pasarla a la nube. En un
+ * chico es "Vincular su celular": un código para su celular, sin email ni contraseña.
  */
 export function MemberAccessButton({ member }: { member: Member }) {
   const { t } = useI18n();
@@ -123,10 +126,11 @@ export function MemberAccessButton({ member }: { member: Member }) {
   const demo = DEMO_ENABLED && !DEMO_BUILD && process.env.NEXT_PUBLIC_CLOUD === "1";
   // Sin cuenta de admin en una casa que ya está en la nube, no hay nada para ofrecer acá.
   if ((!CLOUD_ENABLED && !demo) || member.userId || (!household && getSyncLink())) return null;
+  const kid = member.role === "kid";
   return (
     <>
-      <Button icon={<Share2 />} onClick={() => setOpen(true)}>
-        {t("cloud.memberAccess.share")}
+      <Button icon={kid ? <Smartphone /> : <Share2 />} onClick={() => setOpen(true)}>
+        {kid ? t("cloud.device.link") : t("cloud.memberAccess.share")}
       </Button>
       {demo ? (
         <Modal open={open} onCancel={() => setOpen(false)} footer={null} title={t("cloud.memberAccess.demoTitle")}>
@@ -137,6 +141,8 @@ export function MemberAccessButton({ member }: { member: Member }) {
             </Button>
           </Flex>
         </Modal>
+      ) : household && kid ? (
+        <DeviceLinkModal open={open} household={household} member={member} onClose={() => setOpen(false)} />
       ) : household ? (
         <InviteModal open={open} household={household} member={member} onClose={() => setOpen(false)} />
       ) : (
