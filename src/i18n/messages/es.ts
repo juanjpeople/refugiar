@@ -347,6 +347,7 @@ export const es = {
       account: "Cuenta",
       feedback: "Comentarios",
       privacyPolicy: "Política de privacidad",
+      accountDeletion: "Borrar tu cuenta",
       join: "Unirme a una casa",
       compras: "Compras",
       recipes: "Recetas",
@@ -1598,6 +1599,26 @@ export const es = {
       revokeTitle: "¿Cerrar la sesión en {device}?",
       revokeText: "Deja de sincronizar y tiene que volver a entrar. Lo que ya tenía guardado ese dispositivo no se borra a distancia.",
       revoked: "Sesión cerrada en ese dispositivo.",
+      delete: {
+        title: "Borrar mi cuenta",
+        text: "Se borran tu cuenta y lo que la nube guarda de vos. No se puede deshacer.",
+        button: "Borrar mi cuenta",
+        confirmTitle: "¿Borrar tu cuenta?",
+        what: {
+          account: "Se borran tu email, tu nombre, tu contraseña, tus llaves de acceso y tus sesiones.",
+          alone: "Se borran las casas donde no hay nadie más, con sus fotos y su historial.",
+          shared: "De las casas compartidas salís. Lo que escribiste ahí queda para tu familia.",
+          device: "Este dispositivo queda vacío. Si querés guardar algo, exportá un respaldo antes desde Ajustes → Datos.",
+        },
+        emailLabel: "Para confirmar, escribí {email}",
+        mismatch: "No coincide con el email de tu cuenta.",
+        final: "No se puede deshacer. Para volver, vas a tener que crear una cuenta nueva.",
+        confirm: "Borrar mi cuenta para siempre",
+        done: "Tu cuenta se borró.",
+        blocked: "Sos quien administra {houses}, y ahí hay más gente.",
+        blockedHow: "Antes de borrar tu cuenta, pasale la administración a alguien en Familia → Casa en la nube.",
+        goFamily: "Ir a Familia",
+      },
     },
     access: {
       title: "Código de acceso",
@@ -1871,24 +1892,24 @@ export const es = {
     privacy: {
       eyebrow: "Política de privacidad",
       title: "Qué hace {app} con tus datos",
-      updated: "Última actualización: 10 de octubre de 2026",
+      updated: "Última actualización: 11 de octubre de 2026",
       intro: "{app} es una app de código abierto para organizar la casa. Está pensada para que tus datos vivan en tus dispositivos. No muestra publicidad, no usa rastreadores y no vende datos.",
       sections: {
         android: {
           title: "La app de Android",
-          body: "La app de Android funciona sin cuenta y sin conexión. Todo lo que cargás queda guardado en tu teléfono.\nNo envía tus datos a nuestros servidores ni a terceros.\nLa cámara se usa solo cuando la abrís, para sacar fotos o leer códigos QR. Las imágenes quedan en el teléfono.\nLos respaldos son un archivo que vos elegís dónde guardar. Ese archivo no está cifrado: guardalo en un lugar de confianza.\nSi desinstalás la app, Android borra todos sus datos.",
+          body: "La app de Android abre {domain} en Chrome, a pantalla completa. Es la misma app que la web: lo que dice esta página vale igual para las dos.\nSin cuenta, todo lo que cargás queda en tu teléfono y no nos llega nada.\nLa cámara se usa solo cuando la abrís, para sacar fotos o leer códigos QR.\nLos respaldos son un archivo que vos elegís dónde guardar. Ese archivo no está cifrado: guardalo en un lugar de confianza.",
         },
         cloud: {
-          title: "La versión web con cuenta (opcional)",
-          body: "En {domain} podés crear una cuenta para compartir la casa entre varios dispositivos. Para eso guardamos tu nombre, tu email y tu contraseña protegida con un hash. Si entrás con Google o GitHub, recibimos tu nombre, tu email y tu foto de perfil.\nSi encendés la verificación en dos pasos, guardamos su secreto y tus códigos de respaldo cifrados, y la clave pública de cada llave de acceso.\nLos datos de tu casa y tus fotos se cifran en tu dispositivo antes de subir. Nosotros no tenemos las claves y no podemos leerlos.\nPor seguridad, cada sesión guarda la dirección IP y el navegador desde donde entraste. Una sesión dura hasta 30 días.\nSi nos mandás un comentario, guardamos el mensaje y el email que dejes.",
+          title: "Con cuenta (opcional)",
+          body: "En la web o en la app de Android podés crear una cuenta para compartir la casa entre varios dispositivos. Para eso guardamos tu nombre, tu email y tu contraseña protegida con un hash. Si entrás con Google o GitHub, recibimos tu nombre, tu email y tu foto de perfil.\nSi encendés la verificación en dos pasos, guardamos su secreto y tus códigos de respaldo cifrados, y la clave pública de cada llave de acceso.\nLos datos de tu casa y tus fotos se cifran en tu dispositivo antes de subir. Nosotros no tenemos las claves y no podemos leerlos.\nPor seguridad, cada sesión guarda la dirección IP y el navegador desde donde entraste. Una sesión dura hasta 30 días.\nSi nos mandás un comentario, guardamos el mensaje y el email que dejes.",
         },
         providers: {
           title: "Servicios que usamos",
-          body: "Cloudflare aloja la web, la API y la base de datos de las cuentas.\nSupabase guarda las fotos cifradas de la versión con cuenta.\nGoogle y GitHub solo intervienen si elegís entrar con ellos.\nNinguno recibe tus datos para publicidad.",
+          body: "Cloudflare aloja la web, la API y la base de datos de las cuentas.\nSupabase guarda las fotos cifradas de la versión con cuenta.\nGoogle y GitHub solo intervienen si elegís entrar con ellos.\nEn Android, la app usa Chrome, de Google, para mostrar la web.\nNinguno recibe tus datos para publicidad.",
         },
         retention: {
           title: "Cuánto tiempo guardamos los datos",
-          body: "Lo que está en tu dispositivo se queda ahí hasta que lo borrás o desinstalás la app.\nUna casa en la nube sin actividad durante 90 días se pausa, con avisos antes.\nPodés pedir que borremos tu cuenta y todos sus datos escribiendo a {email}. Lo hacemos dentro de los 30 días.",
+          body: "Lo que está en tu dispositivo se queda ahí hasta que lo borrás o borrás los datos del navegador.\nUna casa en la nube sin actividad durante 90 días se pausa, con avisos antes.\nPodés borrar tu cuenta cuando quieras, desde Ajustes → Cuenta. Los pasos y qué se borra están en {domain}/borrar-cuenta.\nSi no podés entrar, escribinos a {email} desde el email de tu cuenta y la borramos dentro de los 30 días.",
         },
         children: {
           title: "Chicos",
@@ -1904,6 +1925,30 @@ export const es = {
         },
       },
       source: "Ver el código en GitHub",
+    },
+    deletion: {
+      eyebrow: "Tu cuenta",
+      title: "Cómo borrar tu cuenta de {app}",
+      intro: "Podés borrar tu cuenta cuando quieras, desde la web o desde la app de Android. Es la misma cuenta y se borra en el momento.",
+      sections: {
+        steps: {
+          title: "Desde la app",
+          body: "Entrá a {domain} o abrí la app de Android con tu cuenta.\nAndá a Ajustes → Cuenta.\nTocá \"Borrar mi cuenta\" y escribí tu email para confirmar.\nSi administrás una casa donde vive más gente, antes pasale la administración a alguien.",
+        },
+        deleted: {
+          title: "Qué se borra",
+          body: "Tu email, tu nombre y tu contraseña.\nTus sesiones, tus llaves de acceso y tu verificación en dos pasos.\nLa copia cifrada de tus claves que guardaba la nube.\nLas casas donde no hay nadie más, con sus fotos y su historial.",
+        },
+        kept: {
+          title: "Qué queda",
+          body: "Lo que escribiste en una casa compartida queda para tu familia, cifrado. Nosotros no lo podemos leer.\nQueda un identificador al azar y tu clave pública de firma, sin tu nombre ni tu email. Con eso tu familia verifica que tus cambios viejos son tuyos.\nLo que hay en tus dispositivos se borra cuando borrás la app o los datos del navegador.",
+        },
+        help: {
+          title: "Si no podés entrar",
+          body: "Escribinos a {email} desde el email de tu cuenta. La borramos dentro de los 30 días.",
+        },
+      },
+      open: "Ir a Ajustes → Cuenta",
     },
   },
   landing: {

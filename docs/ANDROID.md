@@ -1,185 +1,104 @@
-# Android: MVP en desarrollo
+# Android
 
-La base Android reutiliza las pantallas React, Dexie, inventario, contenedores,
-fotos y exportación del sitio. Capacitor empaqueta `out/`; no carga una página
-remota. Esta primera variante se compila en modo local, sin cuentas ni API cloud.
-La sincronización y el login social en Android siguen pendientes de probar sus
-orígenes, cookies y retornos OAuth. La PWA conserva su funcionamiento habitual.
+La app de Android es la web. Es una **Trusted Web Activity** (TWA): abre `https://refugi.ar` en
+Chrome, a pantalla completa, con el ícono y el nombre de Refugiar. No hay una segunda app que
+mantener: lo que se publica en la web llega a Android en el momento.
 
-## Desbloqueo local
+## Por qué así
 
-**Ajustes → Desbloqueo → Configurar mi bloqueo** abre la seguridad del perfil actual,
-también en modo local y demo. Guardar un PIN de respaldo y registrar el dispositivo.
-El PIN y la biometría bloquean la interfaz del perfil; no cifran toda la base local ni
-inician sesión en una cuenta cloud.
+- **Las mismas posibilidades que la web.** Cuentas, entrar con Google o GitHub, llaves de acceso
+  (que además abren el cifrado), la casa en la nube, invitaciones y desbloqueo con huella dependen
+  del origen `refugi.ar` y de un navegador completo. Dentro de un WebView propio no funcionaban:
+  Google bloquea su login en WebViews y las llaves de acceso quedan atadas a otro dominio.
+- **Una sola versión.** La web y Android no se desfasan. Hace falta un paquete nuevo solo si
+  cambian el ícono, el nombre, los colores de las barras o el dominio.
+- **Antes era otra cosa.** Hasta octubre de 2026 era un proyecto Capacitor con la web empaquetada
+  y sin nube. Se reemplazó porque, sin cuentas, no era la misma app. Su historia queda en git.
 
-Android usa `BiometricPrompt` y una clave P-256 no exportable en Android Keystore.
-Cada desbloqueo firma un desafío nuevo y la web verifica la firma. Android 11/API 30+
-admite biometría fuerte o credencial del bloqueo de pantalla; Android 10 e inferiores
-solo biometría fuerte para este flujo. No obliga a usar exclusivamente huella: puede
-ofrecer rostro compatible o PIN del sistema. Sin hardware/configuración compatible
-queda disponible el PIN del perfil.
+## Cómo se une la app con refugi.ar
 
-Las claves nativas no se trasladan al exportar ni al desinstalar. Después de restaurar
-un respaldo en otro teléfono, entrar con el PIN y registrar ese dispositivo. Agregar
-biometrías al sistema puede invalidar una clave; el PIN permite recuperarse. Instalar
-una actualización del APK para recibir el nuevo puente: publicar el sitio no actualiza
-el código nativo.
+Chrome saca la barra de dirección solo si las dos mitades coinciden:
 
-En Chrome Android, Safari/iPhone y escritorio, el bloqueo usa WebAuthn del navegador,
-sin exigir PRF ni una cuenta cloud. Requiere HTTPS o localhost y un autenticador del
-dispositivo disponible. No hay proyecto iOS nativo en este repositorio: se cubre la
-PWA en Safari, no se afirma soporte de un binario iOS inexistente.
+- La app declara su sitio en `android/app/build.gradle` (`appHost` → `asset_statements`).
+- La web publica [`public/.well-known/assetlinks.json`](../public/.well-known/assetlinks.json)
+  con el paquete `ar.refugi.app` y la huella SHA-256 de cada firma que puede tener la app.
+
+Si no coinciden, la app igual funciona, pero con una barra de dirección arriba. Las huellas:
+
+| Huella | Para qué | De dónde sale |
+| --- | --- | --- |
+| Firma de apps de Google Play | Lo que se instala desde Play | Play Console → Prueba y lanza → Configuración → Integridad de la app → Firma de apps → *Certificado de la clave de firma de apps* → SHA-256 |
+| Clave de subida | Un `.aab` o APK firmado e instalado a mano | `keytool -list -v -keystore refugiar-upload.jks -alias upload` |
+
+La huella de Play la crea Google con la primera subida y no cambia. `scripts/android-twa.test.mjs`
+(corre en `npm test`) verifica que el paquete y el dominio de las dos mitades coincidan.
+
+Para comprobar lo publicado:
+
+- La web: [statements:list de Digital Asset Links](https://digitalassetlinks.googleapis.com/v1/statements:list?source.web.site=https://refugi.ar&relation=delegate_permission/common.handle_all_urls)
+  tiene que listar `ar.refugi.app` con las huellas.
+- El teléfono, con depuración USB: `adb shell pm get-app-links ar.refugi.app` tiene que decir
+  `refugi.ar: verified`.
+
+## Links
+
+La app abre los links de `https://refugi.ar`: invitaciones (`/unirme`), etiquetas QR (`/c/…`) y
+cualquier página. Android lo permite cuando verifica `assetlinks.json` (`autoVerify` en el
+manifiesto). Si no puede verificarlo, esos links se abren en el navegador.
+
+## El teléfono
+
+- **Chrome actualizado**, u otro navegador compatible con TWA. Sin uno compatible, la app abre una
+  pestaña personalizada (con barra de dirección). El manifiesto admite Android 7 (API 24) en adelante.
+- **La primera vez necesita conexión.** Después funciona sin conexión, con el service worker de la
+  web (lo mismo que la app instalada desde Chrome).
+- **Los datos viven en Chrome**, en el espacio de `refugi.ar`. Es el mismo que usa Chrome en ese
+  teléfono: si alguien ya usaba `refugi.ar` en Chrome, la app ve esa misma casa.
+- **Borrar los datos del sitio** en Chrome (Configuración → Configuración de sitios → refugi.ar)
+  borra la casa local. Para no perderla: un respaldo desde Ajustes → Datos, o la casa en la nube.
+- **Desbloqueo con huella:** usa WebAuthn de Chrome, como la web. Las huellas registradas en la app
+  anterior (Capacitor) quedaban en su Keystore: no sirven y se ignoran.
+- **Respaldos:** se descargan como en el navegador (carpeta Descargas).
 
 ## Compilar
 
-Requisitos: Node 24, JDK 21 y Android SDK 36. Android Studio 2025.2.1 o posterior
-permite instalar el SDK. Capacitor está fijado en 8.4.3: la CLI 8.5.2 introducía
-una dependencia de desarrollo `xcode → uuid` con un aviso de seguridad.
-El manifiesto permite Android 7/API 24+, pero eso no certifica todos esos equipos:
-Next requiere un motor Chromium 111+ y las funciones de la app necesitan un WebView
-actualizado. La prueba instrumentada usa Android 15/API 35; versiones anteriores
-y dispositivos físicos necesitan validación adicional.
+Requisitos: JDK 21 y Android SDK 36. Android Studio no hace falta: alcanzan las herramientas de
+línea de comandos del SDK. El paquete no lleva la web, así que no hace falta compilar Next.
 
 ```sh
-npm ci
-npm run android:sync
-npm run android:open
+npm run android:build                      # APK de prueba (debug)
+cd android && ./gradlew bundleRelease      # .aab firmado (con keystore.properties)
 ```
 
-Desde Android Studio se puede ejecutar sobre emulador o dispositivo. Por CLI,
-desde `android/`: `./gradlew assembleDebug` (PowerShell: `./gradlew.bat assembleDebug`).
-El APK queda en `android/app/build/outputs/apk/debug/app-debug.apk`.
-Con `ANDROID_HOME` apuntando al SDK, `npm run android:build` hace el build web,
-la sincronización y la compilación debug en un solo comando, en Windows o Linux/macOS.
-El workflow Android compila y adjunta un APK de prueba, sin publicar ni desplegar.
-En los PR que tocan Android solo compila y corre lint y tests unitarios de Gradle; el
-recorrido en emulador corre al mergear a `main`, los lunes y a pedido (`workflow_dispatch`),
-sin frenar ningún PR. Las pantallas web se prueban con Playwright: el recorrido nativo
-arranca desde la casa de pruebas (`?house=tests`, sembrada por la app) y solo toca lo
-que cambia en Android (selectores, respaldo, cámara, actualización).
-`bash scripts/test-android.sh` usa GNU `timeout` (Linux CI) y ejecuta dos fases
-sobre un emulador conectado y limpio:
-el recorrido de la app, y después una instalación con `versionCode=2` sobre la primera.
-La segunda fase comprueba sesión, contenido y foto sin desinstalar. Cada prueba nativa tiene un máximo de tres minutos (90 segundos para actualizar). La primera
-fase falla si supera ocho minutos y la instrumentación de actualización si supera
-dos; los logs del emulador y capturas sintéticas se conservan para diagnosticar
-incluso una espera que impida generar el reporte JUnit. No ejecutarlo
-contra un teléfono con datos reales: usa fixtures e importa una casa de prueba.
-Para compilar una versión con un código distinto: desde `android/`,
-`./gradlew assembleDebug -PappVersionCode=2` (en Windows, `./gradlew.bat`).
-Incrementar ese código para cada actualización distribuida con la misma firma.
+En Windows, `.\gradlew.bat`. El APK queda en `android/app/build/outputs/apk/debug/app-debug.apk`
+y el `.aab` en `android/app/build/outputs/bundle/release/app-release.aab`. El paquete para Play se
+arma normalmente desde GitHub (*Android release*), ver [PLAY_STORE.md](PLAY_STORE.md).
 
-## Datos y actualizaciones
+El workflow *Android* compila y revisa (lint) en los PR que tocan `android/` o `assetlinks.json`.
+No hay recorridos en emulador: la app no tiene pantallas propias y la web se prueba con Playwright.
 
-La PWA y el APK tienen almacenes diferentes. Exportar desde Ajustes en la PWA e
-importar ese JSON en el APK permite trasladar los datos; no existe migración
-automática. El respaldo contiene información privada sin cifrado: elegir un
-destino confiable. El selector Android puede ofrecer proveedores externos; si
-se elige uno, el archivo se entrega a ese proveedor por decisión del usuario.
+## Actualizar
 
-El adaptador nativo escribe únicamente en el documento elegido y confirma al
-cerrar la escritura. Cancelar no muestra un aviso de éxito. No usa permisos de
-acceso general al almacenamiento ni deja una copia temporal del respaldo.
+- **Cambios de la web:** se publican con el deploy de la web. No hace falta subir nada a Play.
+- **Cambios de la app** (ícono, nombre, colores, dominio, librería): subir el `versionCode`
+  (*Android release* lo hace solo) y conservar la misma clave de subida.
 
-El identificador `ar.refugi.app` y el origen `https://localhost`
-deben mantenerse al actualizar. Incrementar `versionCode` y conservar la misma
-clave de firma; desinstalar borra los datos locales. No usar el APK efímero de CI
-para guardar la única copia de información: la clave debug del runner puede
-cambiar y no sirve para una línea de actualizaciones distribuida.
-
-Los assets se actualizan junto al APK, sin service worker dentro de Android.
-Las claves de firma no se versionan. El build release no habilita depuración web
-ni tráfico HTTP. La captura de cámara pide permiso cuando se utiliza.
-El lector QR usa `jsqr` empaquetado con la pantalla, compartido con la PWA;
-no descarga modelos ni envía imágenes. Lee cuatro veces por segundo y reduce
-cada cuadro a un máximo de 640 px por lado.
-Se deshabilitan los logs del puente nativo, incluso en debug, porque sus argumentos
-pueden contener respaldos completos. Las reglas de backup excluyen explícitamente
-los datos de copias cloud y transferencias entre dispositivos; el traslado previsto
-es la exportación/importación elegida por el usuario.
-
-## Verificación pendiente antes de distribuir
-
-La ejecución Android de CI `37244862651` pasó cinco pruebas instrumentadas sin
-fallos ni omisiones con Android 15 sin Wi-Fi ni datos móviles, y una prueba
-posterior de actualización:
-
-- Inicio local, persistencia al recrear la actividad, navegación directa y ausencia de service workers.
-- Agregar una foto a un contenedor de la casa de pruebas con el selector nativo.
-- Exportar por el selector nativo, comprobar el JSON y restaurar foto y contenido desde Ajustes.
-- Escritura UTF-8 del respaldo, cancelación sin informar éxito y falla con mensaje genérico seguida de reintento exitoso.
-- Captura de cámara real del emulador y cierre de su stream.
-- Lectura QR desde un video sintético mediante el decodificador local, apertura del contenedor restaurado con contenido y foto, y cierre de cámara.
-- Instalar un APK con `versionCode=2` sobre el anterior, con la misma firma e identidad,
-  sin desinstalar, y verificar sesión, contenedor, contenido y foto conservados.
-
-Los resultados de los selectores se simulan con Espresso; el puente, la escritura,
-la interfaz y la base local son reales. El video QR es sintético; la decodificación
-es real. No prueba todos los proveedores ni una actualización desde cada versión
-histórica. Las capturas usan datos sintéticos. El test QR espera a que se muestren
-el contenedor restaurado, su contenido y su foto antes de capturar el resultado.
-
-La ejecución previa `37243268831` se canceló tras quedar esperando en onboarding,
-antes del QR. Se recuperaron sus logs; los límites por prueba y fase conservan
-ahora el diagnóstico de futuras esperas. No se atribuye esa espera a una causa
-confirmada solo porque la siguiente ejecución pasó.
-
-Ocho regresiones de navegador cubren la primera lectura sin conexión tras
-instalar la PWA, sin visitar antes el escáner y con `BarcodeDetector` deshabilitado;
-permisos tardíos, cancelar el inicio de video, navegación y cierre del stream.
-También verifican, en escritorio y móvil, el permiso de cámara realmente denegado
-en Chromium con un dispositivo de video virtual (sin reemplazar `getUserMedia` ni
-autorizar permisos automáticamente), su aviso y la entrada manual del código.
-Estas comprobaciones no reemplazan una cámara física en Android.
-
-Pendiente antes de distribuir:
-
-- Proveedores de documentos diferentes al usado por el test.
-- Cámara/QR real, incluyendo permiso denegado.
-- Apariencia con teclado, barras del sistema y ambos temas en dispositivos físicos.
-- Revisar exclusión de datos de backup y transferencia entre dispositivos según versión Android.
-
-Estas pruebas se completan en la prueba interna y la prueba cerrada de Play antes de
-pasar a producción.
-
-## Advertencias de dependencias
-
-Dependency Review en `37243268874` informó cero paquetes vulnerables y cero licencias
-incompatibles, junto con cuatro licencias no clasificadas y 14 alertas de Scorecard.
-El diff de dependencias devuelve licencia nula para acciones de CI, aunque sus
-archivos oficiales sí la especifican: `actions/checkout@v7`, `actions/setup-node@v7`,
-`actions/setup-java@v5` y `actions/upload-artifact@v7` usan MIT; el commit fijado de
-`ReactiveCircus/android-emulator-runner` contiene Apache-2.0. Se comprobaron los
-archivos LICENSE de esas referencias, sin agregar excepciones al control.
-
-Scorecard evalúa prácticas del repositorio de origen; un resultado bajo requiere
-revisión y no equivale por sí solo a una vulnerabilidad detectada. Incluye `jsqr`
-(2.3 sobre 10, por debajo del umbral 3): está fijado en 1.4.0, no agrega dependencias
-transitivas y procesa las imágenes localmente. Esto limita el alcance del componente,
-pero no demuestra ausencia de fallas. Conservar las advertencias y revisar cambios
-antes de actualizar; el audit de producción sin alertas tampoco es una garantía.
-
-Los avisos originales de jsQR y Capacitor se distribuyen también en
-`public/third-party-notices.txt`, copiado al sitio estático y a los assets del APK.
-La PWA también lo conserva sin conexión; comprobado en el recorrido offline.
-Actualizar ese archivo al cambiar esas versiones. Esta lista documenta los componentes
-incorporados por este MVP; no reemplaza una revisión de todas las dependencias del proyecto.
+El identificador `ar.refugi.app` no cambia nunca: con otro, Play lo trata como otra app.
 
 ## Publicar en Play Store
 
-Ver [PLAY_STORE.md](PLAY_STORE.md): clave de subida, paquete firmado desde GitHub Actions
-(*Android release*, solo a pedido), respuestas de Play Console y textos de la ficha.
+Ver [PLAY_STORE.md](PLAY_STORE.md): clave de subida, paquete firmado desde GitHub Actions,
+respuestas de Play Console, textos de la ficha y borrado de cuenta.
 
 ## Nombre de la app
 
 El nombre visible sale de una sola variable: `NEXT_PUBLIC_APP_NAME` (por defecto, "Refugiar").
-La lee la web (`src/config/brand.ts`: textos, título, manifest de la PWA, mensajes), `capacitor.config.ts`
-y Gradle (el nombre bajo el ícono de Android). Para compilar con otro nombre, definila en la terminal o
-en el CI antes de `npm run android:build`.
+La lee la web (`src/config/brand.ts`: textos, título, manifest de la PWA, mensajes) y Gradle (el
+nombre bajo el ícono de Android). Para compilar con otro nombre, definila antes de compilar.
 
-No cambian con el nombre: el `applicationId` de Android, el nombre de las bases locales, el sello `app`
-de los respaldos y los datos ya guardados. Si cambiaran, se perdería el acceso a lo existente o a la app publicada.
+No cambian con el nombre: el `applicationId` de Android, el dominio, el nombre de las bases locales,
+el sello `app` de los respaldos y los datos ya guardados. Si cambiaran, se perdería el acceso a lo
+existente o a la app publicada.
 
 La app se llamó OpenDomus hasta antes de la primera publicación. Como no tenía usuarios, se renombró
 todo, incluidos los identificadores internos: el `applicationId` es `ar.refugi.app` (por el dominio
