@@ -45,6 +45,11 @@ const CLOUD_ERRORS: Record<string, MessageKey> = {
   "license-required": "errors.cloud.licenseInvalid",
   "license-invalid": "errors.cloud.licenseInvalid",
   "plan-paused": "errors.cloud.planPaused",
+  // El celular de un chico.
+  DEVICE_SIGN_IN_FAILED: "errors.cloud.deviceSignIn",
+  "device-account": "errors.cloud.deviceAccount",
+  "device-link": "errors.cloud.deviceLink",
+  "not-device-link": "errors.cloud.notDeviceLink",
   // Verificación en dos pasos y llaves de acceso (códigos de Better Auth).
   INVALID_PASSWORD: "errors.cloud.wrongPassword",
   INVALID_CODE: "errors.cloud.badCode",

@@ -14,14 +14,24 @@ export interface VaultEntry {
   userId: string;
   email: string;
   identity: Identity;
+  /** Solo en el celular de un chico: su llave para entrar (no exportable). Sin ella, hay que volver a vincularlo. */
+  deviceKey?: CryptoKey;
   savedAt: number;
 }
 
 const vault = new Dexie("RefugiarVault") as Dexie & { identities: EntityTable<VaultEntry, "userId"> };
 vault.version(1).stores({ identities: "userId" });
 
+/** Guarda la identidad. Si ya había una llave del celular para esa cuenta, la conserva. */
 export async function saveIdentity(entry: VaultEntry) {
-  await vault.identities.put(entry);
+  const existing = await vault.identities.get(entry.userId);
+  await vault.identities.put({ deviceKey: existing?.deviceKey, ...entry });
+}
+
+/** La cuenta del celular de un chico guardada en este dispositivo (entra con su llave, sin contraseña). */
+export async function loadDeviceAccount(): Promise<(VaultEntry & { deviceKey: CryptoKey }) | undefined> {
+  const entries = await vault.identities.toArray();
+  return entries.find((entry): entry is VaultEntry & { deviceKey: CryptoKey } => Boolean(entry.deviceKey));
 }
 
 export async function loadIdentity(userId: string): Promise<VaultEntry | undefined> {

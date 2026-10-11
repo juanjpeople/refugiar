@@ -222,6 +222,43 @@ export async function createIdentity(encKey: CryptoKey): Promise<{ identity: Ide
   return { identity, upload, recoveryCode };
 }
 
+/** La identidad del celular de un chico y la llave con la que entra (todo nace y queda en el celular). */
+export interface DeviceIdentity {
+  identity: Identity;
+  /** ECDSA P-256, no exportable: firma el desafío para entrar sin email ni contraseña. */
+  deviceKey: CryptoKey;
+  /** Su parte pública (SPKI, base64url), la que guarda el servidor. */
+  devicePublicKey: string;
+}
+
+/**
+ * El celular de un chico: sin contraseña ni kit, las claves privadas nunca existen fuera de este
+ * dispositivo (se crean no exportables). Si se pierde el celular, un adulto lo desvincula y vincula
+ * el nuevo: no hay nada que recuperar.
+ */
+export async function createDeviceIdentity(): Promise<DeviceIdentity> {
+  const [enc, signing, device] = await Promise.all([
+    subtle.generateKey({ name: "X25519" }, false, ["deriveBits"]) as Promise<CryptoKeyPair>,
+    subtle.generateKey({ name: "Ed25519" }, false, ["sign", "verify"]) as Promise<CryptoKeyPair>,
+    subtle.generateKey({ name: "ECDSA", namedCurve: "P-256" }, false, ["sign", "verify"]),
+  ]);
+  const [encPub, signPub, devicePub] = await Promise.all([
+    exportBinary("raw", enc.publicKey),
+    exportBinary("raw", signing.publicKey),
+    subtle.exportKey("spki", device.publicKey) as Promise<ArrayBuffer>,
+  ]);
+  return {
+    identity: { encPublicKey: toB64u(encPub), signPublicKey: toB64u(signPub), encPrivateKey: enc.privateKey, signPrivateKey: signing.privateKey },
+    deviceKey: device.privateKey,
+    devicePublicKey: toB64u(devicePub),
+  };
+}
+
+/** Firma con la llave del celular (ECDSA P-256, SHA-256) lo que pide el servidor para entrar. */
+export async function signWithDevice(deviceKey: CryptoKey, data: string): Promise<string> {
+  return toB64u(await subtle.sign({ name: "ECDSA", hash: "SHA-256" }, deviceKey, encoder.encode(data)));
+}
+
 /** Abre la identidad con la clave de la contraseña. Lanza si la contraseña no es la correcta. */
 export async function unlockIdentity(keys: { encPublicKey: string; signPublicKey: string; privateKeys: string }, encKey: CryptoKey): Promise<Identity> {
   const plain = JSON.parse(await openText(encKey, keys.privateKeys, "identity/password")) as PrivateKeysPlain;

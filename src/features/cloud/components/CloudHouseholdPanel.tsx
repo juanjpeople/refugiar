@@ -1,13 +1,13 @@
 "use client";
 
 import { App, Avatar, Button, Card, Col, Divider, Dropdown, Flex, Row, Tag, Typography, theme } from "antd";
-import { Cloud, Crown, Ellipsis, LogOut, Trash2, UserMinus, UserPlus } from "lucide-react";
+import { Cloud, Crown, Ellipsis, LogOut, Smartphone, Trash2, UserMinus, UserPlus } from "lucide-react";
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { IconTile, LoadingSkeleton } from "@/components/ui";
 import { useI18n } from "@/i18n";
 import { setAccountRole, unlinkAccount } from "@/features/members/service";
-import { useCurrentUser } from "@/lib/auth/session";
+import { useCurrentUser, useMembersStore } from "@/lib/auth/session";
 import { CLOUD_ENABLED } from "@/lib/cloud/api";
 import { getErrorMessage } from "@/lib/errors";
 import { getSyncLink } from "@/lib/sync/middleware";
@@ -94,8 +94,12 @@ function HouseholdCard({ household }: { household: CloudHousehold }) {
   const { message, modal } = App.useApp();
   const session = useCloudStore((s) => s.session)!;
   const currentUser = useCurrentUser();
+  const profiles = useMembersStore((s) => s.members);
   const { refresh } = useCloudActions();
   const [members, setMembers] = useState<CloudMember[] | null>(null);
+  // El celular de un chico no tiene nombre en la nube: se muestra el de su perfil (que viaja cifrado).
+  const nameOf = (member: CloudMember) =>
+    member.device ? profiles?.find((profile) => profile.userId === member.userId)?.name || t("cloud.device.unnamed") : member.name;
   const [invites, setInvites] = useState<CloudInvite[]>([]);
   const [inviting, setInviting] = useState(false);
   // Subir este número vuelve a pedir miembros e invitaciones (después de invitar, anular o cambiar un rol).
@@ -133,10 +137,11 @@ function HouseholdCard({ household }: { household: CloudHousehold }) {
 
   /** Sacar a alguien: claves nuevas para los que quedan; lo que se escriba desde ahora, no lo puede abrir. */
   function remove(member: CloudMember) {
+    const name = nameOf(member);
     modal.confirm({
-      title: t("cloud.panel.removeTitle", { name: member.name }),
-      content: t("cloud.panel.removeText", { name: member.name }),
-      okText: t("cloud.panel.remove"),
+      title: member.device ? t("cloud.device.unlinkTitle", { name }) : t("cloud.panel.removeTitle", { name }),
+      content: member.device ? t("cloud.device.unlinkText", { name }) : t("cloud.panel.removeText", { name }),
+      okText: member.device ? t("cloud.device.unlink") : t("cloud.panel.remove"),
       okButtonProps: { danger: true },
       cancelText: t("common.cancel"),
       onOk: async () => {
@@ -145,7 +150,7 @@ function HouseholdCard({ household }: { household: CloudHousehold }) {
           // Su perfil queda en la casa (con su historial), pero ya no atado a su cuenta.
           if (getSyncLink()?.householdId === household.id) await unlinkAccount(currentUser, member.userId);
           await refresh();
-          message.success(t("cloud.panel.removed", { name: member.name }));
+          message.success(member.device ? t("cloud.device.unlinked", { name }) : t("cloud.panel.removed", { name }));
           load();
         } catch (error) {
           message.error(getErrorMessage(error, t));
@@ -179,30 +184,34 @@ function HouseholdCard({ household }: { household: CloudHousehold }) {
           {members.map((member) => (
             <Col key={member.userId} xs={24} sm={12} lg={8}>
               <Flex align="center" gap={12} style={{ padding: 12, borderRadius: token.borderRadiusLG, background: token.colorFillQuaternary }}>
-                <Avatar style={{ background: token.colorPrimary, flexShrink: 0 }}>{member.name.charAt(0).toUpperCase()}</Avatar>
+                <Avatar style={{ background: token.colorPrimary, flexShrink: 0 }} icon={member.device ? <Smartphone /> : undefined}>
+                  {member.device ? undefined : member.name.charAt(0).toUpperCase()}
+                </Avatar>
                 <Flex vertical style={{ minWidth: 0, flex: 1 }}>
                   <Typography.Text strong ellipsis>
-                    {member.name}
+                    {nameOf(member)}
                     {member.userId === session.user.id && ` · ${t("cloud.panel.you")}`}
                   </Typography.Text>
                   <Typography.Text type="secondary" style={{ fontSize: token.fontSizeSM }}>
-                    {t(`roles.${member.role}`)} · {t("cloud.panel.since", { date: format.date(member.joinedAt, { day: "numeric", month: "short", year: "numeric" }) })}
+                    {member.device ? t("cloud.device.badge") : t(`roles.${member.role}`)} ·{" "}
+                    {t("cloud.panel.since", { date: format.date(member.joinedAt, { day: "numeric", month: "short", year: "numeric" }) })}
                   </Typography.Text>
                 </Flex>
                 {admin && member.userId !== session.user.id && (
                   <Dropdown
                     trigger={["click"]}
                     menu={{
+                      // Una cuenta con email es de un adulto o de un admin; el celular de un chico sigue siendo de un chico.
                       items: [
-                        ...(["admin", "adult", "kid"] as CloudRole[])
+                        ...(member.device ? [] : (["admin", "adult"] as CloudRole[]))
                           .filter((role) => role !== member.role)
                           .map((role) => ({ key: role, label: t("cloud.panel.makeRole", { role: t(`roles.${role}`) }), onClick: () => changeRole(member, role) })),
-                        { type: "divider" as const },
-                        { key: "remove", danger: true, icon: <UserMinus />, label: t("cloud.panel.remove"), onClick: () => remove(member) },
+                        ...(member.device ? [] : [{ type: "divider" as const }]),
+                        { key: "remove", danger: true, icon: <UserMinus />, label: member.device ? t("cloud.device.unlink") : t("cloud.panel.remove"), onClick: () => remove(member) },
                       ],
                     }}
                   >
-                    <Button type="text" size="small" icon={<Ellipsis />} aria-label={t("cloud.panel.memberActions", { name: member.name })} />
+                    <Button type="text" size="small" icon={<Ellipsis />} aria-label={t("cloud.panel.memberActions", { name: nameOf(member) })} />
                   </Dropdown>
                 )}
               </Flex>
