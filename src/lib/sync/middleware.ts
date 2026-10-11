@@ -17,6 +17,8 @@ export interface SyncLink {
   userId: string;
   /** Identifica este dispositivo (para no volver a aplicar lo que él mismo subió). */
   deviceId: string;
+  /** El celular de un chico, sin email ni contraseña: acá solo se usa su perfil. */
+  device?: boolean;
 }
 
 const LINK_KEY = houseStorageKey("refugiar-sync-link");

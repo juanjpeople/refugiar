@@ -9,6 +9,7 @@
 import type { BetterAuthOptions } from "better-auth";
 import { twoFactor } from "better-auth/plugins/two-factor";
 import { passkey } from "@better-auth/passkey";
+import { refugiarDevices } from "./device-auth";
 import { passkeyAsSecondStep, refugiarTwoFactor } from "./two-factor";
 
 export interface AuthEnv {
@@ -67,6 +68,8 @@ export function authOptions(database: BetterAuthOptions["database"], env: AuthEn
       customRules: {
         "/sign-in/email": { window: 60, max: 5 },
         "/sign-up/email": { window: 60, max: 3 },
+        "/device/challenge": { window: 60, max: 10 },
+        "/device/sign-in": { window: 60, max: 10 },
       },
     },
     advanced: {
@@ -89,6 +92,8 @@ export function authOptions(database: BetterAuthOptions["database"], env: AuthEn
         authentication: { afterVerification: passkeyAsSecondStep },
       }),
       refugiarTwoFactor(),
+      // El celular de un chico: entra firmando con su llave del dispositivo (ver device-auth.ts).
+      refugiarDevices(),
     ],
   };
 }

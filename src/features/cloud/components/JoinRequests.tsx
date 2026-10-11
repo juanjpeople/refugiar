@@ -1,7 +1,7 @@
 "use client";
 
 import { App, Avatar, Button, Flex, Typography, theme } from "antd";
-import { Check, UserCheck, X } from "lucide-react";
+import { Check, Smartphone, UserCheck, X } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { Callout } from "@/components/ui";
 import { useI18n } from "@/i18n";
@@ -42,7 +42,7 @@ export function JoinRequests() {
     setBusy(request.id);
     try {
       await service.approveJoinRequest(household!.id, request.id);
-      message.success(t("cloud.memberAccess.approved", { name: request.name }));
+      message.success(t("cloud.memberAccess.approved", { name: request.device ? t("cloud.device.requestName") : request.name }));
     } catch (error) {
       message.error(getErrorMessage(error, t));
     } finally {
@@ -53,7 +53,7 @@ export function JoinRequests() {
 
   function reject(request: JoinRequest) {
     modal.confirm({
-      title: t("cloud.memberAccess.rejectConfirm", { name: request.name }),
+      title: t("cloud.memberAccess.rejectConfirm", { name: request.device ? t("cloud.device.requestName") : request.name }),
       okText: t("cloud.memberAccess.reject"),
       okButtonProps: { danger: true },
       cancelText: t("common.cancel"),
@@ -72,11 +72,14 @@ export function JoinRequests() {
         <Flex vertical gap={token.marginXS} style={{ marginTop: token.marginSM }}>
           {requests.map((request) => (
             <Flex key={request.id} align="center" gap={token.marginSM} wrap style={{ padding: token.paddingXS, borderRadius: token.borderRadiusLG, background: token.colorBgContainer }}>
-              <Avatar style={{ background: token.colorPrimary, flexShrink: 0 }}>{request.name.charAt(0).toUpperCase()}</Avatar>
+              <Avatar style={{ background: token.colorPrimary, flexShrink: 0 }} icon={request.device ? <Smartphone /> : undefined}>
+                {request.device ? undefined : request.name.charAt(0).toUpperCase()}
+              </Avatar>
               <Flex vertical style={{ minWidth: 0, flex: "1 1 180px" }}>
-                <Typography.Text strong ellipsis>{request.name}</Typography.Text>
+                <Typography.Text strong ellipsis>{request.device ? t("cloud.device.requestName") : request.name}</Typography.Text>
                 <Typography.Text type="secondary" style={{ fontSize: token.fontSizeSM }} ellipsis>
-                  {t("cloud.memberAccess.as", { email: request.email, role: t(`roles.${request.role}`) })} · {format.date(request.createdAt, { day: "numeric", month: "short" })}
+                  {request.device ? t(`roles.${request.role}`) : t("cloud.memberAccess.as", { email: request.email, role: t(`roles.${request.role}`) })} ·{" "}
+                  {format.date(request.createdAt, { day: "numeric", month: "short" })}
                 </Typography.Text>
               </Flex>
               <Flex gap={token.marginXS}>

@@ -60,10 +60,11 @@ export const DEFAULT_MEMBERS: Omit<Member, "createdAt" | "updatedAt">[] = [
  * Qué perfiles se pueden elegir en este dispositivo. Con la casa en la nube (`accountUserId`), el
  * propio y los que no tienen cuenta (un chico con PIN en la tablet); el de otra cuenta, no: ese
  * perfil es de esa persona y se usa desde sus dispositivos (si no, Flor podría "ser Juan").
+ * En el celular de un chico (`onlyOwn`), solo el suyo: no puede pasarse al perfil de un adulto.
  */
-export function pickableProfiles<T extends Pick<Member, "userId">>(members: T[], accountUserId: string | null): T[] {
+export function pickableProfiles<T extends Pick<Member, "userId">>(members: T[], accountUserId: string | null, onlyOwn = false): T[] {
   if (!accountUserId) return members;
-  return members.filter((member) => !member.userId || member.userId === accountUserId);
+  return members.filter((member) => member.userId === accountUserId || (!onlyOwn && !member.userId));
 }
 
 /** Un perfil está protegido si tiene PIN o biometría. */

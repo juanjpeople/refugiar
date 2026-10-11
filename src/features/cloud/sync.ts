@@ -119,7 +119,7 @@ export async function downloadHouse(session: CloudSession, household: CloudHouse
     untracked(tx);
     for (const table of db.tables) await table.clear();
   });
-  const link: SyncLink = { householdId: household.id, userId: session.user.id, deviceId: crypto.randomUUID() };
+  const link: SyncLink = { householdId: household.id, userId: session.user.id, deviceId: crypto.randomUUID(), ...(session.user.device ? { device: true } : {}) };
   setSyncLink(link);
   await syncOnce(await syncContextFor(session, household, link), { download: onProgress });
   useDeviceStore.getState().setMode("cloud");
@@ -134,12 +134,15 @@ export async function claimableMembers(role: CloudRole) {
   return (await db.members.toArray()).filter((member) => !member.userId && member.role === role);
 }
 
-/** Quien se une elige su perfil: uno libre de la casa o uno nuevo con el nombre de su cuenta. */
-export async function chooseProfile(session: CloudSession, household: CloudHousehold, memberId: string | null) {
+/**
+ * Quien se une elige su perfil: uno libre de la casa o uno nuevo con el nombre de su cuenta. El
+ * celular de un chico no tiene nombre de cuenta: usa el del perfil para el que era el código.
+ */
+export async function chooseProfile(session: CloudSession, household: CloudHousehold, memberId: string | null, fallbackName = session.user.name) {
   const existing = memberId ? await db.members.get(memberId) : undefined;
   // Un perfil de ejemplo ("Adulto", "Explorador") toma el nombre de la cuenta; uno con nombre propio lo conserva.
   const placeholder = !existing || DEFAULT_MEMBERS.some((member) => member.id === existing.id && member.name === existing.name);
-  const id = await linkMemberToAccount({ memberId: existing?.id, userId: session.user.id, name: placeholder ? session.user.name : existing.name, role: household.role });
+  const id = await linkMemberToAccount({ memberId: existing?.id, userId: session.user.id, name: placeholder ? fallbackName : existing.name, role: household.role });
   selectProfile(id);
 }
 
