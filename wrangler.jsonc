@@ -39,6 +39,9 @@
   "migrations": [{ "tag": "v1", "new_sqlite_classes": ["HouseholdLog"] }],
   "vars": {
     "APP_ORIGIN": "https://refugi.ar",
+    // Sending domain verified; RESEND_API_KEY is stored as a Worker secret.
+    "EMAIL_ENABLED": "1",
+    "EMAIL_FROM": "avisos@refugi.ar",
     // Bucket privado: guarda solo bytes cifrados. La service role se configura como secreto.
     "SUPABASE_URL": "https://qaeqyeadwijphhlqcrku.supabase.co",
     "SUPABASE_PHOTOS_BUCKET": "opendomus-photos",
@@ -48,6 +51,6 @@
     "HOUSEHOLD_ACCESS": "codes",
   },
   // Procesa avisos y pausa casas inactivas una vez por día. Nunca borra automáticamente.
-  "triggers": { "crons": ["17 4 * * *"] },
+  "triggers": { "crons": ["17 4 * * *", "*/5 * * * *"] },
   "observability": { "enabled": true },
 }

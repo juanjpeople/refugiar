@@ -25,7 +25,9 @@ import {
   sha256,
   sign,
   unlockIdentity,
+  unlockWithPasskey,
   verify,
+  wrapForPasskey,
 } from "./index";
 
 // Menos iteraciones en los tests (la derivación real es lenta a propósito).
@@ -129,6 +131,22 @@ describe("identidad y recuperación", () => {
     const recovered = await recoverIdentity({ ...upload, recoveryPrivateKeys: kit.recoveryPrivateKeys }, kit.recoveryCode, next.encKey);
     assert.equal(recovered.identity.signPublicKey, upload.signPublicKey);
     await assert.rejects(newRecoveryKit(upload.privateKeys, next.encKey));
+  });
+
+  test("una llave de acceso abre su copia de las claves; otra llave u otro secreto, no", async () => {
+    const keys = await derivePasswordKeys("ana@casa.com", "una frase bastante larga", FAST);
+    const { upload, identity } = await createIdentity(keys.encKey);
+    const prf = crypto.getRandomValues(new Uint8Array(32));
+    const wrapped = await wrapForPasskey(upload.privateKeys, keys.encKey, prf, "llave-1");
+    const opened = await unlockWithPasskey(upload, wrapped, prf, "llave-1");
+    const signature = await sign(opened, "hola");
+    assert.equal(await verify(identity.signPublicKey, "hola", signature), true);
+    await assert.rejects(unlockWithPasskey(upload, wrapped, crypto.getRandomValues(new Uint8Array(32)), "llave-1"));
+    await assert.rejects(unlockWithPasskey(upload, wrapped, prf, "llave-2"));
+    await assert.rejects(unlockWithPasskey(upload, wrapped, prf.slice(0, 16), "llave-1"));
+    // Armar la copia pide la contraseña.
+    const other = await derivePasswordKeys("ana@casa.com", "otra frase más larga", FAST);
+    await assert.rejects(wrapForPasskey(upload.privateKeys, other.encKey, prf, "llave-1"));
   });
 
   test("el código del kit va y vuelve sin perder bits", () => {

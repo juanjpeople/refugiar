@@ -1,6 +1,26 @@
 import { test, expect } from '@playwright/test';
 import { addItem, selectTestSpaces, addNote } from './fixtures';
 
+test('las herramientas de la demo no muestran consumo y conservan ajustes', async ({ page }) => {
+  await page.goto('/empezar?house=demo');
+  await page.getByRole('button', { name: 'Explorar casa demo', exact: true }).click();
+  await page.getByRole('heading', { name: 'Administrador', exact: true }).click();
+  await page.goto('/inventario');
+  await page.getByRole('link', { name: /^Herramientas inventariadas/ }).click();
+  await expect(page.getByRole('button', { name: /^Usé uno de / })).toHaveCount(0);
+  await page.getByRole('button', { name: 'Ver detalle de Taladro percutor 13 mm', exact: true }).click();
+  const drawer = page.getByRole('dialog');
+  await expect(drawer.getByRole('button', { name: 'Usé uno', exact: true })).toHaveCount(0);
+  await drawer.getByRole('button', { name: 'Sumar uno', exact: true }).click();
+  await expect(drawer.getByRole('group', { name: 'Cantidad', exact: true }).getByText('2', { exact: true })).toBeVisible();
+  await page.reload();
+  await page.getByRole('button', { name: 'Ver detalle de Taladro percutor 13 mm', exact: true }).click();
+  await expect(page.getByRole('dialog').getByRole('group', { name: 'Cantidad', exact: true }).getByText('2', { exact: true })).toBeVisible();
+  await page.goto('/inventario');
+  await page.getByRole('link', { name: /^Heladera/ }).first().click();
+  await expect(page.getByRole('button', { name: /^Usé uno de / }).first()).toBeVisible();
+});
+
 test('casas integradas: demo y pruebas conservan cambios sin tocar la casa habitual', async ({ page }, testInfo) => {
   const errors: string[] = [];
   page.on('pageerror', error => errors.push(error.message));

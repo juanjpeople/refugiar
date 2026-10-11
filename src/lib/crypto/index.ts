@@ -253,6 +253,33 @@ export async function newRecoveryKit(privateKeys: string, encKey: CryptoKey): Pr
   return kitFor(await openText(encKey, privateKeys, "identity/password"));
 }
 
+// --- Llaves de acceso que abren los datos (WebAuthn PRF) ------------------------------------
+
+/**
+ * Lo que se le pide a la llave de acceso (extensión PRF): siempre lo mismo, así la llave devuelve
+ * siempre el mismo secreto. Ese secreto sale del autenticador (huella, cara o PIN) y no se guarda.
+ */
+export const PASSKEY_PRF_SALT = encoder.encode("refugiar/passkey-prf/v1");
+
+async function passkeyAesKey(prf: Uint8Array) {
+  if (prf.length < 32) throw new Error("bad-prf");
+  return aesKey(await hkdf(prf, "refugiar/passkey/v1"));
+}
+/** Atada a la llave: una copia no se puede usar con otra. */
+const passkeyContext = (credentialId: string) => `identity/passkey|${credentialId}`;
+
+/** La copia de las claves privadas para una llave de acceso. Pide la clave de la contraseña (las abre). */
+export async function wrapForPasskey(privateKeys: string, encKey: CryptoKey, prf: Uint8Array, credentialId: string): Promise<string> {
+  const json = await openText(encKey, privateKeys, "identity/password");
+  return seal(await passkeyAesKey(prf), json, passkeyContext(credentialId));
+}
+
+/** Abre la identidad con el secreto de la llave de acceso. Lanza si no es la llave de esa copia. */
+export async function unlockWithPasskey(keys: { encPublicKey: string; signPublicKey: string }, wrapped: string, prf: Uint8Array, credentialId: string): Promise<Identity> {
+  const plain = JSON.parse(await openText(await passkeyAesKey(prf), wrapped, passkeyContext(credentialId))) as PrivateKeysPlain;
+  return importPrivate(plain, keys.encPublicKey, keys.signPublicKey);
+}
+
 // --- Kit de recuperación -------------------------------------------------------------------
 
 const BASE32 = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"; // sin I, O, 0, 1: no se confunden al copiar a mano

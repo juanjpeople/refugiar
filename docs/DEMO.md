@@ -18,7 +18,11 @@ pestaña y las sesiones, bloqueo, navegación y modo de datos tienen claves sepa
 usan cuentas, sincronización, invitaciones ni API. No demuestran colaboración real.
 
 Los datos se cargan automáticamente al crear cada base. Una actualización no pisa
-los cambios. **Cargar más ejemplos** agrega registros que faltan conservando los existentes.
+los cambios. La versión local 14 corrige las herramientas de ejemplos antiguos que
+todavía no tenían el indicador de reutilizable. Conserva cantidades, mínimos, fechas,
+anotaciones y decisiones explícitas. Solo reconoce IDs y nombres originales en las
+bases demo y de pruebas; no reclasifica artículos de la casa habitual.
+**Cargar más ejemplos** agrega registros que faltan conservando los existentes.
 Para comenzar de cero, usar **Restablecer demo**,
 que pide confirmación y solo reemplaza esa casa de ejemplo. Exportar primero si se
 quieren conservar pruebas. En otro navegador se crea otra copia; no se comparten datos.

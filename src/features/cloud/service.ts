@@ -10,6 +10,7 @@ import {
   createIdentity,
   derivePasswordKeys,
   envelopeContext,
+  fromB64u,
   importScopeKey,
   inviteSecrets,
   newRecoveryKit,
@@ -17,6 +18,7 @@ import {
   open,
   openEnvelope,
   openText,
+  PASSKEY_PRF_SALT,
   recoverIdentity,
   recoveryProof,
   rewrapIdentity,
@@ -24,6 +26,8 @@ import {
   sealEnvelope,
   sha256,
   unlockIdentity,
+  unlockWithPasskey,
+  wrapForPasskey,
   type Identity,
   type Scope,
 } from "@/lib/crypto";
@@ -122,6 +126,73 @@ export async function signIn(input: { email: string; password: string }): Promis
 /** ¿Este navegador puede usar llaves de acceso? */
 export function passkeysSupported() {
   return typeof window !== "undefined" && typeof window.PublicKeyCredential === "function";
+}
+
+// --- Llaves que abren los datos (PRF) -------------------------------------------------------
+
+/** Pide a la llave su secreto (extensión PRF). El navegador lo pasa tal cual al autenticador. */
+function withPrf<T extends object>(options: T): T {
+  return { ...options, extensions: { ...(options as { extensions?: object }).extensions, prf: { eval: { first: PASSKEY_PRF_SALT } } } };
+}
+
+function prfBytes(results: unknown): Uint8Array | null {
+  const first = (results as { prf?: { results?: { first?: BufferSource } } } | undefined)?.prf?.results?.first;
+  if (!first) return null;
+  return first instanceof ArrayBuffer ? new Uint8Array(first) : new Uint8Array(first.buffer, first.byteOffset, first.byteLength);
+}
+
+/** Saca el secreto de la respuesta y lo borra de ella: nunca va al servidor. */
+function takePrf(response: { clientExtensionResults: unknown }): Uint8Array | null {
+  const prf = prfBytes(response.clientExtensionResults);
+  response.clientExtensionResults = {};
+  return prf;
+}
+
+/**
+ * Algunos autenticadores dan el secreto recién al usar la llave, no al crearla: se usa una vez acá,
+ * en el dispositivo (no hace falta el servidor). `null` si el dispositivo no lo da.
+ */
+async function evaluatePrf(credentialId: string): Promise<Uint8Array | null> {
+  try {
+    const credential = (await navigator.credentials.get({
+      publicKey: {
+        challenge: crypto.getRandomValues(new Uint8Array(32)),
+        allowCredentials: [{ type: "public-key", id: fromB64u(credentialId) }],
+        userVerification: "required",
+        extensions: { prf: { eval: { first: PASSKEY_PRF_SALT } } } as AuthenticationExtensionsClientInputs,
+      },
+    })) as PublicKeyCredential | null;
+    return prfBytes(credential?.getClientExtensionResults());
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Entrar con una llave de acceso, sin contraseña: la llave verifica a la persona (huella, cara o
+ * PIN) y da el secreto que abre la copia de las claves. Si el dispositivo no da el secreto, no se
+ * abre la sesión: sin las claves no se pueden leer los datos.
+ */
+export async function signInWithPasskey(): Promise<CloudSession> {
+  const optionsJSON = await api<PublicKeyCredentialRequestOptionsJSON>("GET", "/auth/passkey/generate-authenticate-options");
+  const response = await startAuthentication({ optionsJSON: withPrf({ ...optionsJSON, userVerification: "required" }) }).catch(() => {
+    throw new CloudError("passkey-cancelled", 0);
+  });
+  const prf = takePrf(response);
+  if (!prf) throw new CloudError("passkey-no-prf", 0);
+  await api("POST", "/auth/passkey/verify-authentication", { response }).catch((error: unknown) => {
+    throw error instanceof CloudError && error.code === "TWO_FACTOR_REQUIRED" ? new CloudError("passkey-second-step", 401) : error;
+  });
+  try {
+    const me = await api<MeResponse>("GET", "/me");
+    if (!me.user || !me.keys) throw new Error("no-keys");
+    const { privateKeys } = await api<{ privateKeys: string }>("GET", `/account/passkeys/unlock/${encodeURIComponent(response.id)}`);
+    return await sessionFrom(me, await unlockWithPasskey(me.keys, privateKeys, prf, response.id));
+  } catch {
+    // Sesión sin claves: no sirve. Se cierra y se pide la contraseña.
+    await api("POST", "/auth/sign-out", {}).catch(() => {});
+    throw new CloudError("passkey-locked", 0);
+  }
 }
 
 /** Completa el segundo paso del ingreso (deja la sesión abierta en el servidor). */
@@ -388,18 +459,41 @@ export async function newBackupCodes(session: CloudSession, password: string): P
 }
 
 export async function listPasskeys(): Promise<CloudPasskey[]> {
-  const list = await api<{ id: string; name?: string | null; createdAt: string }[]>("GET", "/auth/passkey/list-user-passkeys");
-  return list.map((entry) => ({ id: entry.id, name: entry.name ?? null, createdAt: Date.parse(entry.createdAt) }));
+  return (await api<{ passkeys: CloudPasskey[] }>("GET", "/account/passkeys")).passkeys;
 }
 
-/** Suma una llave de acceso de este dispositivo (o de una llave física). Pide la contraseña. */
-export async function addPasskey(session: CloudSession, input: { name?: string; password: string }) {
+/**
+ * Suma una llave de acceso de este dispositivo (o de una llave física). Pide la contraseña. Si el
+ * dispositivo da el secreto de la llave (PRF), guarda una copia de las claves cifrada con él: desde
+ * ahí la llave entra sola. Si no, la llave queda como segundo paso (sin los dos pasos encendidos
+ * no serviría, así que se quita).
+ */
+export async function addPasskey(session: CloudSession, input: { name?: string; password: string }): Promise<{ unlocks: boolean }> {
   const keys = await derivePasswordKeys(session.user.email, input.password);
+  const me = await api<MeResponse>("GET", "/me");
+  // Antes de pedir la huella: la contraseña tiene que abrir las claves.
+  try {
+    await unlockIdentity(me.keys!, keys.encKey);
+  } catch {
+    throw new CloudError("wrong-password", 403);
+  }
   const optionsJSON = await api<PublicKeyCredentialCreationOptionsJSON>("GET", "/auth/passkey/generate-register-options");
-  const response = await startRegistration({ optionsJSON }).catch(() => {
+  const response = await startRegistration({ optionsJSON: withPrf(optionsJSON) }).catch(() => {
     throw new CloudError("passkey-cancelled", 0);
   });
-  await api("POST", "/auth/passkey/verify-registration", { response, name: (input.name ?? "").trim() || undefined, password: keys.authKey });
+  const created = takePrf(response);
+  const passkey = await api<{ id: string; credentialID: string }>("POST", "/auth/passkey/verify-registration", { response, name: (input.name ?? "").trim() || undefined, password: keys.authKey });
+  const prf = created ?? (await evaluatePrf(passkey.credentialID));
+  if (prf) {
+    const privateKeys = await wrapForPasskey(me.keys!.privateKeys, keys.encKey, prf, passkey.credentialID);
+    await api("POST", `/account/passkeys/${passkey.id}/unlock`, { password: keys.authKey, privateKeys });
+    return { unlocks: true };
+  }
+  if (!session.user.twoFactorEnabled) {
+    await removePasskey(passkey.id);
+    throw new CloudError("passkey-no-prf", 0);
+  }
+  return { unlocks: false };
 }
 
 export async function removePasskey(id: string) {

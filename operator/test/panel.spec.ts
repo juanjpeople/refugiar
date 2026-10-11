@@ -21,10 +21,22 @@ test("panel privado: rechazo, datos, licencia y revocación de identidad", async
   }
   let writes = 0;
   let unavailable = false;
+  let deleted = false;
+  const resets: string[] = [];
   app.all("/api/admin/platform/*", async c => {
       const request = c.req.raw;
       if (unavailable) return c.json({ error: "unavailable" }, 503);
       const key = new URL(request.url).pathname.split("/").at(-1)!;
+      if (request.method === "DELETE") {
+        expect(new URL(request.url).pathname).toBe("/api/admin/platform/users/user-alone");
+        expect(await request.json()).toEqual({ confirm: "sola@example.com" });
+        deleted = true;
+        return c.json({ ok: true });
+      }
+      if (request.method === "POST" && new URL(request.url).pathname.includes("/reset/")) {
+        resets.push(new URL(request.url).pathname);
+        return c.json({ ok: true });
+      }
       if (request.method === "POST") {
         expect(key).toBe("licenses");
         expect(await request.json()).toMatchObject({ count: 1 });
@@ -36,7 +48,12 @@ test("panel privado: rechazo, datos, licencia y revocación de identidad", async
       if (key === "licenses") return c.json({ licenses: [{ id: "license-synthetic", note: "Licencia de prueba", used: 0, maxHouseholds: 1, status: "active", expiresAt: null }] });
       if (key === "feedback") return c.json({ feedback: [{ id: "feedback-synthetic", email: null, category: "question", status: "open", message: "Mensaje de ejemplo", createdAt: 0 }] });
       if (key === "notices") return c.json({ notices: [{ householdId: "house-synthetic", daysBeforePause: 7, dueAt: 0, status: "pending", memberEmails: "notice@example.com" }] });
-      return c.json({ [key]: key === "users" ? [{ id: "synthetic", name: "Persona de prueba", email: "synthetic@example.com", households: 1, activeSessions: 1, lastSessionAt: null }] : [] });
+      if (key === "mail") return c.json({ config: "disabled", counts: {}, usage: { daily: 0, monthly: 0 }, limits: { daily: 100, monthly: 3000 } });
+      if (key === "users") return c.json({ users: [
+        { id: "synthetic", name: "Persona de prueba", email: "synthetic@example.com", households: 1, activeSessions: 1, lastSessionAt: null, twoFactorEnabled: 1, passkeys: 2, deletable: 0 },
+        ...(deleted ? [] : [{ id: "user-alone", name: "Sin casa", email: "sola@example.com", households: 0, activeSessions: 0, lastSessionAt: null, twoFactorEnabled: 0, passkeys: 0, deletable: 1 }]),
+      ] });
+      return c.json({ [key]: [] });
   });
   const assets = { fetch: async (request: Request) => {
     const path = new URL(request.url).pathname;
@@ -56,7 +73,10 @@ test("panel privado: rechazo, datos, licencia y revocación de identidad", async
       for (const [name, value] of Object.entries(incoming.headers)) if (value !== undefined) headers.set(name, Array.isArray(value) ? value.join(",") : value);
       const request = new Request(`https://${incoming.headers.host}${incoming.url}`, { method: incoming.method, headers, body: chunks.length ? Buffer.concat(chunks) : undefined });
       const response = incoming.url?.startsWith("/admin") ? await operatorPage(request, assets) : await app.fetch(request, env);
-      outgoing.writeHead(response.status, Object.fromEntries(response.headers));
+      // Object.fromEntries deja solo la última Set-Cookie: se pasan todas.
+      const responseHeaders: Record<string, string | string[]> = Object.fromEntries(response.headers);
+      if (response.headers.getSetCookie().length) responseHeaders["set-cookie"] = response.headers.getSetCookie();
+      outgoing.writeHead(response.status, responseHeaders);
       outgoing.end(Buffer.from(await response.arrayBuffer()));
     } catch (error) {
       errors.push(String(error));
@@ -64,7 +84,7 @@ test("panel privado: rechazo, datos, licencia y revocación de identidad", async
     }
   });
   await new Promise<void>(resolve => server.listen(0, "127.0.0.1", resolve));
-  const base = `https://127.0.0.1:${(server.address() as AddressInfo).port}`;
+  const base = `https://localhost:${(server.address() as AddressInfo).port}`;
   try {
   env.APP_ORIGIN = base;
   if (testInfo.project.name === "mobile") await page.setViewportSize({ width: 320, height: 740 });
@@ -79,10 +99,25 @@ test("panel privado: rechazo, datos, licencia y revocación de identidad", async
   await page.getByRole("button", { name: "Ingresar", exact: true }).click();
   await expect(page.getByText("No se pudo ingresar. Revisá la clave y usá un código nuevo del autenticador.")).toBeVisible();
   await expect(page.getByText("Estado de la plataforma", { exact: true })).toHaveCount(0);
+  const step = Math.floor(Date.now() / 30000);
   await page.getByLabel("Clave de operador").fill(TEST_KEY);
-  await page.getByLabel("Código del autenticador").fill(await operatorTotp(TEST_TOTP, Math.floor(Date.now() / 30000)));
+  await page.getByLabel("Código del autenticador").fill(await operatorTotp(TEST_TOTP, step));
   await page.getByRole("button", { name: "Ingresar", exact: true }).click();
   await expect(page.getByText("Estado de la plataforma", { exact: true })).toBeVisible();
+  // Una llave de este dispositivo (autenticador virtual de Chromium, con huella): se suma con un código nuevo.
+  const cdp = await page.context().newCDPSession(page);
+  await cdp.send("WebAuthn.enable");
+  await cdp.send("WebAuthn.addVirtualAuthenticator", { options: { protocol: "ctap2", transport: "internal", hasResidentKey: true, hasUserVerification: true, isUserVerified: true, automaticPresenceSimulation: true } });
+  await openSection("Mi acceso");
+  await expect(page.getByText("Todavía no sumaste ninguna llave.")).toBeVisible();
+  await page.getByRole("button", { name: "Sumar una llave de este dispositivo", exact: true }).click();
+  const addDialog = page.getByRole("dialog");
+  await addDialog.getByLabel("Nombre de la llave").fill("Compu de prueba");
+  await addDialog.getByLabel("Código del autenticador").fill(await operatorTotp(TEST_TOTP, step + 1));
+  await addDialog.getByRole("button", { name: "Sumar una llave de este dispositivo", exact: true }).click();
+  await expect(page.getByRole("cell", { name: "Compu de prueba", exact: true })).toBeVisible();
+  await expect(page.getByRole("dialog")).toHaveCount(0);
+  await openSection("Casas");
   await expect(page.getByText("Recuperación desde una dirección", { exact: true })).toBeVisible();
   await expect(page.getByText("Varias sesiones abiertas", { exact: true })).toBeVisible();
   await expect(page.locator("pre")).toHaveCount(0);
@@ -96,6 +131,23 @@ test("panel privado: rechazo, datos, licencia y revocación de identidad", async
   await expect(page.getByRole("cell", { name: "Pendiente", exact: true })).toBeVisible();
   await openSection("Usuarios");
   await expect(page.getByText("synthetic@example.com")).toBeVisible();
+  // Acceso de una cuenta: quitar los dos pasos, con confirmación. La contraseña no se toca desde acá.
+  await expect(page.getByText("La contraseña no se cambia desde acá", { exact: false })).toBeVisible();
+  const syntheticRow = page.getByRole("row", { name: /synthetic@example\.com/ });
+  await expect(syntheticRow.getByText("2 llaves")).toBeVisible();
+  await syntheticRow.getByRole("button", { name: "Acceso", exact: true }).click();
+  await page.getByRole("menuitem", { name: "Quitar dos pasos", exact: true }).click();
+  await expect(page.getByRole("dialog")).toContainText("synthetic@example.com");
+  await page.getByRole("dialog").getByRole("button", { name: "Confirmar", exact: true }).click();
+  await expect.poll(() => resets).toEqual(["/api/admin/platform/users/synthetic/reset/two-factor"]);
+  await expect(page.getByRole("dialog")).toHaveCount(0);
+  // Solo se borra una cuenta sin casas, con confirmación.
+  await expect(page.getByRole("row", { name: /synthetic@example\.com/ }).getByText("Está o estuvo en una casa")).toBeVisible();
+  await page.getByRole("row", { name: /sola@example\.com/ }).getByRole("button", { name: "Eliminar", exact: true }).click();
+  await expect(page.getByRole("dialog")).toContainText("sola@example.com");
+  await page.getByRole("dialog").getByRole("button", { name: "Eliminar", exact: true }).click();
+  await expect(page.getByText("sola@example.com")).toHaveCount(0);
+  expect(deleted).toBe(true);
   await openSection("Licencias");
   await page.getByRole("button", { name: "Generar licencias", exact: true }).click();
   await page.getByRole("dialog").getByRole("button", { name: "Generar licencias", exact: true }).click();
@@ -128,6 +180,10 @@ test("panel privado: rechazo, datos, licencia y revocación de identidad", async
   await expect(page.getByText("OD-SYNTHETIC-LICENSE")).toHaveCount(0);
   await page.getByRole("button", { name: "Cerrar sesión privada" }).click();
   await expect(page.getByRole("heading", { name: "Acceso de operador" })).toBeVisible();
+  // Con la configuración de antes, la llave entra sola: sin clave ni código.
+  env.OPERATOR_EMAIL = "owner@example.com";
+  await page.getByRole("button", { name: "Entrar con huella o llave de acceso", exact: true }).click();
+  await expect(page.getByText("Estado de la plataforma", { exact: true })).toBeVisible();
   expect(errors).toEqual([]);
   } finally {
     await testInfo.attach("browser-errors", { body: JSON.stringify(errors), contentType: "application/json" });
