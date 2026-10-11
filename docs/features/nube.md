@@ -9,6 +9,9 @@ La casa en varios dispositivos sin que el servidor pueda leerla.
 - **Tres niveles** para cada lista, proyecto, receta y evento: Familia, Adultos o Privado.
 - **Recuperación** con el kit, sin email. Lista de sesiones y revocación de dispositivos.
 - **Sacar a alguien** de la casa rota las claves para los que quedan.
+- **Borrar la cuenta** desde Ajustes → Cuenta. Se borran la cuenta y las casas donde vive sola. De
+  una casa compartida sale, y quedan solo su id y su clave pública de firma, para verificar sus
+  cambios viejos. Pasos públicos en `/borrar-cuenta`.
 - Funciona **sin conexión** y sincroniza al volver.
 
 ## Cómo se usa

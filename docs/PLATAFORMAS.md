@@ -8,7 +8,7 @@ Raspberry o NAS **no convierte ese equipo en una base de datos compartida**.
 
 | Plataforma | Disponible | Requisitos y límites |
 | --- | --- | --- |
-| Android | Web/PWA, misma interfaz | Navegador actualizado, HTTPS e instalación desde su menú. No distribuimos todavía un APK validado. |
+| Android | App de Play (abre la web en Chrome) o PWA instalada desde Chrome | Chrome actualizado. Es la misma app que la web, con cuenta y nube incluidas. Ver [ANDROID.md](ANDROID.md). |
 | Windows, macOS, Linux | Web/PWA | Navegador con IndexedDB y Web Crypto; HTTPS o localhost. No hace falta un ejecutable nativo. |
 | Raspberry Pi, NAS, servidor | Alojamiento del paquete estático | Servidor HTTP compatible con el sistema/arquitectura, por ejemplo Caddy. Compilar en PC o CI y copiar el paquete. Sin Node ni Next en el equipo que sirve los archivos. |
 | Cloudflare Workers | Interfaz y API opcional | Configuración de Worker, D1, Durable Objects, secretos y almacenamiento de fotos. Consultar README. |
@@ -123,13 +123,11 @@ Hoy se puede abrir la dirección HTTPS de la aplicación en Chrome e instalarla 
 el menú del navegador. Reutiliza interfaz, lógica y almacenamiento local. Probá cámara,
 QR, uso offline, exportación y actualización en el teléfono que vas a usar.
 
-La base APK experimental con [Capacitor](https://capacitorjs.com/docs/getting-started)
-ya empaqueta `out` y reutiliza las mismas pantallas y servicios. `npm run android:sync`
-genera el build local y lo copia al proyecto Android; `npm run android:open` lo abre en
-Android Studio. Consultá [requisitos, respaldos y límites](ANDROID.md).
-El APK inicial funciona sin servidor: la integración cloud nativa sigue pendiente.
-Antes de distribuirlo faltan completar las pruebas en WebView/dispositivo y la firma
-de releases. Los datos de la PWA no pasan automáticamente al almacenamiento nativo.
+La app de Play es una Trusted Web Activity: abre `https://refugi.ar` en Chrome, a pantalla
+completa, y usa el mismo almacenamiento que ese sitio en Chrome. No duplica pantallas ni lógica:
+cada deploy de la web la actualiza. Consultá [cómo se une con el dominio y cómo se compila](ANDROID.md).
+Un servidor propio (Raspberry, NAS) no la reemplaza: la app de Play abre siempre `refugi.ar`. Para
+otra dirección, instalá la PWA desde Chrome en esa dirección.
 
 ## Compartir información y proyectos
 

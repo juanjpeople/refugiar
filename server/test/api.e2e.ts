@@ -629,3 +629,91 @@ async function twoFactorChecks(client: Client, authKey: string, email: string, u
     assert.ok(audit.some((entry: { action: string; targetId: string }) => entry.action === `user.reset.${action}` && entry.targetId === userId));
   }
 }
+
+type Account = Awaited<ReturnType<typeof signUp>>;
+
+/** Una casa nueva de `owner`, con sus tres claves de nivel ensobradas para quien la crea. */
+async function createHome(owner: Account, accessCode: string) {
+  const householdId = crypto.randomUUID();
+  const raw: Record<Scope, Uint8Array> = { family: newScopeKey(), adults: newScopeKey(), private: newScopeKey() };
+  const encryptedName = await seal(await importScopeKey(raw.family), "Casa", `household-name|${householdId}`);
+  const envelopes = await Promise.all(
+    (Object.keys(raw) as Scope[]).map(async (scope) => ({ scope, version: 1, envelope: await sealEnvelope(raw[scope], owner.upload.encPublicKey, envelopeContext(householdId, scope, 1, owner.userId)) })),
+  );
+  const created = await owner.client.call("POST", "/api/households", { id: householdId, encryptedName, envelopes, accessCode });
+  assert.equal(created.status, 201, JSON.stringify(created.body));
+  return { householdId, raw };
+}
+
+/** `owner` invita a `guest` como adulta y aprueba su pedido. */
+async function joinHome(owner: Account, guest: Account, home: Awaited<ReturnType<typeof createHome>>) {
+  const invite = await inviteSecrets();
+  const inviteId = crypto.randomUUID();
+  const wrappedKeys = JSON.stringify({
+    family: { version: 1, key: await seal(invite.wrapKey, home.raw.family, `invite|${inviteId}|family`) },
+    adults: { version: 1, key: await seal(invite.wrapKey, home.raw.adults, `invite|${inviteId}|adults`) },
+  });
+  const tokenHash = await sha256(invite.authToken);
+  assert.equal((await owner.client.call("POST", `/api/households/${home.householdId}/invites`, { id: inviteId, role: "adult", tokenHash, wrappedKeys })).status, 201);
+  const envelopes = await Promise.all(
+    (["family", "adults", "private"] as Scope[]).map(async (scope) => ({
+      scope,
+      version: 1,
+      envelope: await sealEnvelope(scope === "private" ? newScopeKey() : home.raw[scope], guest.upload.encPublicKey, envelopeContext(home.householdId, scope, 1, guest.userId)),
+    })),
+  );
+  assert.equal((await guest.client.call("POST", `/api/invites/${inviteId}/accept`, { authToken: invite.authToken, envelopes })).status, 202);
+  assert.equal((await owner.client.call("POST", `/api/households/${home.householdId}/join-requests/${inviteId}/approve`)).status, 200);
+}
+
+test("cada persona borra su cuenta: sola, de una casa compartida y como última admin", async () => {
+  const issued = await adminCall("POST", "/platform/licenses", { count: 2, note: `borrado ${unique}` });
+  assert.equal(issued.status, 201, JSON.stringify(issued.body));
+  const [soloLicense, sharedLicense] = issued.body.licenses as { code: string }[];
+  const users = async () => (await adminCall("GET", "/platform/users")).body.users as { id: string; email: string; name: string }[];
+  const households = async () => ((await adminCall("GET", "/platform/households")).body.households as { id: string }[]).map((household) => household.id);
+
+  // Sola en su casa: se borran la cuenta entera y la casa.
+  const soloEmail = `borrar-sola-${unique}@casa.test`;
+  const solo = await signUp("Sola", soloEmail, "una frase larga para borrarme", "203.0.113.21");
+  const soloHome = await createHome(solo, soloLicense.code);
+  assert.equal((await solo.client.call("POST", "/api/account/delete", { confirm: "otra@casa.test" })).status, 400);
+  assert.equal((await solo.client.call("POST", "/api/account/delete", { confirm: soloEmail }, { origin: "https://ajeno.test" })).status, 403);
+  assert.equal((await new Client().call("POST", "/api/account/delete", { confirm: soloEmail })).status, 401);
+  const soloDeleted = await solo.client.call("POST", "/api/account/delete", { confirm: soloEmail.toUpperCase() });
+  assert.equal(soloDeleted.status, 200, JSON.stringify(soloDeleted.body));
+  assert.equal((await solo.client.call("GET", "/api/me")).body.user, null);
+  assert.ok(!(await users()).some((user) => user.id === solo.userId));
+  assert.ok(!(await households()).includes(soloHome.householdId));
+  const again = new Client("203.0.113.22");
+  assert.notEqual((await again.call("POST", "/api/auth/sign-in/email", { email: soloEmail, password: solo.keys.authKey })).status, 200);
+
+  // Casa compartida: la única admin no se puede ir dejando a los demás sin quien administre.
+  const owner = await signUp("Dueña", `borrar-duena-${unique}@casa.test`, "una frase larga para la duena", "203.0.113.23");
+  const guestEmail = `borrar-invitada-${unique}@casa.test`;
+  const guest = await signUp("Invitada", guestEmail, "una frase larga para la invitada", "203.0.113.24");
+  const home = await createHome(owner, sharedLicense.code);
+  await joinHome(owner, guest, home);
+  const blocked = await owner.client.call("POST", "/api/account/delete", { confirm: `borrar-duena-${unique}@casa.test` });
+  assert.equal(blocked.status, 409);
+  assert.deepEqual(blocked.body, { error: "last-admin", households: [home.householdId] });
+
+  // La invitada se va: queda sin email, nombre, sesión ni claves privadas, pero su firma sigue
+  // verificando sus cambios viejos.
+  assert.equal((await guest.client.call("POST", "/api/account/delete", { confirm: guestEmail })).status, 200);
+  assert.equal((await guest.client.call("GET", "/api/me")).body.user, null);
+  assert.notEqual((await new Client("203.0.113.25").call("POST", "/api/auth/sign-in/email", { email: guestEmail, password: guest.keys.authKey })).status, 200);
+  const roster = await owner.client.call("GET", `/api/households/${home.householdId}/members`);
+  assert.deepEqual(roster.body.members.map((member: { userId: string }) => member.userId), [owner.userId]);
+  const former = roster.body.former.find((member: { userId: string }) => member.userId === guest.userId);
+  assert.equal(former.name, "");
+  assert.equal(former.signPublicKey, guest.upload.signPublicKey);
+  const pseudonym = (await users()).find((user) => user.id === guest.userId)!;
+  assert.equal(pseudonym.email, `deleted-${guest.userId}@deleted.invalid`);
+  assert.ok(!(await users()).some((user) => user.email === guestEmail));
+
+  // Ya sola, la dueña se puede ir: la casa y su cuenta se borran.
+  assert.equal((await owner.client.call("POST", "/api/account/delete", { confirm: `borrar-duena-${unique}@casa.test` })).status, 200);
+  assert.ok(!(await households()).includes(home.householdId));
+  assert.ok(!(await users()).some((user) => user.id === owner.userId));
+});
