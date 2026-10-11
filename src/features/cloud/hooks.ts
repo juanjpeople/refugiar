@@ -95,6 +95,13 @@ export function useCloudActions() {
         useCloudStore.getState().setSession(session);
         return session;
       }),
+    /** El celular de un chico: entra con el código que mostró un adulto, sin email ni contraseña. */
+    linkDevice: (id: string, secret: string) =>
+      run(async () => {
+        const session = await service.linkDevice(id, secret);
+        useCloudStore.getState().setSession(session);
+        return session;
+      }),
     recover: (input: { email: string; recoveryCode: string; password: string }) =>
       run(async () => {
         const result = await service.recoverAccount(input);

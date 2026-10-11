@@ -75,7 +75,7 @@ Sin esto la app funciona, pero con una barra de dirección arriba.
 | Acceso a la app | **Parte de la funcionalidad está restringida.** Sin cuenta se usa casi todo ("Probar en este dispositivo"). La casa en la nube pide cuenta y un código de acceso. Para la revisión, cargar el email y la contraseña de una cuenta de prueba que ya tenga una casa, sin verificación en dos pasos. |
 | Anuncios | No contiene anuncios. |
 | Clasificación del contenido | Categoría *Todos los demás tipos de apps*. Sin violencia, sexo, lenguaje, drogas ni apuestas; no comparte ubicación, no vende productos digitales, no da acceso libre a internet. **Los usuarios interactúan: sí**, solo dentro de una casa y por invitación (comparten inventario, listas, recetas y calendario). |
-| Público objetivo | **18 años o más**. Ver la nota sobre chicos más abajo. |
+| Público objetivo | Ver [Chicos](#chicos): los chicos usan la app en su celular, sin cuenta. |
 | Seguridad de los datos | Ver la tabla siguiente. |
 | Borrado de cuenta | URL: `https://refugi.ar/borrar-cuenta`. En la app: Ajustes → Cuenta → Borrar mi cuenta. |
 | App gubernamental, funciones financieras, salud, noticias | No. |
@@ -105,10 +105,17 @@ Si cambia lo que la app guarda o envía, actualizar primero la política
 
 ### Chicos
 
-Un chico puede tener un perfil sin cuenta, que maneja un adulto. Pero una invitación a la nube con
-rol *Chico* le crea una **cuenta propia, con email**. La política de privacidad dice hoy que los
-perfiles de chicos no tienen cuenta ni email: hay que decidir si la invitación de chicos se limita
-o si se ajustan la política y el público objetivo (con menores de 13 entra la política de Familias).
+Un chico no tiene cuenta, email ni contraseña. Un adulto vincula su celular a su perfil con un código
+de un solo uso (Familia → tarjeta del chico → **Vincular su celular**) y aprueba el pedido en el momento.
+Del celular se guardan un id al azar y sus claves públicas. La sesión no guarda IP ni navegador, y el
+nombre del chico viaja cifrado. Las invitaciones por email ya no ofrecen el rol *Chico*.
+
+- **Público objetivo:** elegí los grupos de edad que de verdad usan la app, incluidos los de los chicos.
+  Con menores de 13, Play aplica la [política de Familias](https://support.google.com/googleplay/android-developer/answer/9893335).
+  Refugiar la cumple: no tiene anuncios, ni SDKs de terceros, ni rastreadores, y no junta datos
+  personales de chicos.
+- **Seguridad de los datos:** el celular de un chico no suma tipos de datos a la tabla de arriba (su id
+  entra en "IDs de usuario").
 
 ### Ficha de Play Store
 

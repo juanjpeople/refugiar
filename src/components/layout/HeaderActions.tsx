@@ -136,7 +136,7 @@ export function UserMenu({ labeled = false, onSelect }: { labeled?: boolean; onS
       label: t("shell.switchProfile"),
       // Cambiar a un perfil protegido pide su PIN/biometría (lo resuelve AppShell).
       // Con la casa en la nube, solo los perfiles que se pueden elegir acá (ver `pickableProfiles`).
-      children: pickableProfiles(members ?? [], getSyncLink()?.userId ?? null)
+      children: pickableProfiles(members ?? [], getSyncLink()?.userId ?? null, getSyncLink()?.device)
         .filter((member) => member.id !== user.id)
         .map((member) => ({
           key: member.id,
