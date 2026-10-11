@@ -88,6 +88,13 @@ export function useCloudActions() {
         if ("session" in result) useCloudStore.getState().setSession(result.session);
         return result;
       }),
+    /** Entrar con una llave de acceso, sin contraseña: la llave abre las claves en el dispositivo. */
+    signInWithPasskey: () =>
+      run(async () => {
+        const session = await service.signInWithPasskey();
+        useCloudStore.getState().setSession(session);
+        return session;
+      }),
     recover: (input: { email: string; recoveryCode: string; password: string }) =>
       run(async () => {
         const result = await service.recoverAccount(input);

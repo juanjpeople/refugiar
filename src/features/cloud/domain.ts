@@ -19,6 +19,8 @@ export interface CloudPasskey {
   id: string;
   name: string | null;
   createdAt: number;
+  /** Entra sin contraseña: el dispositivo abre los datos con ella (PRF). Si no, solo es segundo paso. */
+  unlocks: boolean;
 }
 
 export interface CloudHousehold {

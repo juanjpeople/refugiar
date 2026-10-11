@@ -33,6 +33,7 @@ test("la precarga se elige antes del alta cloud y llega cifrada a un segundo dis
       else if (path === "/social-providers") result = { providers: ["google", "github"] };
       else if (path === "/auth/list-accounts") result = [{ providerId: "github" }];
       else if (path === "/account/devices") result = { devices: [] };
+      else if (path === "/account/passkeys") result = { passkeys: [] };
       else if (path.endsWith("/invites")) result = { invites: [] };
       else if (path === "/auth/link-social") { links.push(request.postDataJSON()); result = { url: "https://unexpected.example/blocked" }; }
       else { unexpected.push(`${request.method()} ${path}`); return route.fulfill({ status: 404, json: { error: "not-found" } }); }

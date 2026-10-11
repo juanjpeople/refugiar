@@ -6,6 +6,31 @@ remota. Esta primera variante se compila en modo local, sin cuentas ni API cloud
 La sincronización y el login social en Android siguen pendientes de probar sus
 orígenes, cookies y retornos OAuth. La PWA conserva su funcionamiento habitual.
 
+## Desbloqueo local
+
+**Ajustes → Desbloqueo → Configurar mi bloqueo** abre la seguridad del perfil actual,
+también en modo local y demo. Guardar un PIN de respaldo y registrar el dispositivo.
+El PIN y la biometría bloquean la interfaz del perfil; no cifran toda la base local ni
+inician sesión en una cuenta cloud.
+
+Android usa `BiometricPrompt` y una clave P-256 no exportable en Android Keystore.
+Cada desbloqueo firma un desafío nuevo y la web verifica la firma. Android 11/API 30+
+admite biometría fuerte o credencial del bloqueo de pantalla; Android 10 e inferiores
+solo biometría fuerte para este flujo. No obliga a usar exclusivamente huella: puede
+ofrecer rostro compatible o PIN del sistema. Sin hardware/configuración compatible
+queda disponible el PIN del perfil.
+
+Las claves nativas no se trasladan al exportar ni al desinstalar. Después de restaurar
+un respaldo en otro teléfono, entrar con el PIN y registrar ese dispositivo. Agregar
+biometrías al sistema puede invalidar una clave; el PIN permite recuperarse. Instalar
+una actualización del APK para recibir el nuevo puente: publicar el sitio no actualiza
+el código nativo.
+
+En Chrome Android, Safari/iPhone y escritorio, el bloqueo usa WebAuthn del navegador,
+sin exigir PRF ni una cuenta cloud. Requiere HTTPS o localhost y un autenticador del
+dispositivo disponible. No hay proyecto iOS nativo en este repositorio: se cubre la
+PWA en Safari, no se afirma soporte de un binario iOS inexistente.
+
 ## Compilar
 
 Requisitos: Node 24, JDK 21 y Android SDK 36. Android Studio 2025.2.1 o posterior

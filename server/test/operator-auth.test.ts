@@ -3,6 +3,7 @@ import { test } from "node:test";
 import { operatorHash, operatorSession, operatorTotp } from "../src/operator-auth";
 import { operatorPage } from "../src/operator-page";
 import { operatorFixture, TEST_KEY, TEST_TOTP } from "./operator-fixture";
+import { softwareAuthenticator } from "./webauthn-fixture";
 
 test("TOTP coincide con todos los vectores SHA-1 de RFC 6238", async () => {
   for (const [time, code] of [[59, "94287082"], [1111111109, "07081804"], [1111111111, "14050471"], [1234567890, "89005924"], [2000000000, "69279037"], [20000000000, "65353130"]] as const) assert.equal(await operatorTotp(TEST_TOTP, Math.floor(time / 30), 8), code);
@@ -63,4 +64,64 @@ test("panel: otro dominio (www) redirige al origen principal, que es el único q
   assert.equal(moved.headers.get("Location"), "https://refugi.ar/admin?x=1");
   assert.equal((await operatorPage(new Request("https://refugi.ar/admin"), assets, "https://refugi.ar")).status, 200);
   assert.equal((await operatorPage(new Request("http://localhost:8787/admin"), assets, "https://refugi.ar")).status, 200);
+});
+test("operador: llave de acceso con la sesión y un código nuevo; después entra sola, con huella o PIN", async (t) => {
+  const { app, env, database } = await operatorFixture(); t.after(() => database.close());
+  const headers = { Origin: env.APP_ORIGIN, "Content-Type": "application/json", "X-Refugiar-Operator": "browser" };
+  const step = Math.floor(Date.now() / 30_000);
+  /** Cada pedido con sus cookies; devuelve el estado, el cuerpo y las cookies nuevas. */
+  async function call(path: string, jar: Map<string, string>, body?: unknown, method = body === undefined ? "GET" : "POST", config = env) {
+    const response = await app.request(`${env.APP_ORIGIN}/api/admin/auth${path}`, { method, headers: { ...headers, Cookie: [...jar].map(([name, value]) => `${name}=${value}`).join("; ") }, body: body === undefined ? undefined : JSON.stringify(body) }, config);
+    for (const cookie of response.headers.getSetCookie()) {
+      const [pair] = cookie.split(";");
+      const [name, value] = pair.split("=");
+      if (/Max-Age=0/.test(cookie)) jar.delete(name); else jar.set(name, value);
+    }
+    return { status: response.status, body: await response.json() as Record<string, unknown> };
+  }
+  const operator = new Map<string, string>();
+  assert.equal((await call("/login", operator, { key: TEST_KEY, code: await operatorTotp(TEST_TOTP, step) })).status, 200);
+  assert.deepEqual((await call("/passkeys", operator)).body, { passkeys: [] });
+
+  // Sumar una llave: sin sesión, nada; con sesión, además un código nuevo (el del ingreso ya se usó).
+  const key = softwareAuthenticator({ origin: env.APP_ORIGIN, rpId: "app.example" });
+  assert.equal((await call("/passkeys/options", new Map(), {})).status, 401);
+  const options = await call("/passkeys/options", operator, {});
+  assert.equal((options.body.authenticatorSelection as { userVerification: string }).userVerification, "required");
+  const response = key.register(options.body.challenge as string);
+  assert.equal((await call("/passkeys", operator, { response, name: "Celular" })).status, 400);
+  assert.equal((await call("/passkeys", operator, { response, code: await operatorTotp(TEST_TOTP, step), name: "Celular" })).status, 401);
+  assert.equal((await call("/passkeys", operator, { response, code: await operatorTotp(TEST_TOTP, step + 1), name: "Celular" })).status, 201);
+  const listed = (await call("/passkeys", operator)).body.passkeys as { id: string; name: string }[];
+  assert.deepEqual(listed.map((entry) => [entry.id, entry.name]), [[key.id, "Celular"]]);
+
+  // Entrar solo con la llave: el desafío sirve una vez y la huella (o el PIN) es obligatoria.
+  const phone = new Map<string, string>();
+  const login = await call("/passkey/login/options", phone, {});
+  assert.equal(login.body.userVerification, "required");
+  const challengeCookie = [...phone];
+  assert.equal((await call("/passkey/login", phone, { response: key.authenticate(login.body.challenge as string) })).status, 200);
+  const session = new Request(`${env.APP_ORIGIN}/api/admin/platform/overview`, { headers: { Cookie: `__Host-od-operator=${phone.get("__Host-od-operator")}` } });
+  assert.equal(await operatorSession(session, env), "owner@example.com");
+  assert.equal(phone.has("__Host-od-operator-webauthn"), false);
+  assert.equal((await call("/passkey/login", new Map(challengeCookie), { response: key.authenticate(login.body.challenge as string) })).status, 401);
+  const untouched = new Map<string, string>();
+  const noVerification = await call("/passkey/login/options", untouched, {});
+  assert.equal((await call("/passkey/login", untouched, { response: key.authenticate(noVerification.body.challenge as string, { userVerified: false }) })).status, 401);
+  const stranger = new Map<string, string>();
+  const strangerOptions = await call("/passkey/login/options", stranger, {});
+  const other = softwareAuthenticator({ origin: env.APP_ORIGIN, rpId: "app.example" });
+  assert.equal((await call("/passkey/login", stranger, { response: other.authenticate(strangerOptions.body.challenge as string) })).status, 401);
+
+  // Si cambia la configuración del operador (otro TOTP), la llave deja de servir.
+  const rotated = { ...env, OPERATOR_TOTP_SECRET: "A".repeat(32) };
+  const later = new Map<string, string>();
+  const rotatedOptions = await call("/passkey/login/options", later, {}, "POST", rotated);
+  assert.equal((await call("/passkey/login", later, { response: key.authenticate(rotatedOptions.body.challenge as string) }, "POST", rotated)).status, 401);
+
+  // Quitarla: ya no entra.
+  assert.equal((await call(`/passkeys/${key.id}`, operator, undefined, "DELETE")).status, 200);
+  const removed = new Map<string, string>();
+  const removedOptions = await call("/passkey/login/options", removed, {});
+  assert.equal((await call("/passkey/login", removed, { response: key.authenticate(removedOptions.body.challenge as string) })).status, 401);
 });
