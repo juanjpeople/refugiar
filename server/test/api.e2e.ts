@@ -10,6 +10,7 @@ import { softwareAuthenticator } from "./webauthn-fixture";
 import { test } from "node:test";
 import WebSocket from "ws";
 import {
+  createDeviceIdentity,
   createIdentity,
   derivePasswordKeys,
   envelopeContext,
@@ -27,6 +28,7 @@ import {
   sealEnvelope,
   sha256,
   sign,
+  signWithDevice,
   toB64u,
   unlockIdentity,
   verify,
@@ -35,6 +37,7 @@ import {
   type Scope,
 } from "../../src/lib/crypto";
 import { opContext, opSigningData, type StoredOp, type WireOp } from "../../src/lib/sync/protocol";
+import { deviceSignInData } from "../../src/lib/cloud/device-protocol";
 
 const API = process.env.API ?? "http://127.0.0.1:8787";
 const ORIGIN = "http://localhost:3000";
@@ -716,4 +719,114 @@ test("cada persona borra su cuenta: sola, de una casa compartida y como última 
   assert.equal((await owner.client.call("POST", "/api/account/delete", { confirm: `borrar-duena-${unique}@casa.test` })).status, 200);
   assert.ok(!(await households()).includes(home.householdId));
   assert.ok(!(await users()).some((user) => user.id === owner.userId));
+});
+
+/** Un código para vincular el celular de un chico: lleva solo la clave de Familia. */
+async function deviceInvite(owner: Account, home: Awaited<ReturnType<typeof createHome>>) {
+  const invite = await inviteSecrets();
+  const inviteId = crypto.randomUUID();
+  const wrappedKeys = JSON.stringify({ family: { version: 1, key: await seal(invite.wrapKey, home.raw.family, `invite|${inviteId}|family`) } });
+  const created = await owner.client.call("POST", `/api/households/${home.householdId}/invites`, { id: inviteId, role: "kid", kind: "device", tokenHash: await sha256(invite.authToken), wrappedKeys });
+  assert.equal(created.status, 201, JSON.stringify(created.body));
+  return { inviteId, invite, expiresAt: created.body.expiresAt as number };
+}
+
+/** Lo que hace el celular al escanear el código: crea sus claves y su id, y arma sus sobres. */
+async function phoneFor(home: Awaited<ReturnType<typeof createHome>>, code: Awaited<ReturnType<typeof deviceInvite>>, familyVersion = 1) {
+  const phone = await createDeviceIdentity();
+  const userId = crypto.randomUUID();
+  const envelopes = [
+    { scope: "family", version: familyVersion, envelope: await sealEnvelope(home.raw.family, phone.identity.encPublicKey, envelopeContext(home.householdId, "family", familyVersion, userId)) },
+    { scope: "private", version: 1, envelope: await sealEnvelope(newScopeKey(), phone.identity.encPublicKey, envelopeContext(home.householdId, "private", 1, userId)) },
+  ];
+  const body = { inviteId: code.inviteId, authToken: code.invite.authToken, userId, devicePublicKey: phone.devicePublicKey, encPublicKey: phone.identity.encPublicKey, signPublicKey: phone.identity.signPublicKey, envelopes };
+  return { ...phone, userId, body };
+}
+
+/** Entrar con la llave del celular: pide un desafío y lo firma. */
+async function deviceSignIn(client: Client, userId: string, deviceKey: CryptoKey) {
+  const { challenge } = (await client.call("POST", "/api/auth/device/challenge", { userId })).body as { challenge: string };
+  const signature = await signWithDevice(deviceKey, deviceSignInData(userId, challenge));
+  return { challenge, signature, result: await client.call("POST", "/api/auth/device/sign-in", { userId, challenge, signature }) };
+}
+
+test("el celular de un chico entra sin email ni contraseña, solo a lo de la familia", async () => {
+  const issued = await adminCall("POST", "/platform/licenses", { count: 1, note: `celular ${unique}` });
+  assert.equal(issued.status, 201, JSON.stringify(issued.body));
+  const mom = await signUp("Mamá", `celular-mama-${unique}@casa.test`, "una frase larga para la mama", "203.0.113.31");
+  const home = await createHome(mom, (issued.body.licenses as { code: string }[])[0].code);
+
+  // El código es solo para un chico y vence en minutos.
+  const wrong = { id: crypto.randomUUID(), role: "adult", kind: "device", tokenHash: await sha256("x".repeat(43)), wrappedKeys: JSON.stringify({ family: "x".repeat(30) }) };
+  assert.equal((await mom.client.call("POST", `/api/households/${home.householdId}/invites`, wrong)).status, 400);
+  const code = await deviceInvite(mom, home);
+  assert.ok(code.expiresAt - Date.now() <= 15 * 60_000 + 5_000);
+  const preview = await new Client().call("POST", `/api/invites/${code.inviteId}/preview`, { authToken: code.invite.authToken });
+  assert.equal(preview.body.kind, "device");
+  assert.equal(preview.body.role, "kid");
+
+  // Una cuenta con email no lo puede usar: es para un celular.
+  const aunt = await signUp("Tía", `celular-tia-${unique}@casa.test`, "una frase larga para la tia", "203.0.113.32");
+  const auntEnvelopes = [{ scope: "family", version: 1, envelope: await sealEnvelope(home.raw.family, aunt.upload.encPublicKey, envelopeContext(home.householdId, "family", 1, aunt.userId)) }];
+  assert.equal((await aunt.client.call("POST", `/api/invites/${code.inviteId}/accept`, { authToken: code.invite.authToken, envelopes: auntEnvelopes })).status, 400);
+
+  // El celular se vincula. Con la clave de Adultos o con un id que ya existe, no. El código sirve una vez.
+  const phone = await phoneFor(home, code);
+  const adults = { scope: "adults", version: 1, envelope: await sealEnvelope(home.raw.adults, phone.identity.encPublicKey, envelopeContext(home.householdId, "adults", 1, phone.userId)) };
+  assert.equal((await new Client().call("POST", "/api/devices/link", { ...phone.body, envelopes: [...phone.body.envelopes, adults] })).status, 400);
+  assert.equal((await new Client().call("POST", "/api/devices/link", { ...phone.body, userId: aunt.userId })).status, 400);
+  const linked = await new Client().call("POST", "/api/devices/link", phone.body);
+  assert.equal(linked.status, 202, JSON.stringify(linked.body));
+  assert.equal((await new Client().call("POST", "/api/devices/link", { ...phone.body, userId: crypto.randomUUID() })).status, 410);
+
+  // Entra firmando con su llave. Con otra llave, o con un desafío ya usado, no.
+  const kid = new Client("203.0.113.33");
+  const intruder = await createDeviceIdentity();
+  assert.equal((await deviceSignIn(kid, phone.userId, intruder.deviceKey)).result.status, 401);
+  const signedIn = await deviceSignIn(kid, phone.userId, phone.deviceKey);
+  assert.equal(signedIn.result.status, 200, JSON.stringify(signedIn.result.body));
+  assert.equal((await new Client().call("POST", "/api/auth/device/sign-in", { userId: phone.userId, challenge: signedIn.challenge, signature: signedIn.signature })).status, 401);
+  const pending = await kid.call("GET", "/api/me");
+  assert.equal(pending.body.user.id, phone.userId);
+  assert.equal(pending.body.user.device, true);
+  assert.equal(pending.body.user.name, "");
+  assert.deepEqual(pending.body.households, []);
+  // Sin contraseña ni kit: no hay nada que recuperar ni con qué entrar por email.
+  assert.equal(pending.body.keys.privateKeys, "");
+  // La sesión del celular no guarda su navegador (ni su IP).
+  assert.deepEqual((await kid.call("GET", "/api/account/devices")).body.devices.map((entry: { userAgent: string }) => entry.userAgent), [""]);
+
+  // La mamá ve un celular, sin email, y lo aprueba.
+  const requests = await mom.client.call("GET", `/api/households/${home.householdId}/join-requests`);
+  assert.deepEqual(requests.body.requests.map((request: { id: string; email: string; device: number }) => [request.id, request.email, Boolean(request.device)]), [[code.inviteId, "", true]]);
+  assert.equal((await mom.client.call("POST", `/api/households/${home.householdId}/join-requests/${code.inviteId}/approve`)).status, 200);
+  const joined = (await kid.call("GET", "/api/me")).body.households[0];
+  assert.equal(joined.role, "kid");
+  assert.deepEqual(joined.envelopes.map((entry: { scope: string }) => entry.scope).sort(), ["family", "private"]);
+  const family = joined.envelopes.find((entry: { scope: string }) => entry.scope === "family");
+  assert.deepEqual((await openEnvelope(family.envelope, phone.identity, envelopeContext(home.householdId, "family", 1, phone.userId))).raw, home.raw.family);
+  const roster = await mom.client.call("GET", `/api/households/${home.householdId}/members`);
+  assert.deepEqual(roster.body.members.map((member: { userId: string; device: number }) => [member.userId, Boolean(member.device)]), [[mom.userId, false], [phone.userId, true]]);
+
+  // Sigue siendo el celular de un chico: no se le cambia el rol.
+  assert.equal((await mom.client.call("PATCH", `/api/households/${home.householdId}/members/${phone.userId}`, { role: "adult" })).status, 409);
+
+  // Desvincularlo rota Familia, y el celular ya no entra.
+  const newFamily = newScopeKey();
+  const removal = {
+    encryptedName: await seal(await importScopeKey(newFamily), "Casa", `household-name|${home.householdId}`),
+    rotation: [{ scope: "family", version: 2, envelopes: [{ userId: mom.userId, envelope: await sealEnvelope(newFamily, mom.upload.encPublicKey, envelopeContext(home.householdId, "family", 2, mom.userId)) }] }],
+  };
+  assert.equal((await mom.client.call("POST", `/api/households/${home.householdId}/members/${phone.userId}/remove`, removal)).status, 200);
+  assert.equal((await kid.call("GET", "/api/me")).body.user, null);
+  assert.equal((await deviceSignIn(kid, phone.userId, phone.deviceKey)).result.status, 401);
+
+  // Un pedido rechazado borra la cuenta del celular entera.
+  const home2 = { ...home, raw: { ...home.raw, family: newFamily } };
+  const code2 = await deviceInvite(mom, home2);
+  const phone2 = await phoneFor(home2, code2, 2);
+  assert.equal((await new Client().call("POST", "/api/devices/link", phone2.body)).status, 202);
+  assert.equal((await mom.client.call("DELETE", `/api/households/${home.householdId}/join-requests/${code2.inviteId}`)).status, 200);
+  assert.equal((await deviceSignIn(new Client("203.0.113.34"), phone2.userId, phone2.deviceKey)).result.status, 401);
+  assert.ok(!((await adminCall("GET", "/platform/users")).body.users as { id: string }[]).some((user) => user.id === phone2.userId));
 });

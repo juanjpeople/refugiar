@@ -20,6 +20,7 @@ import { operatorAuth, operatorConfigured, operatorRequestAllowed, operatorSessi
 import { operatorPage } from "./operator-page";
 import { mailConfigState, mailOverview, processEmails, queueTestEmail, securityEmailStatements } from "./mail";
 import { OP_CONFLICT } from "./sync";
+import { DEVICE_LINK_MINUTES } from "../../src/lib/cloud/device-protocol";
 import {
   acceptInviteInput,
   changePasswordInput,
@@ -29,6 +30,7 @@ import {
   createLicensesInput,
   deleteHouseholdInput,
   deleteUserInput,
+  deviceLinkInput,
   envelopeInput,
   feedbackInput,
   feedbackStatusInput,
@@ -294,7 +296,7 @@ app.get("/me", async (c) => {
     .all<{ householdId: string; scope: Scope; version: number; envelope: string }>();
   await Promise.all(households.results.map((household) => touchHousehold(c.env, household.id)));
   return c.json({
-    user,
+    user: { ...user, device: await isDevice(c.env, user.id) },
     keys,
     households: households.results.map((household) => ({
       ...household,
@@ -626,7 +628,8 @@ app.get("/households/:id/members", async (c) => {
   const householdId = c.req.param("id");
   if (!(await membership(c.env, householdId, user.id))) return c.json({ error: "not-found" }, 404);
   const members = await c.env.DB.prepare(
-    `select m.user_id as userId, u.name, m.role, m.joined_at as joinedAt, k.enc_public_key as encPublicKey, k.sign_public_key as signPublicKey
+    `select m.user_id as userId, u.name, m.role, m.joined_at as joinedAt, k.enc_public_key as encPublicKey, k.sign_public_key as signPublicKey,
+            exists (select 1 from "deviceKey" d where d."userId" = m.user_id) as device
        from memberships m join "user" u on u.id = m.user_id left join user_keys k on k.user_id = m.user_id
       where m.household_id = ? order by m.joined_at`,
   )
@@ -709,6 +712,9 @@ app.post("/households/:id/members/:userId/remove", async (c) => {
       householdId,
     ),
     c.env.DB.prepare("delete from invites where household_id = ? and used_at is null").bind(householdId),
+    // El celular de un chico vive para esta casa: sin ella, su llave y sus sesiones no sirven más.
+    c.env.DB.prepare(`delete from "session" where "userId" = ? and exists (select 1 from "deviceKey" where "userId" = ?)`).bind(targetId, targetId),
+    c.env.DB.prepare(`delete from "deviceKey" where "userId" = ?`).bind(targetId),
   ]);
   return c.json({ ok: true });
 });
@@ -722,6 +728,7 @@ app.patch("/households/:id/members/:userId", async (c) => {
   if (!input) return c.json({ error: "invalid" }, 400);
   const target = await membership(c.env, householdId, c.req.param("userId"));
   if (!target) return c.json({ error: "not-found" }, 404);
+  if (await isDevice(c.env, c.req.param("userId"))) return c.json({ error: "device-account" }, 409);
   if (target.role === "admin" && input.role !== "admin") {
     const admins = await c.env.DB.prepare("select count(*) as count from memberships where household_id = ? and role = 'admin'").bind(householdId).first<{ count: number }>();
     if ((admins?.count ?? 0) <= 1) return c.json({ error: "last-admin" }, 409);
@@ -800,13 +807,13 @@ app.post("/households/:id/invites", async (c) => {
   const householdId = c.req.param("id");
   if ((await membership(c.env, householdId, user.id))?.role !== "admin") return c.json({ error: "forbidden" }, 403);
   const input = await parse(c, createInviteInput);
-  if (!input) return c.json({ error: "invalid" }, 400);
+  if (!input || (input.kind === "device" && input.role !== "kid")) return c.json({ error: "invalid" }, 400);
   const now = Date.now();
-  const expiresAt = now + input.expiresInDays * DAY;
+  const expiresAt = now + (input.kind === "device" ? DEVICE_LINK_MINUTES * 60_000 : input.expiresInDays * DAY);
   await c.env.DB.prepare(
-    "insert into invites (id, household_id, role, token_hash, wrapped_keys, created_by, created_at, expires_at) values (?, ?, ?, ?, ?, ?, ?, ?)",
+    "insert into invites (id, household_id, role, kind, token_hash, wrapped_keys, created_by, created_at, expires_at) values (?, ?, ?, ?, ?, ?, ?, ?, ?)",
   )
-    .bind(input.id, householdId, input.role, input.tokenHash, input.wrappedKeys, user.id, now, expiresAt)
+    .bind(input.id, householdId, input.role, input.kind, input.tokenHash, input.wrappedKeys, user.id, now, expiresAt)
     .run();
   return c.json({ id: input.id, expiresAt }, 201);
 });
@@ -817,7 +824,7 @@ app.get("/households/:id/invites", async (c) => {
   const householdId = c.req.param("id");
   if ((await membership(c.env, householdId, user.id))?.role !== "admin") return c.json({ error: "forbidden" }, 403);
   const invites = await c.env.DB.prepare(
-    "select id, role, created_at as createdAt, expires_at as expiresAt, used_at as usedAt from invites where household_id = ? and (used_at is null and expires_at > ?) order by created_at desc",
+    "select id, role, kind, created_at as createdAt, expires_at as expiresAt, used_at as usedAt from invites where household_id = ? and (used_at is null and expires_at > ?) order by created_at desc",
   )
     .bind(householdId, Date.now())
     .all();
@@ -836,11 +843,11 @@ app.delete("/households/:id/invites/:inviteId", async (c) => {
 /** Valida el token de una invitación (sin sesión: se usa antes de crear la cuenta). */
 async function findInvite(env: Env, id: string, authToken: string) {
   const invite = await env.DB.prepare(
-    `select i.id, i.household_id as householdId, i.role, i.token_hash as tokenHash, i.wrapped_keys as wrappedKeys, i.expires_at as expiresAt, i.used_at as usedAt, u.name as inviterName
+    `select i.id, i.household_id as householdId, i.role, i.kind, i.token_hash as tokenHash, i.wrapped_keys as wrappedKeys, i.expires_at as expiresAt, i.used_at as usedAt, u.name as inviterName
        from invites i join "user" u on u.id = i.created_by where i.id = ?`,
   )
     .bind(id)
-    .first<{ id: string; householdId: string; role: Role; tokenHash: string; wrappedKeys: string; expiresAt: number; usedAt: number | null; inviterName: string }>();
+    .first<{ id: string; householdId: string; role: Role; kind: "account" | "device"; tokenHash: string; wrappedKeys: string; expiresAt: number; usedAt: number | null; inviterName: string }>();
   // Mismo error para "no existe" y "token incorrecto": no se puede averiguar qué invitaciones hay.
   if (!invite || !timingSafeEqual(invite.tokenHash, await sha256(authToken))) return { error: "not-found" as const };
   if (invite.usedAt) return { error: "used" as const };
@@ -854,7 +861,7 @@ app.post("/invites/:id/preview", async (c) => {
   const found = await findInvite(c.env, c.req.param("id"), input.authToken);
   if ("error" in found) return c.json({ error: found.error }, found.error === "not-found" ? 404 : 410);
   const { invite } = found;
-  return c.json({ householdId: invite.householdId, role: invite.role, wrappedKeys: invite.wrappedKeys, inviterName: invite.inviterName, expiresAt: invite.expiresAt });
+  return c.json({ householdId: invite.householdId, role: invite.role, kind: invite.kind, wrappedKeys: invite.wrappedKeys, inviterName: invite.inviterName, expiresAt: invite.expiresAt });
 });
 
 app.post("/invites/:id/accept", async (c) => {
@@ -865,6 +872,7 @@ app.post("/invites/:id/accept", async (c) => {
   const found = await findInvite(c.env, c.req.param("id"), input.authToken);
   if ("error" in found) return c.json({ error: found.error }, found.error === "not-found" ? 404 : 410);
   const { invite } = found;
+  if (invite.kind === "device") return c.json({ error: "device-link" }, 400);
   if (await membership(c.env, invite.householdId, user.id)) return c.json({ error: "already-member" }, 409);
   const hasKeys = await c.env.DB.prepare("select 1 from user_keys where user_id = ?").bind(user.id).first();
   if (!hasKeys) return c.json({ error: "no-keys" }, 409);
@@ -873,12 +881,7 @@ app.post("/invites/:id/accept", async (c) => {
     .bind(invite.householdId)
     .first<{ family: number; adults: number }>();
   if (!household) return c.json({ error: "not-found" }, 404);
-  // Solo los niveles que permite su rol, y en la versión vigente de cada clave.
-  const allowed = scopesFor(invite.role);
-  const valid = input.envelopes.every(
-    (entry) => allowed.includes(entry.scope) && entry.version === (entry.scope === "private" ? 1 : household[entry.scope as "family" | "adults"]),
-  );
-  if (!valid || !input.envelopes.some((entry) => entry.scope === "family")) return c.json({ error: "invalid-envelopes" }, 400);
+  if (!validEnvelopes(invite.role, input.envelopes, household)) return c.json({ error: "invalid-envelopes" }, 400);
 
   const pending = await c.env.DB.prepare("select 1 from join_requests where household_id = ? and user_id = ?").bind(invite.householdId, user.id).first();
   if (pending) return c.json({ error: "already-requested" }, 409);
@@ -896,14 +899,78 @@ app.post("/invites/:id/accept", async (c) => {
   return c.json({ householdId: invite.householdId, role: invite.role, pending: true }, 202);
 });
 
+/** ¿Es el celular de un chico (entra con su llave, sin email ni contraseña)? */
+async function isDevice(env: Env, userId: string) {
+  return Boolean(await env.DB.prepare(`select 1 from "deviceKey" where "userId" = ?`).bind(userId).first());
+}
+
+/** Los sobres que sube quien entra: solo los niveles de su rol, en la versión vigente, y Familia siempre. */
+function validEnvelopes(role: Role, envelopes: { scope: Scope; version: number }[], household: { family: number; adults: number }) {
+  const allowed = scopesFor(role);
+  const current = (scope: Scope) => (scope === "private" ? 1 : household[scope as "family" | "adults"]);
+  return envelopes.every((entry) => allowed.includes(entry.scope) && entry.version === current(entry.scope)) && envelopes.some((entry) => entry.scope === "family");
+}
+
+/**
+ * Vincular el celular de un chico con el código que mostró un adulto. Crea una cuenta sin email ni
+ * contraseña: el id al azar que eligió el celular, las claves públicas que generó el celular y su llave para entrar. Como
+ * una invitación, queda un pedido que un admin aprueba. Después el celular entra con
+ * `/api/auth/device/sign-in`.
+ */
+app.post("/devices/link", async (c) => {
+  if (await tooMany(c.env, `device-link:${clientIp(c)}`, 10, RECOVERY_WINDOW)) return c.json({ error: "rate-limited" }, 429);
+  const input = await parse(c, deviceLinkInput);
+  if (!input) return c.json({ error: "invalid" }, 400);
+  const found = await findInvite(c.env, input.inviteId, input.authToken);
+  if ("error" in found) return c.json({ error: found.error }, found.error === "not-found" ? 404 : 410);
+  const { invite } = found;
+  if (invite.kind !== "device" || invite.role !== "kid") return c.json({ error: "not-device-link" }, 400);
+  const household = await c.env.DB.prepare("select family_key_version as family, adults_key_version as adults from households where id = ?")
+    .bind(invite.householdId)
+    .first<{ family: number; adults: number }>();
+  if (!household) return c.json({ error: "not-found" }, 404);
+  if (!validEnvelopes(invite.role, input.envelopes, household)) return c.json({ error: "invalid-envelopes" }, 400);
+
+  const { userId } = input;
+  if (await c.env.DB.prepare(`select 1 from "user" where id = ?`).bind(userId).first()) return c.json({ error: "invalid" }, 400);
+  const now = Date.now();
+  const iso = new Date(now).toISOString();
+  // Primero se usa el código (una sola vez, aunque lleguen dos a la par); después se crea la cuenta.
+  const claimed = await c.env.DB.prepare("update invites set used_at = ?, used_by = ? where id = ? and used_at is null").bind(now, userId, invite.id).run();
+  if (!claimed.meta.changes) return c.json({ error: "used" }, 410);
+  await c.env.DB.batch([
+    c.env.DB.prepare(`insert into "user" ("id", "name", "email", "emailVerified", "image", "createdAt", "updatedAt") values (?, '', ?, 0, null, ?, ?)`).bind(
+      userId,
+      `device-${userId}@device.invalid`,
+      iso,
+      iso,
+    ),
+    c.env.DB.prepare(
+      "insert into user_keys (user_id, kdf_version, enc_public_key, sign_public_key, private_keys, recovery_private_keys, recovery_verifier, created_at, updated_at) values (?, 1, ?, ?, '', '', null, ?, ?)",
+    ).bind(userId, input.encPublicKey, input.signPublicKey, now, now),
+    c.env.DB.prepare(`insert into "deviceKey" ("id", "userId", "publicKey", "createdAt") values (?, ?, ?, ?)`).bind(crypto.randomUUID(), userId, input.devicePublicKey, iso),
+    c.env.DB.prepare("insert into join_requests (invite_id, household_id, user_id, role, envelopes, created_at) values (?, ?, ?, ?, ?, ?)").bind(
+      invite.id,
+      invite.householdId,
+      userId,
+      invite.role,
+      JSON.stringify(input.envelopes),
+      now,
+    ),
+  ]);
+  return c.json({ userId, householdId: invite.householdId, role: invite.role, pending: true }, 202);
+});
+
 app.get("/households/:id/join-requests", async (c) => {
   const user = await requireUser(c);
   if (!user) return c.json({ error: "unauthorized" }, 401);
   const householdId = c.req.param("id");
   if ((await membership(c.env, householdId, user.id))?.role !== "admin") return c.json({ error: "forbidden" }, 403);
   const requests = await c.env.DB.prepare(
-    `select r.invite_id as id, r.role, r.created_at as createdAt, u.name, u.email
-       from join_requests r join "user" u on u.id = r.user_id where r.household_id = ? order by r.created_at`,
+    `select r.invite_id as id, r.role, r.created_at as createdAt, u.name,
+            case when d."id" is null then u.email else '' end as email, d."id" is not null as device
+       from join_requests r join "user" u on u.id = r.user_id left join "deviceKey" d on d."userId" = r.user_id
+      where r.household_id = ? order by r.created_at`,
   )
     .bind(householdId)
     .all();
@@ -928,7 +995,10 @@ app.post("/households/:id/join-requests/:inviteId/approve", async (c) => {
   // el pedido se descarta y hace falta una invitación nueva.
   const current = envelopes.every((entry) => entry.version === (entry.scope === "private" ? 1 : household[entry.scope as "family" | "adults"]));
   if (!current) {
-    await c.env.DB.prepare("delete from join_requests where invite_id = ?").bind(c.req.param("inviteId")).run();
+    await c.env.DB.batch([
+      c.env.DB.prepare("delete from join_requests where invite_id = ?").bind(c.req.param("inviteId")),
+      c.env.DB.prepare(`delete from "user" where id = ? and exists (select 1 from "deviceKey" where "userId" = ?) and not ${inHouseholds(`"user".id`)}`).bind(request.userId, request.userId),
+    ]);
     return c.json({ error: "stale" }, 409);
   }
   if (await membership(c.env, householdId, request.userId)) return c.json({ error: "already-member" }, 409);
@@ -951,7 +1021,17 @@ app.delete("/households/:id/join-requests/:inviteId", async (c) => {
   if (!user) return c.json({ error: "unauthorized" }, 401);
   const householdId = c.req.param("id");
   if ((await membership(c.env, householdId, user.id))?.role !== "admin") return c.json({ error: "forbidden" }, 403);
-  await c.env.DB.prepare("delete from join_requests where invite_id = ? and household_id = ?").bind(c.req.param("inviteId"), householdId).run();
+  const request = await c.env.DB.prepare("select user_id as userId from join_requests where invite_id = ? and household_id = ?")
+    .bind(c.req.param("inviteId"), householdId)
+    .first<{ userId: string }>();
+  await c.env.DB.batch([
+    c.env.DB.prepare("delete from join_requests where invite_id = ? and household_id = ?").bind(c.req.param("inviteId"), householdId),
+    // Un celular rechazado no tiene otra casa ni email: su cuenta se borra entera.
+    c.env.DB.prepare(`delete from "user" where id = ? and exists (select 1 from "deviceKey" where "userId" = ?) and not ${inHouseholds(`"user".id`)}`).bind(
+      request?.userId ?? "",
+      request?.userId ?? "",
+    ),
+  ]);
   return c.json({ ok: true });
 });
 

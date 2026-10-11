@@ -119,9 +119,27 @@ export const createInviteInput = z.object({
   /** JSON con las claves de la casa cifradas con la clave del link (el servidor no lo interpreta). */
   wrappedKeys: z.string().min(24).max(8_192),
   expiresInDays: z.number().int().min(1).max(30).default(7),
+  /** `device`: el código para vincular el celular de un chico (solo rol chico, vence en minutos). */
+  kind: z.enum(["account", "device"]).default("account"),
 });
 
 export const inviteTokenInput = z.object({ authToken: b64(64) });
+
+/**
+ * Vincular el celular de un chico: con el código, sube las claves públicas que creó el celular
+ * (cifrar, firmar y entrar) y sus sobres de la casa. No hay email ni contraseña.
+ */
+export const deviceLinkInput = z.object({
+  inviteId: uuid,
+  /** El id lo elige el celular: sus sobres de la casa van atados a él desde antes de existir la cuenta. */
+  userId: uuid,
+  authToken: b64(64),
+  /** Llave para entrar: ECDSA P-256 (SPKI, 91 bytes). */
+  devicePublicKey: b64(160),
+  encPublicKey: b64(64),
+  signPublicKey: b64(64),
+  envelopes: z.array(envelopeInput).min(1).max(3),
+});
 
 export const acceptInviteInput = z.object({
   authToken: b64(64),

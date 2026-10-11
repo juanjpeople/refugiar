@@ -8,6 +8,8 @@ Quién vive en la casa, qué puede hacer cada uno y cómo entra.
 - Cada perfil se protege con **PIN** o **biometría**, y se bloquea solo por inactividad.
 - **Compartir acceso**: cada tarjeta tiene un link de un solo uso para ese perfil (WhatsApp, email, QR o copiar).
 - Abrir el link no hace miembro a nadie: queda un **pedido que un admin aprueba** en Familia.
+- En un chico, **Vincular su celular**: un QR de un solo uso que vence en 15 minutos. El celular entra
+  como ese chico, sin email ni contraseña, y el pedido se aprueba ahí mismo. Desvincularlo rota las claves.
 - Los permisos de cada rol salen de una sola política (`src/lib/auth/permissions.ts`).
 
 ## Cómo se usa

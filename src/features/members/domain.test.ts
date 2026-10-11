@@ -16,4 +16,9 @@ describe("perfiles que se pueden elegir", () => {
   test("con la casa en la nube, el propio y los sin cuenta; nunca el de otra cuenta", () => {
     assert.deepEqual(pickableProfiles(members, "cuenta-flor").map((member) => member.id), ["flor", "tomi"]);
   });
+
+  test("en el celular de un chico, solo el suyo: tampoco los perfiles sin cuenta", () => {
+    const withKid = [...members, { id: "valen", userId: "celular-valen" }];
+    assert.deepEqual(pickableProfiles(withKid, "celular-valen", true).map((member) => member.id), ["valen"]);
+  });
 });
