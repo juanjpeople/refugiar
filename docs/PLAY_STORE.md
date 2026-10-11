@@ -1,9 +1,9 @@
 # Publicar en Google Play
 
-Guía de la primera subida y de cada actualización. La app de Play es la variante Android local
-(`npm run android:sync`): sin cuentas, sin API y sin conexión. Las respuestas de Play Console de
-abajo valen para esa variante. Si algún día la app de Android suma cuentas o sincronización, hay que
-revisar la política de privacidad, el formulario de seguridad de datos y el borrado de cuenta.
+Guía de la primera subida y de cada actualización. La app de Play es la misma web: una Trusted Web
+Activity que abre `https://refugi.ar` en Chrome ([ANDROID.md](ANDROID.md)). Tiene todo lo que tiene
+la web: sin cuenta en el teléfono, o con cuenta y la casa compartida en la nube cifrada. Las
+respuestas de Play Console de abajo valen para eso.
 
 Costo: la cuenta de desarrollador es un pago único. Nada de esto suma cuotas ni servicios pagos.
 
@@ -32,10 +32,10 @@ queda como artefacto `refugiar-<versionCode>-aab` durante 7 días; adentro está
 El workflow solo corre a pedido: no agrega tiempo a los PR. Si faltan los secretos, falla sin
 generar un paquete sin firmar. Antes de subirlo comprueba la firma.
 
-**Local:** con Android SDK 36, `android/keystore.properties` (`storeFile` relativo a `android/`,
-`storePassword`, `keyAlias`, `keyPassword`) y desde `android/`:
-`npm run android:sync` y después `./gradlew bundleRelease -PappVersionCode=N`.
-Queda en `android/app/build/outputs/bundle/release/app-release.aab`.
+**Local:** con JDK 21, Android SDK 36 y `android/keystore.properties` (`storeFile`,
+`storePassword`, `keyAlias`, `keyPassword`), desde `android/`: `./gradlew bundleRelease -PappVersionCode=N`.
+Queda en `android/app/build/outputs/bundle/release/app-release.aab`. `storeFile` tiene que apuntar a
+la clave de subida que está en GitHub: con otra, Play rechaza el paquete.
 
 Cada subida necesita un `versionCode` mayor que el anterior.
 
@@ -47,6 +47,17 @@ Nombre **Refugiar** · idioma predeterminado **Español (Latinoamérica), es-419
 el cifrado usa algoritmos estándar, que es el caso de uso masivo, sin trámites extra).
 
 El nombre del paquete queda fijo en `ar.refugi.app` con la primera subida.
+
+### Unir la app con refugi.ar (una sola vez, después de la primera subida)
+
+Sin esto la app funciona, pero con una barra de dirección arriba.
+
+1. Play Console → Prueba y lanza → Configuración → **Integridad de la app** → Firma de apps.
+2. Copiar el **SHA-256** del *Certificado de la clave de firma de apps* (el de Google, no el de subida).
+3. Agregarlo a `sha256_cert_fingerprints` en `public/.well-known/assetlinks.json`, junto al de la
+   clave de subida, y mergear. El deploy de la web lo publica.
+4. Comprobarlo con el link de [ANDROID.md](ANDROID.md#cómo-se-une-la-app-con-refugiar). Puede tardar
+   unos minutos; después, abrir la app de nuevo.
 
 ### Pruebas
 1. **Prueba interna** primero: hasta 100 personas, disponible en minutos, sin revisión larga.
@@ -61,40 +72,63 @@ El nombre del paquete queda fijo en `ar.refugi.app` con la primera subida.
 | Formulario | Respuesta |
 | --- | --- |
 | Política de privacidad | `https://refugi.ar/politica-de-privacidad` |
-| Acceso a la app | Toda la funcionalidad está disponible sin acceso especial (no hay login). |
+| Acceso a la app | **Parte de la funcionalidad está restringida.** Sin cuenta se usa casi todo ("Probar en este dispositivo"). La casa en la nube pide cuenta y un código de acceso. Para la revisión, cargar el email y la contraseña de una cuenta de prueba que ya tenga una casa, sin verificación en dos pasos. |
 | Anuncios | No contiene anuncios. |
-| Clasificación del contenido | Categoría *Todos los demás tipos de apps*. Todo **No**: sin violencia, sexo, lenguaje, drogas, apuestas; los usuarios no interactúan entre sí, no comparte ubicación, no vende productos digitales, no da acceso libre a internet. Resultado esperado: Todos / PEGI 3. |
-| Público objetivo | **18 años o más**. Los perfiles de chicos los maneja un adulto dentro de la casa; elegir edades menores a 13 suma los requisitos de la política de Familias. |
-| Seguridad de los datos | ¿Recopila o comparte datos? **No**. La app de Android guarda todo en el teléfono y no envía datos. La cámara se usa en el dispositivo y no sale de él, por eso no cuenta como recopilada. |
+| Clasificación del contenido | Categoría *Todos los demás tipos de apps*. Sin violencia, sexo, lenguaje, drogas ni apuestas; no comparte ubicación, no vende productos digitales, no da acceso libre a internet. **Los usuarios interactúan: sí**, solo dentro de una casa y por invitación (comparten inventario, listas, recetas y calendario). |
+| Público objetivo | **18 años o más**. Ver la nota sobre chicos más abajo. |
+| Seguridad de los datos | Ver la tabla siguiente. |
+| Borrado de cuenta | URL: `https://refugi.ar/borrar-cuenta`. En la app: Ajustes → Cuenta → Borrar mi cuenta. |
 | App gubernamental, funciones financieras, salud, noticias | No. |
 
-Comprobado el 2026-10-10 sobre `build:local`: `NEXT_PUBLIC_CLOUD=0` apaga en la variante Android
-la cuenta, el login social, la sincronización (incluidas las fotos en Supabase), las invitaciones y
-los accesos por integrante, y el formulario de comentarios (`/cuenta`, `/unirme` y `/feedback`
-muestran `LocalOnlyPage`). Además `NEXT_PUBLIC_API_URL` queda vacío: cualquier llamada a `/api` iría al
-servidor interno de Capacitor (`https://localhost`) y no saldría del teléfono. El bundle no contiene
-el host de la API ni de Supabase; las únicas URLs externas son enlaces que la persona abre en el
-navegador (tiendas de precios, WhatsApp, GitHub). Si eso cambia, revisar estas respuestas.
+### Seguridad de los datos
+
+Según la [guía de Play](https://support.google.com/googleplay/android-developer/answer/10787469),
+lo cifrado de extremo a extremo (que ni el desarrollador puede leer) no se declara. Por eso no van
+los datos de la casa ni las fotos: se cifran en el dispositivo y no tenemos las claves.
+
+- ¿Recopila o comparte datos? **Sí, recopila. No comparte** (Cloudflare y Supabase son proveedores
+  que procesan en nuestro nombre; eso no cuenta como compartir).
+- ¿Todo viaja cifrado en tránsito? **Sí** (HTTPS).
+- ¿Se puede pedir el borrado? **Sí**: `https://refugi.ar/borrar-cuenta`.
+
+| Dato | Tipo en Play | Para qué | ¿Opcional? |
+| --- | --- | --- | --- |
+| Nombre | Información personal → Nombre | Funcionalidad de la app, administración de la cuenta | Sí: solo con cuenta |
+| Email | Información personal → Dirección de correo electrónico | Administración de la cuenta, comunicaciones del desarrollador (avisos de seguridad y de la casa) | Sí: solo con cuenta |
+| Id de la cuenta | Información personal → IDs de usuario | Funcionalidad de la app, administración de la cuenta | Sí: solo con cuenta |
+| Foto de perfil de Google o GitHub | Fotos y videos → Fotos | Administración de la cuenta | Sí: solo si entra con ellos |
+| Comentarios desde la app | Actividad en la app → Otro contenido generado por el usuario | Comunicaciones del desarrollador | Sí |
+| IP y navegador de cada sesión | Actividad en la app → Otras acciones | Seguridad y prevención de fraude ("Tus dispositivos") | Sí: solo con cuenta |
+
+Si cambia lo que la app guarda o envía, actualizar primero la política
+(`src/i18n/messages/*.ts`, `legal.privacy`, con su fecha) y después este formulario.
+
+### Chicos
+
+Un chico puede tener un perfil sin cuenta, que maneja un adulto. Pero una invitación a la nube con
+rol *Chico* le crea una **cuenta propia, con email**. La política de privacidad dice hoy que los
+perfiles de chicos no tienen cuenta ni email: hay que decidir si la invitación de chicos se limita
+o si se ajustan la política y el público objetivo (con menores de 13 entra la política de Familias).
 
 ### Ficha de Play Store
 
 Categoría: **Casa y hogar**. Email de contacto: el mismo de la política (`privacidad@refugi.ar`).
 Sitio web: `https://refugi.ar`.
 
-Gráficos (en la carpeta del proyecto `play-store/`):
-- Ícono 512 × 512: `icono-512.png` (sale de `/icons/512.png`).
-- Gráfico destacado 1024 × 500: `grafico-destacado-1024x500.png`.
-- Capturas de teléfono 1080 × 1920 (entre 2 y 8): `screenshots/`. Son de la casa demo, con datos ficticios.
+Gráficos (todavía no están en el repositorio):
+- Ícono 512 × 512: sale de `https://refugi.ar/icons/512.png`.
+- Gráfico destacado 1024 × 500.
+- Capturas de teléfono 1080 × 1920 (entre 2 y 8), de la casa demo, con datos ficticios.
 
 **Español (es-419)**
 
 - Título (30): `Refugiar`
 - Descripción breve (80):
-  `Inventario, compras, recetas y agenda de tu casa. Sin cuenta y sin conexión.`
+  `Inventario, compras, recetas y agenda de tu casa, solo o con tu familia.`
 - Descripción completa:
 
 ```
-Refugiar ordena la casa en un solo lugar, y tus datos se quedan en tu teléfono.
+Refugiar ordena la casa en un solo lugar. Tus datos son tuyos.
 
 • Inventario: recintos, contenedores y etiquetas QR. Buscá "¿dónde guardé...?" y encontralo.
 • Herramientas e insumos por separado: solo los insumos avisan cuando se acaban.
@@ -103,9 +137,10 @@ Refugiar ordena la casa en un solo lugar, y tus datos se quedan en tu teléfono.
 • Calendario de la familia, con feriados y escuela.
 • Proyectos de la casa con lista de compras y presupuesto.
 • Perfiles para cada integrante, con roles y niveles de privacidad.
-• Respaldo en un archivo que elegís vos.
+• Casa compartida: invitá a tu familia. Todo viaja cifrado de extremo a extremo y nadie más lo puede leer, ni nosotros.
 
-Sin cuenta, sin publicidad y sin rastreadores. Funciona sin conexión.
+Sin cuenta, todo queda en tu teléfono. La cuenta es opcional.
+Sin publicidad y sin rastreadores. Funciona sin conexión.
 Es código abierto (AGPL-3.0): github.com/juanjpeople/refugiar
 ```
 
@@ -113,11 +148,11 @@ Es código abierto (AGPL-3.0): github.com/juanjpeople/refugiar
 
 - Title: `Refugiar`
 - Short description:
-  `Your home inventory, shopping, recipes and calendar. No account, works offline.`
+  `Home inventory, shopping, recipes and calendar, alone or with your family.`
 - Full description:
 
 ```
-Refugiar organizes your home in one place, and your data stays on your phone.
+Refugiar organizes your home in one place. Your data is yours.
 
 • Inventory: rooms, containers and QR labels. Search "where did I put...?" and find it.
 • Tools and supplies kept apart: only supplies warn you when they run out.
@@ -126,13 +161,18 @@ Refugiar organizes your home in one place, and your data stays on your phone.
 • Family calendar, with holidays and school.
 • Home projects with a shopping list and budget.
 • Profiles for each member, with roles and privacy levels.
-• Backup to a file you choose.
+• Shared home: invite your family. Everything is end-to-end encrypted and nobody else can read it, not even us.
 
-No account, no ads and no trackers. Works offline.
+Without an account, everything stays on your phone. The account is optional.
+No ads and no trackers. Works offline.
 Open source (AGPL-3.0): github.com/juanjpeople/refugiar
 ```
 
 ## 4. Cada actualización
+
+La mayoría de los cambios son de la web: se publican con su deploy y llegan a la app sin pasar por
+Play. Un paquete nuevo hace falta solo si cambia algo de `android/` (ícono, nombre, colores,
+dominio, librería):
 
 1. Mergear a `main`.
 2. Correr *Android release* (el `versionCode` sube solo).
@@ -158,6 +198,3 @@ versiones de Refugiar. No tiene costo ni pide tarjeta. No sirve para la primera 
 
 Si la app todavía figura como borrador en Play, la API solo acepta versiones en borrador: el
 workflow la deja así y hay que publicarla desde Play Console. El script es `scripts/play-upload.mjs`.
-
-Si cambia lo que la app guarda o envía, actualizar primero la política
-(`src/i18n/messages/*.ts`, `legal.privacy`, con su fecha) y el formulario de seguridad de datos.

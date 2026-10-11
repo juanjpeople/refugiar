@@ -33,7 +33,7 @@ const { Header, Content } = Layout;
 
 /** Rutas públicas: se ven sin sesión y sin el layout de la app (la landing, la bienvenida). */
 const PUBLIC_ROUTES = APP_ROUTES.filter((route) => route.external).map((route) => route.href);
-const STATIC_PUBLIC_ROUTES = ["/bienvenida", "/politica-de-privacidad"];
+const STATIC_PUBLIC_ROUTES = ["/bienvenida", "/politica-de-privacidad", "/borrar-cuenta"];
 
 /**
  * Estructura de la app. Decide qué mostrar según el estado del dispositivo y la sesión:
