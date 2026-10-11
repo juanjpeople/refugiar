@@ -1,17 +1,22 @@
 import { es } from "../../src/i18n/messages/es";
+import { z } from "zod";
 import type { Env } from "./env";
 import { DAY, INACTIVITY_NOTICE_DAYS, inactivityNoticeWindow } from "./inactivity";
 
 export const EMAIL_LIMITS = { daily: 100, monthly: 3_000, batch: 10 } as const;
 const RETRY_WINDOW = 23 * 3_600_000;
-const ADDRESS = /^[^\s<>@]+@[^\s<>@]+\.[^\s<>@]+$/;
+const ADDRESS = z.email();
 const t = (key: keyof typeof es.emails) => es.emails[key];
 export type SecurityEmail = "password" | "recovery" | "kit" | "twoFactor" | "passkeys" | "sessions";
 export type MailConfigState = "disabled" | "incomplete" | "configured";
 
+function isEmailAddress(value: string | undefined): value is string {
+  return typeof value === "string" && value.length <= 254 && ADDRESS.safeParse(value).success;
+}
+
 export function mailConfigState(env: Pick<Env, "EMAIL_ENABLED" | "EMAIL_FROM" | "RESEND_API_KEY">): MailConfigState {
   if (env.EMAIL_ENABLED !== "1") return "disabled";
-  return ADDRESS.test(env.EMAIL_FROM ?? "") && /^re_[A-Za-z0-9_-]+$/.test(env.RESEND_API_KEY ?? "") ? "configured" : "incomplete";
+  return isEmailAddress(env.EMAIL_FROM) && /^re_[A-Za-z0-9_-]+$/.test(env.RESEND_API_KEY ?? "") ? "configured" : "incomplete";
 }
 
 function sender(env: Env) {
@@ -30,7 +35,7 @@ export function securityEmailStatements(env: Env, user: { id: string; email: str
 }
 
 export async function queueTestEmail(env: Env) {
-  if (!ADDRESS.test(env.OPERATOR_EMAIL ?? "")) throw new Error("Operator email is not configured");
+  if (!isEmailAddress(env.OPERATOR_EMAIL)) throw new Error("Operator email is not configured");
   const now = Date.now();
   await env.DB.prepare(
     `insert into email_outbox (id, recipient, sender, subject, body, created_at, next_attempt_at) values (?, ?, ?, ?, ?, ?, ?)`,
