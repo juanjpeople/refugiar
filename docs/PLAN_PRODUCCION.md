@@ -14,7 +14,7 @@ solos una configuración real de producción. El despliegue queda manual.
 | Google y GitHub para cuentas domésticas | Implementación de vinculación explícita, login y desbloqueo local en `ACCESO_SOCIAL.md`; el alta sigue por contraseña. Pruebas con proveedores simulados, incluido rechazo de emails distintos/no verificados y state reutilizado. Pendientes configuración y prueba con apps OAuth reales, recuperación y revocación en esa instalación. No concede permisos de operador. |
 | Correos y OTP domésticos | Pendientes de proveedor/remitente verificado. Probar entrega real, expiración, uso único, límites de reenvío/intentos y respuestas sin enumeración de cuentas. OTP no sustituye al kit para descifrar datos. El operador usa TOTP local, sin entrega de emails. |
 | Métricas | PR #26 prepara estadísticas públicas estáticas y consulta CLI del tráfico privado de GitHub. Contadores propios privados de descargas siguen pendientes de decisión; los contadores de assets de GitHub son públicos y no miden instalaciones. |
-| Android | PWA disponible y APK local experimental en PR #31, reutilizando el export web con Capacitor. Pruebas instrumentadas cubren respaldo/restauración, foto, contenido libre y actualización sin desinstalar en Android 15; lector QR local compartido con la PWA. Estado detallado y pendientes en `ANDROID.md`. Falta validar dispositivos físicos y distribución firmada; nube, cookies y retornos OAuth nativos no habilitados. |
+| Android | App de Play como Trusted Web Activity: abre refugi.ar en Chrome, con cuenta, nube e invitaciones como la web (reemplazó al APK local con Capacitor del PR #31). Release firmado desde GitHub y prueba interna en Play. Estado y pendientes en `ANDROID.md` y `PLAY_STORE.md`. |
 | Raspberry, notebook y servidor | Paquete estático local implementado en PR #24; no incluye backend multiusuario. Backend autoalojado pendiente: adaptadores, migraciones, backup/restauración y prueba en arm64/amd64. Especificaciones y comandos actuales en `PLATAFORMAS.md`. |
 | ESP32 | Firmware y protocolo pendientes. Requiere identidad de dispositivo con permisos mínimos y revocación; no poner credenciales de operador ni claves generales de la casa en el firmware. |
 | Compartir información y proyectos | Sincronización por casa, permisos y listas asociadas a proyectos existentes. Falta concretar y probar el intercambio entre proyectos/casas: qué se comparte, quién lo recibe, copia o vínculo, permisos, revocación y conflictos offline. No asumir que exportar toda la casa resuelve este caso. |
@@ -105,7 +105,7 @@ El servidor no puede ejecutar el dominio sobre datos que no lee. Por eso la regl
 | Tema | Decisión |
 |---|---|
 | Web | Sitio estático (`output: "export"`), ✅ publicado en Cloudflare. |
-| Android | **Capacitor** sobre el build estático. |
+| Android | **Trusted Web Activity** que abre la web publicada (antes, Capacitor con la web empaquetada). |
 | Suscripciones | Entitlements por casa + proveedor intercambiable (ver "Decisiones abiertas"). |
 | Repositorio | Web en `src/`, backend en `server/`; extracción de un core compartido pendiente si aporta valor. |
 | Autoalojado y ESP32 | Más adelante (Etapa 4): el mismo servidor en Docker; el ESP32 como cliente con token de dispositivo. |
@@ -222,8 +222,7 @@ El diseño de comandos, dominio en servidor y SSE que sigue **no es el protocolo
 
 ## Etapa 5: Android (Play Store)
 
-- **Capacitor** sobre el build estático.
-  - Plugins: cámara/escáner, biometría, deep links de `/c/<código>`, push.
+- **Trusted Web Activity**: abre la web publicada en Chrome. Cámara, escáner, huella (WebAuthn) y links de `/c/<código>` vienen de la web y de `assetlinks.json`.
   - Ícono y splash con la casa del isotipo.
 - **Play Console**:
   - cuenta de desarrollador (pago único);

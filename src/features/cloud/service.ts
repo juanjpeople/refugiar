@@ -500,6 +500,22 @@ export async function removePasskey(id: string) {
   await api("POST", "/auth/passkey/delete-passkey", { id });
 }
 
+/**
+ * Las casas que frenan el borrado de la cuenta: las que administra sola y donde hay más gente.
+ * Primero tiene que pasarle la administración a alguien (el servidor lo vuelve a comprobar).
+ */
+export async function householdsBlockingDeletion(session: CloudSession): Promise<CloudHousehold[]> {
+  const admin = session.households.filter((household) => household.role === "admin");
+  const rosters = await Promise.all(admin.map((household) => listMembers(household.id)));
+  return admin.filter((_, index) => rosters[index].length > 1 && rosters[index].filter((member) => member.role === "admin").length <= 1);
+}
+
+/** Borra la cuenta, las casas donde vive sola y su lugar en las compartidas. Ver `/api/account/delete`. */
+export async function deleteAccount(email: string) {
+  await api("POST", "/account/delete", { confirm: email.trim().toLowerCase() });
+  await clearVault();
+}
+
 export function listDevices() {
   return api<{ devices: CloudDevice[] }>("GET", "/account/devices").then((result) => result.devices);
 }
