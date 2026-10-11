@@ -37,6 +37,17 @@ export function AccountSettings() {
     );
   }
 
+  // El celular de un chico: sin email, contraseña, kit ni dos pasos. Lo desvincula un adulto.
+  if (session.user.device) {
+    return (
+      <SettingRow label={t("cloud.device.accountTitle")} description={t("cloud.device.accountText")} last>
+        <Tag icon={<Smartphone />} color="processing" style={{ margin: 0, display: "inline-flex", alignItems: "center", gap: 4 }}>
+          {t("cloud.device.badge")}
+        </Tag>
+      </SettingRow>
+    );
+  }
+
   return (
     <>
       <SettingRow label={session.user.name} description={session.user.email}>

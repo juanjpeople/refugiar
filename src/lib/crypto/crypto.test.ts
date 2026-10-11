@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { describe, test } from "node:test";
 import {
   checkCryptoSupport,
+  createDeviceIdentity,
   createIdentity,
   decodeRecoveryCode,
   derivePasswordKeys,
@@ -24,6 +25,7 @@ import {
   sealEnvelope,
   sha256,
   sign,
+  signWithDevice,
   unlockIdentity,
   unlockWithPasskey,
   verify,
@@ -73,6 +75,28 @@ describe("cajas", () => {
     bytes[0] ^= 1;
     const tampered = `${iv}.${bytes.toString("base64url")}`;
     await assert.rejects(open(key, tampered));
+  });
+});
+
+describe("celular de un chico", () => {
+  test("sus claves no se pueden exportar, abren sobres y firman", async () => {
+    const { identity, deviceKey, devicePublicKey } = await createDeviceIdentity();
+    for (const key of [identity.encPrivateKey, identity.signPrivateKey, deviceKey]) {
+      assert.equal(key.extractable, false);
+      await assert.rejects(crypto.subtle.exportKey("pkcs8", key));
+    }
+    const raw = newScopeKey();
+    const context = envelopeContext("casa", "family", 1, "tomi");
+    const opened = await openEnvelope(await sealEnvelope(raw, identity.encPublicKey, context), identity, context);
+    assert.deepEqual(opened.raw, raw);
+    assert.equal(await verify(identity.signPublicKey, "hola", await sign(identity, "hola")), true);
+
+    // La firma para entrar se verifica con la parte pública (SPKI), como en el servidor.
+    const signature = await signWithDevice(deviceKey, "desafío");
+    const publicKey = await crypto.subtle.importKey("spki", fromB64u(devicePublicKey), { name: "ECDSA", namedCurve: "P-256" }, false, ["verify"]);
+    const check = (data: string) => crypto.subtle.verify({ name: "ECDSA", hash: "SHA-256" }, publicKey, fromB64u(signature), new TextEncoder().encode(data));
+    assert.equal(await check("desafío"), true);
+    assert.equal(await check("otro desafío"), false);
   });
 });
 
