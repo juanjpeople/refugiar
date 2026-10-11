@@ -475,6 +475,82 @@ app.delete("/account/devices/:id", async (c) => {
   return c.json({ ok: true });
 });
 
+/**
+ * Borrar mi cuenta (lo exige Google Play y es un derecho de cada persona). Se confirma escribiendo
+ * el email. Las casas donde vive sola se borran enteras: historial cifrado, fotos y registro. De
+ * una casa compartida sale, y lo que escribió queda para la familia. Si es la única que administra
+ * una casa con más gente, primero tiene que pasarle la administración a alguien.
+ *
+ * Si nunca compartió una casa, la cuenta se borra entera. Si la compartió, se borra todo lo que la
+ * identifica o la deja entrar (email, nombre, contraseña, sesiones, llaves, claves privadas) y
+ * quedan su id y su clave pública de firma: sin ellas, la familia no podría verificar sus cambios
+ * viejos. Sale sin rotar las claves de la casa (eso lo hace quien saca a alguien): sin cuenta ya no
+ * puede pedirle nada al servidor.
+ */
+app.post("/account/delete", async (c) => {
+  const user = await requireUser(c);
+  if (!user) return c.json({ error: "unauthorized" }, 401);
+  const input = await parse(c, deleteUserInput);
+  if (!input || input.confirm !== user.email.toLowerCase()) return c.json({ error: "confirmation-required" }, 400);
+  if (await tooMany(c.env, `delete-account:${user.id}`, 5, RECOVERY_WINDOW)) return c.json({ error: "rate-limited" }, 429);
+
+  const homes = await c.env.DB.prepare(
+    `select m.household_id as householdId, m.role,
+            (select count(*) from memberships x where x.household_id = m.household_id) as members,
+            (select count(*) from memberships x where x.household_id = m.household_id and x.role = 'admin') as admins
+       from memberships m where m.user_id = ?`,
+  )
+    .bind(user.id)
+    .all<{ householdId: string; role: Role; members: number; admins: number }>();
+  const lastAdmin = homes.results.filter((home) => home.members > 1 && home.role === "admin" && home.admins <= 1);
+  if (lastAdmin.length) return c.json({ error: "last-admin", households: lastAdmin.map((home) => home.householdId) }, 409);
+  const alone = homes.results.filter((home) => home.members <= 1).map((home) => home.householdId);
+  const shared = homes.results.filter((home) => home.members > 1);
+
+  try {
+    for (const householdId of alone) {
+      await photoStorage(c.env).deletePrefix(`households/${householdId}/photos`);
+      await householdLog(c.env, householdId).purge();
+    }
+  } catch (error) {
+    return photoStorageFailure(c, error);
+  }
+
+  const now = Date.now();
+  await c.env.DB.batch([
+    ...alone.map((householdId) => c.env.DB.prepare("delete from households where id = ?").bind(householdId)),
+    ...shared.flatMap((home) => [
+      c.env.DB.prepare("delete from memberships where household_id = ? and user_id = ?").bind(home.householdId, user.id),
+      c.env.DB.prepare("delete from key_envelopes where household_id = ? and recipient_user_id = ?").bind(home.householdId, user.id),
+      c.env.DB.prepare(
+        "insert into former_members (household_id, user_id, role, removed_at, removed_by) values (?, ?, ?, ?, ?) on conflict do update set role = excluded.role, removed_at = excluded.removed_at, removed_by = excluded.removed_by",
+      ).bind(home.householdId, user.id, home.role, now, user.id),
+    ]),
+    // Sus invitaciones sin usar y sus pedidos para entrar a otras casas ya no tienen sentido.
+    c.env.DB.prepare("delete from invites where created_by = ? and used_at is null").bind(user.id),
+    c.env.DB.prepare("delete from join_requests where user_id = ?").bind(user.id),
+    c.env.DB.prepare("delete from email_outbox where user_id = ? and status in ('pending', 'failed')").bind(user.id),
+    c.env.DB.prepare("update feedback set email = null, user_id = null where user_id = ?").bind(user.id),
+  ]);
+
+  // Sin rastro en ninguna casa: se borra la fila y todo lo suyo en cascada.
+  const removed = await c.env.DB.prepare(`delete from "user" where id = ? and not ${inHouseholds(`"user".id`)}`).bind(user.id).run();
+  if (!removed.meta.changes) {
+    await c.env.DB.batch([
+      c.env.DB.prepare(`update "user" set "name" = '', "email" = ?, "emailVerified" = 0, "image" = null, "twoFactorEnabled" = 0, "updatedAt" = ? where "id" = ?`)
+        .bind(`deleted-${user.id}@deleted.invalid`, new Date(now).toISOString(), user.id),
+      c.env.DB.prepare(`delete from "session" where "userId" = ?`).bind(user.id),
+      c.env.DB.prepare(`delete from "account" where "userId" = ?`).bind(user.id),
+      c.env.DB.prepare(`delete from "passkey" where "userId" = ?`).bind(user.id),
+      c.env.DB.prepare(`delete from "twoFactor" where "userId" = ?`).bind(user.id),
+      c.env.DB.prepare(`delete from "verification" where "value" = ?`).bind(user.id),
+      c.env.DB.prepare("delete from platform_admin_grants where user_id = ?").bind(user.id),
+      c.env.DB.prepare("update user_keys set private_keys = '', recovery_private_keys = '', recovery_verifier = null, updated_at = ? where user_id = ?").bind(now, user.id),
+    ]);
+  }
+  return c.json({ ok: true });
+});
+
 // --- Casas -------------------------------------------------------------------------------
 
 app.post("/households", async (c) => {

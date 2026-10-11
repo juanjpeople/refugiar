@@ -1,0 +1,12 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "ar.refugi.app",
+      "sha256_cert_fingerprints": [
+        "B7:A0:B4:14:28:D8:96:FA:34:F0:DC:69:5F:01:8E:C2:84:5D:C4:B9:0B:04:81:3E:32:3B:E4:48:CA:2B:3F:2D"
+      ]
+    }
+  }
+]
