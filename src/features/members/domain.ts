@@ -15,6 +15,8 @@ export interface PinHash {
 
 /** Credencial biométrica (WebAuthn) registrada en un dispositivo. */
 export interface BiometricCredential {
+  /** Absent for existing WebAuthn credentials; native private keys stay in Android Keystore. */
+  kind?: "native";
   /** Id de la credencial (base64url). */
   id: string;
   /** Clave pública SPKI (base64): con ella se verifica cada desbloqueo. */

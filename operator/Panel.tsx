@@ -1,8 +1,9 @@
 "use client";
-import { App, Alert, Button, Card, Col, Descriptions, Flex, Form, Grid, Input, InputNumber, Modal, Row, Select, Segmented, Skeleton, Statistic, Table, Tabs, Tag, Typography, theme } from "antd";
+import { App, Alert, Button, Card, Col, Descriptions, Dropdown, Flex, Form, Grid, Input, InputNumber, Modal, Row, Select, Segmented, Skeleton, Statistic, Table, Tabs, Tag, Typography, theme } from "antd";
 import { CircleAlert, Gauge, KeyRound, MessageSquare, RefreshCw, ShieldCheck, Users } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { OperatorLayout, useT, api, CloudError, getErrorMessage } from "./support";
+import { OperatorAccess, type OperatorPasskey } from "./Access";
+import { OperatorLayout, useT, api, CloudError, date, getErrorMessage } from "./support";
 import { PageHeader } from "../src/components/ui/PageHeader";
 import { Reveal } from "../src/components/motion/Reveal";
 interface Overview {
@@ -18,7 +19,7 @@ interface Overview {
     pendingNotices: number;
   };
   risks: Record<string, unknown>[];
-  credentials: { operatorConfigured: boolean; supabaseConfigured: boolean };
+  credentials: { operatorConfigured: boolean; supabaseConfigured: boolean; mail: "disabled" | "incomplete" | "configured" };
   recentAudit: { action: string; targetType: string; targetId: string; createdAt: number; actorEmail?: string }[];
 }
 interface AdminUser {
@@ -29,7 +30,12 @@ interface AdminUser {
   households: number;
   activeSessions: number;
   lastSessionAt: string | null;
+  twoFactorEnabled: number;
+  passkeys: number;
+  deletable: number;
 }
+/** Lo que el panel puede hacer por el acceso de una cuenta (ver /platform/users/:id/reset/*). */
+const USER_RESETS = { "two-factor": "twoFactor", passkeys: "passkeys", sessions: "sessions" } as const;
 interface AdminHousehold {
   id: string;
   createdAt: number;
@@ -75,19 +81,27 @@ interface AdminData {
   licenses: AdminLicense[];
   feedback: AdminFeedback[];
   notices: AdminNotice[];
+  passkeys: OperatorPasskey[];
+  mail: {
+    config: "disabled" | "incomplete" | "configured";
+    counts: Record<string, number>;
+    usage: { daily: number; monthly: number };
+    limits: { daily: number; monthly: number };
+  };
 }
 const shortId = (value: string) => `${value.slice(0, 8)}…`;
-const date = (value: string | number | null) => (value === null ? "—" : new Date(value).toLocaleString("es-AR"));
 async function fetchAdminData(): Promise<AdminData> {
-  const [overview, users, households, licenses, feedback, notices] = await Promise.all([
+  const [overview, users, households, licenses, feedback, notices, passkeys, mail] = await Promise.all([
     api<Overview>("GET", "/api/admin/platform/overview"),
     api<{ users: AdminUser[] }>("GET", "/api/admin/platform/users"),
     api<{ households: AdminHousehold[] }>("GET", "/api/admin/platform/households"),
     api<{ licenses: AdminLicense[] }>("GET", "/api/admin/platform/licenses"),
     api<{ feedback: AdminFeedback[] }>("GET", "/api/admin/platform/feedback"),
     api<{ notices: AdminNotice[] }>("GET", "/api/admin/platform/notices"),
+    api<{ passkeys: OperatorPasskey[] }>("GET", "/api/admin/auth/passkeys"),
+    api<AdminData["mail"]>("GET", "/api/admin/platform/mail"),
   ]);
-  return { overview, users: users.users, households: households.households, licenses: licenses.licenses, feedback: feedback.feedback, notices: notices.notices };
+  return { overview, users: users.users, households: households.households, licenses: licenses.licenses, feedback: feedback.feedback, notices: notices.notices, passkeys: passkeys.passkeys, mail };
 }
 export function PlatformAdminPage() {
   const t = useT();
@@ -225,6 +239,7 @@ export function PlatformAdminPage() {
                 items={[
                   { key: "admin", label: t("operator.title"), children: <Tag color={overview.credentials.operatorConfigured ? "green" : "red"}>{t(overview.credentials.operatorConfigured ? "platformAdmin.configured" : "platformAdmin.missing")}</Tag> },
                   { key: "storage", label: t("operator.storage"), children: <Tag color={overview.credentials.supabaseConfigured ? "green" : "red"}>{t(overview.credentials.supabaseConfigured ? "platformAdmin.configured" : "platformAdmin.missing")}</Tag> },
+                  { key: "mail", label: t("platformAdmin.tabs.mail"), children: t(`platformAdmin.mail.${overview.credentials.mail}`) },
                 ]}
               />
             </Flex>
@@ -248,7 +263,7 @@ export function PlatformAdminPage() {
         <Reveal delay={0.15}><Card>
           {!screens.sm && <Select virtual={false} aria-label={t("operator.section")} value={section} onChange={setSection}
             style={{ width: "100%", minHeight: 44, marginBottom: token.margin }}
-            options={["households", "users", "licenses", "feedback", "notices"].map(value => ({ value, label: t(`platformAdmin.tabs.${value}`) }))} />}
+            options={["households", "users", "licenses", "feedback", "notices", "mail", "access"].map(value => ({ value, label: t(`platformAdmin.tabs.${value}`) }))} />}
           <Tabs activeKey={section} onChange={setSection} tabBarStyle={screens.sm ? undefined : { display: "none" }}
             items={[
               {
@@ -300,6 +315,8 @@ export function PlatformAdminPage() {
                 key: "users",
                 label: t("platformAdmin.tabs.users"),
                 children: (
+                  <Flex vertical gap={12}>
+                  <Typography.Paragraph type="secondary" style={{ margin: 0 }}>{t("platformAdmin.userAccess.password")}</Typography.Paragraph>
                   <Table scroll={{ x: "max-content" }}
                     rowKey="id"
                     dataSource={data?.users ?? []}
@@ -310,8 +327,65 @@ export function PlatformAdminPage() {
                       { title: t("platformAdmin.metrics.households"), dataIndex: "households" },
                       { title: t("platformAdmin.metrics.sessions"), dataIndex: "activeSessions" },
                       { title: t("platformAdmin.lastActivity"), dataIndex: "lastSessionAt", render: date },
+                      {
+                        title: t("platformAdmin.security"),
+                        render: (_: unknown, row: AdminUser) => (
+                          <Flex gap={4} wrap>
+                            {Boolean(row.twoFactorEnabled) && <Tag color="green">{t("platformAdmin.twoFactorOn")}</Tag>}
+                            {row.passkeys > 0 && <Tag>{t("platformAdmin.passkeyCount", { count: row.passkeys })}</Tag>}
+                          </Flex>
+                        ),
+                      },
+                      {
+                        title: t("platformAdmin.actions"),
+                        render: (_: unknown, row: AdminUser) => (
+                          <Flex gap={8} wrap align="center">
+                          <Dropdown disabled={busy} trigger={["click"]}
+                            menu={{
+                              items: [
+                                { key: "two-factor", label: t("platformAdmin.userAccess.twoFactor"), disabled: !row.twoFactorEnabled },
+                                { key: "passkeys", label: t("platformAdmin.userAccess.passkeys"), disabled: !row.passkeys },
+                                { key: "sessions", label: t("platformAdmin.userAccess.sessions"), disabled: !row.activeSessions },
+                              ],
+                              onClick: ({ key }) => {
+                                const name = USER_RESETS[key as keyof typeof USER_RESETS];
+                                modal.confirm({
+                                  title: t(`platformAdmin.userAccess.${name}Title`, { email: row.email }),
+                                  content: t(`platformAdmin.userAccess.${name}Text`),
+                                  okText: t("platformAdmin.userAccess.confirm"),
+                                  okButtonProps: { danger: true },
+                                  onOk: () => action("POST", `/api/admin/platform/users/${row.id}/reset/${key}`),
+                                });
+                              },
+                            }}>
+                            <Button icon={<ShieldCheck />} style={{ minHeight: 44 }}>{t("platformAdmin.userAccess.menu")}</Button>
+                          </Dropdown>
+                          {row.deletable ? (
+                            <Button
+                              disabled={busy}
+                              style={{ minHeight: 44 }}
+                              danger
+                              onClick={() =>
+                                modal.confirm({
+                                  title: t("platformAdmin.deleteUserTitle"),
+                                  content: t("platformAdmin.deleteUserText", { email: row.email }),
+                                  okText: t("common.delete"),
+                                  okButtonProps: { danger: true },
+                                  onOk: () => action("DELETE", `/api/admin/platform/users/${row.id}`, { confirm: row.email }),
+                                })
+                              }
+                            >
+                              {t("common.delete")}
+                            </Button>
+                          ) : (
+                            <Typography.Text type="secondary">{t("platformAdmin.userInHouse")}</Typography.Text>
+                          )}
+                          </Flex>
+                        ),
+                      },
                     ]}
                   />
+                  </Flex>
                 ),
               },
               {
@@ -408,6 +482,32 @@ export function PlatformAdminPage() {
                     ]}
                   />
                 ),
+              },
+              {
+                key: "mail",
+                label: t("platformAdmin.tabs.mail"),
+                children: <Flex vertical gap={token.margin}>
+                  <Alert type={data.mail.config === "configured" ? "info" : "warning"} showIcon
+                    title={t(`platformAdmin.mail.${data.mail.config}`)} description={t("platformAdmin.mail.help")} />
+                  <Descriptions column={1} items={[
+                    { key: "pending", label: t("platformAdmin.mail.pending"), children: (data.mail.counts.pending ?? 0) + (data.mail.counts.sending ?? 0) },
+                    { key: "sent", label: t("platformAdmin.mail.accepted"), children: data.mail.counts.sent ?? 0 },
+                    { key: "failed", label: t("platformAdmin.mail.failed"), children: data.mail.counts.failed ?? 0 },
+                    { key: "daily", label: t("platformAdmin.mail.daily"), children: `${data.mail.usage.daily}/${data.mail.limits.daily}` },
+                    { key: "monthly", label: t("platformAdmin.mail.monthly"), children: `${data.mail.usage.monthly}/${data.mail.limits.monthly}` },
+                  ]} />
+                  <Flex wrap gap={token.marginXS}>
+                    <Button disabled={busy || data.mail.config !== "configured"} onClick={() => action("POST", "/api/admin/platform/mail/test")}>{t("platformAdmin.mail.test")}</Button>
+                    <Button disabled={busy || data.mail.config !== "configured"} onClick={() => action("POST", "/api/admin/platform/mail/process")}>{t("platformAdmin.mail.process")}</Button>
+                    <Button disabled={busy || !data.mail.counts.failed} onClick={() => action("POST", "/api/admin/platform/mail/retry")}>{t("platformAdmin.mail.retry")}</Button>
+                  </Flex>
+                  <Typography.Paragraph type="secondary">{t("platformAdmin.mail.delivery")}</Typography.Paragraph>
+                </Flex>,
+              },
+              {
+                key: "access",
+                label: t("platformAdmin.tabs.access"),
+                children: <OperatorAccess passkeys={data?.passkeys ?? []} busy={busy} onRemove={(id) => action("DELETE", `/api/admin/auth/passkeys/${encodeURIComponent(id)}`)} onAdded={() => void load()} />,
               },
             ]}
           />
