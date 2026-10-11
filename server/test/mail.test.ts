@@ -70,6 +70,20 @@ test("mail: atomic UTC budgets stop at exactly 100 daily and 3000 monthly", asyn
   assert.equal(await reserveEmailBudget(env, Date.UTC(2026, 10, 2)), true);
 });
 
+test("mail: sender and operator addresses reject oversized and malformed inputs", async t => {
+  const { env } = fixture(t);
+  const longest = `${"a".repeat(64)}@${"b".repeat(63)}.${"c".repeat(63)}.${"d".repeat(61)}`;
+  assert.equal(longest.length, 254);
+  env.EMAIL_FROM = longest;
+  assert.equal(mailConfigState(env), "configured");
+  for (const invalid of [longest + "d", "!@!." + "!.".repeat(50_000), "avisos@example.test\nBcc:other@example.test", "owner@@example.test"]) {
+    env.EMAIL_FROM = invalid;
+    assert.equal(mailConfigState(env), "incomplete");
+    env.OPERATOR_EMAIL = invalid;
+    await assert.rejects(queueTestEmail(env), /Operator email is not configured/);
+  }
+});
+
 test("mail: security event and account change commit together; test goes only to the operator", async t => {
   const { env, database } = fixture(t);
   const user = { id: "owner", email: "owner@example.test" };
@@ -108,7 +122,9 @@ test("mail: retries retain body and idempotency key; unknown deliveries stop bef
   await processEmails(env, started + 5 * 60_000, send);
   assert.deepEqual(requests[0], requests[1]);
   assert.equal((await mailOverview(env, started)).usage?.daily, 2);
-  await processEmails(env, started + 23 * 3_600_000, send);
+  const firstAttempt = database.prepare("select first_attempt_at from email_outbox").get()?.first_attempt_at;
+  assert.ok(typeof firstAttempt === "number");
+  await processEmails(env, firstAttempt + 23 * 3_600_000, send);
   assert.equal(requests.length, 2);
   assert.equal(database.prepare("select last_error from email_outbox").get()?.last_error, "delivery-unknown");
 });
