@@ -7,7 +7,8 @@ API. Las cuentas domésticas no dan privilegios globales.
 
 ## Costos y dependencias
 
-No necesita Access, Zero Trust, un gateway adicional, email, OAuth ni otra suscripción.
+No necesita Access, Zero Trust, un gateway adicional, email, OAuth ni otra suscripción
+para ingresar. El envío opcional de avisos usa Resend Free; ver [CORREOS.md](CORREOS.md).
 Utiliza Workers y D1 existentes. Puede funcionar dentro de sus planes gratuitos,
 sujeto a cuotas: no se promete disponibilidad ilimitada. Este cambio no cambia planes,
 no acepta condiciones comerciales y no configura facturación. Si la cuenta ya tiene
@@ -35,8 +36,15 @@ un plan pago, este código no lo cancela ni impone un tope monetario.
    una cuenta doméstica. Un TOTP aceptado no puede volver a usarse; esperar el siguiente
    código para otra sesión. El panel pide los dos factores al vencer la hora de sesión.
 
+Con la migración `0011_operator_passkeys.sql`, la pestaña **Mi acceso** permite sumar
+una llave del dispositivo (huella, cara o PIN). Pide la sesión abierta y un código nuevo
+del autenticador. Después, esa llave alcanza para ingresar al panel; la clave y el
+autenticador siguen disponibles como respaldo. Cambiar las credenciales del operador
+invalida también sus llaves. No permite registrar llaves antes del primer ingreso.
+
 El correo identifica al único operador de esta configuración para auditoría. No se
-envían emails ni se verifica su propiedad. Para varios operadores con credenciales
+verifica su propiedad durante el ingreso. El envío opcional de avisos permite mandar
+una prueba a ese correo, sin usarlo como factor de autenticación. Para varios operadores con credenciales
 individuales hará falta extender el modelo; no compartir la clave y el autenticador.
 
 ## Migración desde la implementación anterior
@@ -59,6 +67,33 @@ Cookie de una hora, HttpOnly, Secure y SameSite=Strict. D1 conserva solo el hash
 la sesión. Cerrar sesión la revoca; cambiar email, hash de clave o secreto TOTP
 invalida todas las sesiones. Para recuperar acceso, generar nuevas credenciales y
 cargar los tres valores desde la cuenta Cloudflare. No existe recuperación por email.
+
+Las cuentas domésticas se recuperan solo con su kit (`/cuenta?modo=recuperar`). Si se perdieron
+la contraseña y el kit, la pestaña Usuarios permite eliminar la cuenta, confirmando con su correo,
+para volver a crearla. Solo se puede con cuentas que no están ni estuvieron en una casa existente:
+dejaría una casa sin quien la administra, o cambios viejos sin la firma que los verifica. Se
+borran sus sesiones, claves, llaves y dos pasos, y queda registrado en la auditoría.
+
+En **Usuarios → Acceso** también se pueden quitar los dos pasos, quitar las llaves
+de acceso o cerrar todas las sesiones. Quitar los dos pasos conserva las llaves que
+abren los datos sin contraseña (`0010_passkey_unlock.sql`); quitar las llaves elimina
+todas. Ninguna de estas acciones cambia la contraseña ni recupera las claves cifradas.
+Si se perdió un dispositivo, cerrar sus sesiones además de quitar sus llaves.
+
+La recuperación con el kit y estas operaciones del admin no requieren email. El envío
+opcional de avisos de seguridad e inactividad usa una cola con límites gratuitos;
+configuración y verificación en [CORREOS.md](CORREOS.md). **Correos** muestra estado,
+pendientes, aceptados y errores. **Avisos → Marcar enviado** sigue registrando un envío
+manual, no manda un correo. El envío automático solo marca el aviso después de aceptar
+los mensajes de sus destinatarios. Un enlace por email, por sí solo, no reconstruye
+las claves E2EE.
+
+Si el panel publicado no muestra **Eliminar** o **Acceso**, compilar y publicar juntos
+el Worker y la app con las migraciones pendientes. `npm run build` integra el panel en
+`out/admin/`; `npm run deploy` aplica las migraciones remotas y publica ese build.
+`npm run build:operator` por sí solo prepara las pruebas del panel, no publica la app.
+Recargar `/admin` después del despliegue. No borrar cuentas directamente en D1 para
+saltear las restricciones de casas.
 
 El límite es de diez intentos cada quince minutos por bucket de IP y diez verificaciones
 TOTP con clave correcta. Los buckets limitan el tamaño de la tabla y pueden compartir

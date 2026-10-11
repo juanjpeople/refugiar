@@ -51,6 +51,8 @@ jobs:
             echo "DEV_ORIGINS=http://localhost:3000"
             # Como en producción: crear una casa pide licencia (el test la emite por la API de administración).
             echo "HOUSEHOLD_ACCESS=codes"
+            # El envío de producción está habilitado; este job nunca manda emails reales.
+            echo "EMAIL_ENABLED=0"
             echo "OPERATOR_EMAIL=operator@localhost.test"
             echo "OPERATOR_KEY_HASH=$(printf 'abababababababababababababababababababababababababababababababab' | openssl dgst -sha256 | awk '{print $NF}')"
             echo "OPERATOR_TOTP_SECRET=GEZDGNBVGY3TQOJQGEZDGNBVGY3TQOJQ"

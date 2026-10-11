@@ -6,6 +6,7 @@
 import assert from "node:assert/strict";
 import { createOTP } from "@better-auth/utils/otp";
 import { operatorTotp } from "../src/operator-auth";
+import { softwareAuthenticator } from "./webauthn-fixture";
 import { test } from "node:test";
 import WebSocket from "ws";
 import {
@@ -29,6 +30,7 @@ import {
   toB64u,
   unlockIdentity,
   verify,
+  wrapForPasskey,
   type Identity,
   type Scope,
 } from "../../src/lib/crypto";
@@ -40,9 +42,15 @@ const FAST = 1_000;
 
 class Client {
   cookies = new Map<string, string>();
+  /** Otra IP para el límite de altas de Better Auth (tres por minuto por IP). */
+  ip?: string;
+  constructor(ip?: string) {
+    this.ip = ip;
+  }
   async call(method: string, path: string, body?: unknown, { origin = ORIGIN }: { origin?: string | null } = {}) {
     const headers: Record<string, string> = { "Content-Type": "application/json" };
     if (origin) headers.Origin = origin;
+    if (this.ip) headers["cf-connecting-ip"] = this.ip;
     if (this.cookies.size) headers.Cookie = [...this.cookies].map(([name, value]) => `${name}=${value}`).join("; ");
     const response = await fetch(API + path, { method, headers, body: body === undefined ? undefined : JSON.stringify(body) });
     // getSetCookie existe en Node (donde corre este test), no en los tipos del Worker.
@@ -56,8 +64,8 @@ class Client {
   }
 }
 
-async function signUp(name: string, email: string, password: string) {
-  const client = new Client();
+async function signUp(name: string, email: string, password: string, ip?: string) {
+  const client = new Client(ip);
   const keys = await derivePasswordKeys(email, password, FAST);
   const signUp = await client.call("POST", "/api/auth/sign-up/email", { name, email, password: keys.authKey });
   assert.equal(signUp.status, 200, JSON.stringify(signUp.body));
@@ -512,10 +520,33 @@ test("cuenta, casa, invitación y unión, de punta a punta y cifrado", async (t)
   assert.ok(overview.body.metrics.users >= 3);
   assert.equal(overview.body.credentials.supabaseConfigured, false);
   assert.ok(overview.body.recentAudit.some((entry: { actorEmail: string }) => entry.actorEmail === "operator@localhost.test"));
+  const mail = await adminCall("GET", "/platform/mail");
+  assert.equal(mail.status, 200);
+  assert.equal(mail.body.config, "disabled");
+  assert.equal((await adminCall("POST", "/platform/mail/test")).status, 503);
+  assert.equal((await adminCall("POST", "/platform/mail/process")).status, 503);
 
   const users = await adminCall("GET", "/platform/users");
   assert.equal(users.status, 200);
   assert.ok(users.body.users.some((entry: { email: string }) => entry.email === anaEmail));
+
+  // --- Borrar una cuenta: solo sin casas y confirmando su email. Después se puede volver a crear. ---
+  const listedUsers = users.body.users as { id: string; deletable: number }[];
+  assert.equal(listedUsers.find((entry) => entry.id === ana.userId)!.deletable, 0);
+  assert.equal((await adminCall("DELETE", `/platform/users/${ana.userId}`, { confirm: anaEmail })).status, 409);
+  // Flor ya no es de la casa, pero su firma sigue verificando sus cambios viejos.
+  assert.equal(listedUsers.find((entry) => entry.id === flor.userId)!.deletable, 0);
+  assert.equal((await adminCall("DELETE", `/platform/users/${flor.userId}`, { confirm: `flor-${unique}@casa.test` })).status, 409);
+  const loneEmail = `sola-${unique}@casa.test`;
+  const lone = await signUp("Sola", loneEmail, "una frase larga sin ninguna casa", "198.51.100.7");
+  assert.equal((await adminCall("GET", "/platform/users")).body.users.find((entry: { id: string }) => entry.id === lone.userId).deletable, 1);
+  assert.equal((await adminCall("DELETE", `/platform/users/${lone.userId}`)).status, 400);
+  assert.equal((await adminCall("DELETE", `/platform/users/${lone.userId}`, { confirm: anaEmail })).status, 400);
+  assert.equal((await adminCall("DELETE", `/platform/users/${lone.userId}`, { confirm: loneEmail.toUpperCase() })).status, 200);
+  assert.equal((await lone.client.call("GET", "/api/me")).body.user, null);
+  assert.equal((await adminCall("DELETE", `/platform/users/${lone.userId}`, { confirm: loneEmail })).status, 404);
+  assert.ok((await adminCall("GET", "/platform/overview")).body.recentAudit.some((entry: { action: string; targetId: string }) => entry.action === "user.delete" && entry.targetId === lone.userId));
+  await signUp("Sola", loneEmail, "otra frase larga, con la cuenta nueva", "198.51.100.7");
 
   const feedback = await adminCall("GET", "/platform/feedback");
   assert.equal(feedback.status, 200);
@@ -533,12 +564,14 @@ test("cuenta, casa, invitación y unión, de punta a punta y cifrado", async (t)
   assert.equal((await adminCall("POST", `/platform/households/${householdId}/resume`)).status, 200);
   assert.equal((await adminCall("GET", "/platform/notices")).status, 200);
 
-  // Al final: encender los dos pasos cambia cómo entra Ana.
-  await twoFactorChecks(anaAgain, anaThird.authKey, anaEmail);
+  // Una cuenta nueva conserva el cupo de contraseña para probar también las llaves y el admin.
+  const supportEmail = `soporte-${unique}@casa.test`;
+  const support = await signUp("Soporte", supportEmail, "una frase larga para probar el acceso", "198.51.100.9");
+  await twoFactorChecks(support.client, support.keys.authKey, supportEmail, support.userId, support.keys.encKey);
 });
 
 /** Dos pasos en el Worker: se enciende con la contraseña, frena el ingreso y la llave pide contraseña. */
-async function twoFactorChecks(client: Client, authKey: string, email: string) {
+async function twoFactorChecks(client: Client, authKey: string, email: string, userId: string, encKey: CryptoKey) {
   assert.equal((await client.call("GET", "/api/me")).body.user.twoFactorEnabled, false);
   const enabled = await client.call("POST", "/api/auth/two-factor/enable", { password: authKey });
   assert.equal(enabled.status, 200, JSON.stringify(enabled.body));
@@ -559,4 +592,40 @@ async function twoFactorChecks(client: Client, authKey: string, email: string) {
   assert.equal((await device.call("GET", "/api/me")).body.user, null);
   assert.equal((await device.call("POST", "/api/auth/two-factor/verify-totp", { code: await code() })).status, 200);
   assert.equal((await device.call("GET", "/api/me")).body.user.email, email);
+
+  const passkeys = [];
+  for (const name of ["Segundo paso", "Abre los datos"]) {
+    const key = softwareAuthenticator({ origin: ORIGIN, rpId: new URL(API).hostname });
+    const options = await client.call("GET", "/api/auth/passkey/generate-register-options");
+    assert.equal(options.status, 200);
+    const registered = await client.call("POST", "/api/auth/passkey/verify-registration", { response: key.register(options.body.challenge), name, password: authKey });
+    assert.equal(registered.status, 200, JSON.stringify(registered.body));
+    passkeys.push({ id: registered.body.id as string, key });
+  }
+  const unlocking = passkeys[1];
+  const keys = (await client.call("GET", "/api/me")).body.keys;
+  const privateKeys = await wrapForPasskey(keys.privateKeys, encKey, crypto.getRandomValues(new Uint8Array(32)), unlocking.key.id);
+  assert.equal((await client.call("POST", `/api/account/passkeys/${unlocking.id}/unlock`, { password: authKey, privateKeys })).status, 201);
+  assert.equal((await client.call("GET", "/api/account/passkeys")).body.passkeys.length, 2);
+
+  // El operador quita el segundo paso sin perder las claves ni la llave que las abre.
+  assert.equal((await adminCall("POST", `/platform/users/${userId}/reset/two-factor`)).status, 200);
+  const afterReset = await client.call("GET", "/api/me");
+  assert.equal(afterReset.body.user.twoFactorEnabled, false);
+  assert.equal(afterReset.body.keys.privateKeys, keys.privateKeys);
+  assert.deepEqual((await client.call("GET", "/api/account/passkeys")).body.passkeys.map((entry: { id: string }) => entry.id), [unlocking.id]);
+  const passwordOnly = new Client("198.51.100.8");
+  assert.equal((await passwordOnly.call("POST", "/api/auth/sign-in/email", { email, password: authKey })).body.twoFactorRedirect, undefined);
+  assert.equal((await passwordOnly.call("GET", "/api/me")).body.user.id, userId);
+
+  assert.equal((await adminCall("POST", `/platform/users/${userId}/reset/passkeys`)).status, 200);
+  assert.deepEqual((await client.call("GET", "/api/account/passkeys")).body.passkeys, []);
+  assert.equal((await client.call("GET", `/api/account/passkeys/unlock/${unlocking.key.id}`)).status, 404);
+  assert.equal((await adminCall("POST", `/platform/users/${userId}/reset/sessions`)).status, 200);
+  for (const session of [client, device, passwordOnly]) assert.equal((await session.call("GET", "/api/me")).body.user, null);
+  assert.equal((await adminCall("POST", "/platform/users/nonexistent/reset/two-factor")).status, 404);
+  const audit = (await adminCall("GET", "/platform/overview")).body.recentAudit;
+  for (const action of ["two-factor", "passkeys", "sessions"]) {
+    assert.ok(audit.some((entry: { action: string; targetId: string }) => entry.action === `user.reset.${action}` && entry.targetId === userId));
+  }
 }

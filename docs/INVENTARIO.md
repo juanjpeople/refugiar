@@ -60,6 +60,12 @@ La ficha de un producto muestra, en este orden:
 4. Los datos, plegados.
 5. Los precios.
 
+Las herramientas y equipos reutilizables no muestran «Usé uno» ni se descuentan al
+usarlos. La cantidad se ajusta al comprar, perder o dar de baja uno. No generan
+sugerencias automáticas de reposición. En la ficha, **Datos → Herramienta o equipo
+reutilizable** permite corregir la clasificación de un artículo propio. Las casas de
+ejemplo antiguas se corrigen al actualizar sin restablecer sus datos (ver [DEMO.md](DEMO.md)).
+
 ## Cámara
 
 **Lectura.** La cámara pide resolución alta (1920 × 1080 si el equipo la da), enfoque

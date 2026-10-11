@@ -5,13 +5,14 @@ import { DemoLauncher } from "@/features/demo/DemoLauncher";
 
 import { Anchor, Button, Card, Col, ColorPicker, Flex, Grid, Row, Segmented, Slider, Typography, theme } from "antd";
 import { motion } from "framer-motion";
-import { Check, Database, Info, Keyboard, Languages, MonitorDown, Paintbrush, PanelLeft, Sparkles, UserRound, type LucideIcon } from "lucide-react";
+import { Check, Database, Fingerprint, Info, Keyboard, Languages, MonitorDown, Paintbrush, PanelLeft, Sparkles, UserRound, type LucideIcon } from "lucide-react";
 import Link from "next/link";
 import { useState, type ReactNode } from "react";
 import { Stagger, StaggerItem } from "@/components/motion";
 import { FONT_SIZES } from "@/components/providers/ThemeProvider";
 import { ChoiceCards, PageHeader } from "@/components/ui";
 import { AccountSettings } from "@/features/cloud/components/AccountSettings";
+import { ProfileSecuritySettings } from "@/features/members/components/SecurityDrawer";
 import { usePreferences, useSetPreference } from "@/hooks/usePreferences";
 import { LOCALE_META, LOCALES, useI18n } from "@/i18n";
 import { detectBrowserLocale } from "@/i18n/config";
@@ -38,6 +39,7 @@ const SECTIONS = [
   { id: "idioma", key: "language", icon: Languages },
   { id: "navegacion", key: "navigation", icon: PanelLeft },
   { id: "atajos", key: "shortcuts", icon: Keyboard },
+  { id: "desbloqueo", key: "unlock", icon: Fingerprint },
   { id: "cuenta", key: "account", icon: UserRound },
   { id: "datos", key: "data", icon: Database },
   { id: "acerca", key: "about", icon: Info },
@@ -57,6 +59,7 @@ export function SettingsPage() {
     language: <LanguageSettings />,
     navigation: <NavigationSettings />,
     shortcuts: <ShortcutsSettings />,
+    unlock: <ProfileSecuritySettings />,
     account: <AccountSettings />,
     data: <><DemoLauncher /><DataSettings /></>,
     about: <AboutSettings />,

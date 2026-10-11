@@ -9,6 +9,7 @@ import { useCurrentUser } from "@/lib/auth/session";
 import { deleteInventoryItem } from "@/features/inventory/service";
 import { getErrorMessage } from "@/lib/errors";
 import { DemoBlock, DemoLabel } from "./DemoBlock";
+import { ProfileSecuritySettings } from "@/features/members/components/SecurityDrawer";
 
 /** Un perfil de ejemplo por rol, para evaluar la matriz con la misma función `can` que usa la app. */
 const SAMPLE_ACTOR_BY_ROLE = Object.fromEntries(ROLES.map((role) => [role, { id: `sample-${role}`, name: role, role }]));
@@ -32,6 +33,9 @@ export function SecuritySection() {
       />
 
       <MatrixBlock />
+      <DemoBlock id="bloqueo-perfil" title={t("security.local.title")} description={t("security.local.text")} code="<ProfileSecuritySettings />">
+        <ProfileSecuritySettings />
+      </DemoBlock>
 
       <DemoBlock
         id="can"

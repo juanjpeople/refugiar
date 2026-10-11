@@ -1,4 +1,5 @@
 import type { Transaction } from "dexie";
+import type { InventoryItem } from "@/features/inventory/domain";
 import fixture from "./house.json" with { type: "json" };
 
 /** Datos públicos y ficticios. No se consulta una cuenta ni se descarga contenido remoto. */
@@ -35,4 +36,15 @@ export async function populateDemo(tx: Transaction) {
     const missing = decoded.filter(row => !existing.has(row.id));
     if (missing.length) await table.bulkAdd(missing);
   }
+
+}
+
+export async function backfillDemoTools(tx: Transaction) {
+  const tools = new Map(fixture.tables.inventory.filter(row => "reusable" in row && row.reusable === true).map(row => [row.id, row.name]));
+  await tx.table<InventoryItem>("inventory").toCollection().modify(item => {
+    if (item.reusable === undefined && tools.get(item.id) === item.name) {
+      item.reusable = true;
+      item.autoSuggest ??= false;
+    }
+  });
 }

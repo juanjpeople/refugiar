@@ -120,10 +120,11 @@ function AccountPatterns() {
   const [linked, setLinked] = useState(false);
   const [busy, setBusy] = useState(false);
   return <>
-    <DemoLabel>SettingRow y ProviderButton: ajustes adaptables y marcas monocromas en SVG</DemoLabel>
-    <SettingRow label="Acceso con proveedores" description="La contraseña de Refugiar sigue abriendo tus datos cifrados." stacked>
+    <DemoLabel>SettingRow y ProviderButton: ajustes adaptables y marcas monocromas en SVG. La llave de acceso usa la huella como marca y va primero.</DemoLabel>
+    <SettingRow label="Acceso con proveedores" description="La contraseña de Refugiar sigue abriendo tus datos cifrados. Una llave de acceso los abre sin contraseña." stacked>
       <Flex vertical gap={12}>
         <Checkbox checked={busy} onChange={event => setBusy(event.target.checked)}>Simular espera</Checkbox>
+        <ProviderButton provider="passkey" disabled={busy}>Entrar con huella o llave de acceso</ProviderButton>
         <ProviderButton provider="google" loading={busy} disabled={busy}>Continuar con Google</ProviderButton>
         <ProviderButton provider="github" disabled={busy || linked} onClick={() => setLinked(true)}>{linked ? "GitHub vinculado" : "Vincular GitHub"}</ProviderButton>
         {linked && <Button onClick={() => setLinked(false)}>Reiniciar ejemplo</Button>}

@@ -1,5 +1,7 @@
-import { Alert, Button, Card, Form, Input, Typography, theme } from "antd";
+import { Alert, Button, Card, Divider, Form, Input, Typography, theme } from "antd";
+import { browserSupportsWebAuthn, startAuthentication, type PublicKeyCredentialRequestOptionsJSON } from "@simplewebauthn/browser";
 import { useEffect, useRef, useState } from "react";
+import { ProviderButton } from "../src/components/ui/ProviderButton";
 import { PlatformAdminPage } from "./Panel";
 import { api, CloudError, OperatorLayout, useT } from "./support";
 
@@ -27,6 +29,22 @@ export function OperatorApp() {
     if (status === 404) return t("operator.notConfigured");
     return t("operator.error");
   }
+  /** Con una llave del dispositivo: huella, cara o PIN. */
+  async function passkeyLogin() {
+    if (pending.current) return;
+    pending.current = true;
+    setBusy(true); setError("");
+    try {
+      const optionsJSON = await api<PublicKeyCredentialRequestOptionsJSON>("POST", "/api/admin/auth/passkey/login/options", {});
+      let response;
+      try { response = await startAuthentication({ optionsJSON }); }
+      catch { setError(t("operator.passkeyCancelled")); return; }
+      await api("POST", "/api/admin/auth/passkey/login", { response });
+      setAuthenticated(true);
+    } catch (err) {
+      setError(err instanceof CloudError && err.status === 401 ? t("operator.passkeyFailed") : loginError(err));
+    } finally { pending.current = false; setBusy(false); }
+  }
   async function login(values: { key: string; code: string }) {
     if (pending.current) return;
     pending.current = true;
@@ -46,6 +64,10 @@ export function OperatorApp() {
       <Typography.Title level={1} style={{ fontSize: token.fontSizeHeading3, marginTop: 0 }}>{t("operator.title")}</Typography.Title>
       <Typography.Paragraph type="secondary">{t("operator.intro")}</Typography.Paragraph>
       {error && <Alert type="error" title={error} showIcon style={{ marginBottom: token.margin }} />}
+      {browserSupportsWebAuthn() && <>
+        <ProviderButton provider="passkey" loading={busy} disabled={busy} onClick={() => void passkeyLogin()}>{t("operator.passkeyLogin")}</ProviderButton>
+        <Divider plain>{t("operator.passkeyOr")}</Divider>
+      </>}
       <Form form={form} layout="vertical" requiredMark={false} disabled={busy} onFinish={login}>
         <Form.Item name="key" label={t("operator.key")} normalize={(value: string) => value.replace(/\s/g, "").toLowerCase()} rules={[{ required: true, message: t("operator.keyRequired") }]}><Input.Password autoComplete="current-password" style={{ minHeight: 44 }} /></Form.Item>
         <Form.Item name="code" label={t("operator.code")} normalize={(value: string) => value.replace(/\D/g, "").slice(0, 6)} rules={[{ required: true, pattern: /^\d{6}$/, message: t("operator.codeRequired") }]}><Input inputMode="numeric" autoComplete="one-time-code" style={{ minHeight: 44 }} /></Form.Item>

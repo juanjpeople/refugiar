@@ -18,6 +18,7 @@ import { DAY, INACTIVITY_NOTICE_DAYS, inactivityNoticeWindow, inactiveBefore } f
 import { PhotoStorageError, photoStorage } from "./photo-storage";
 import { operatorAuth, operatorConfigured, operatorRequestAllowed, operatorSession } from "./operator-auth";
 import { operatorPage } from "./operator-page";
+import { mailConfigState, mailOverview, processEmails, queueTestEmail, securityEmailStatements } from "./mail";
 import { OP_CONFLICT } from "./sync";
 import {
   acceptInviteInput,
@@ -27,12 +28,14 @@ import {
   createInviteInput,
   createLicensesInput,
   deleteHouseholdInput,
+  deleteUserInput,
   envelopeInput,
   feedbackInput,
   feedbackStatusInput,
   inactivityNoticeStatusInput,
   inviteTokenInput,
   licenseCheckInput,
+  passkeyUnlockInput,
   pullQuery,
   pushInput,
   recoveryCompleteInput,
@@ -354,6 +357,7 @@ app.post("/recovery/complete", async (c) => {
       found.userId,
     ),
     c.env.DB.prepare(`delete from "session" where "userId" = ?`).bind(found.userId),
+    ...securityEmailStatements(c.env, { id: found.userId, email: input.email }, "recovery"),
   ]);
   return c.json({ ok: true });
 });
@@ -372,6 +376,7 @@ app.post("/account/password", async (c) => {
     await setPasswordStatement(c.env, user.id, input.newPassword),
     c.env.DB.prepare("update user_keys set private_keys = ?, updated_at = ? where user_id = ?").bind(input.privateKeys, Date.now(), user.id),
     c.env.DB.prepare(`delete from "session" where "userId" = ? and "id" <> ?`).bind(user.id, c.var.sessionId),
+    ...securityEmailStatements(c.env, user, "password"),
   ]);
   return c.json({ ok: true });
 });
@@ -384,9 +389,11 @@ app.post("/account/recovery-kit", async (c) => {
   if (!input) return c.json({ error: "invalid" }, 400);
   if (await tooMany(c.env, `password:${user.id}`, 5, RECOVERY_WINDOW)) return c.json({ error: "rate-limited" }, 429);
   if (!(await checkPassword(c.env, user.id, input.password))) return c.json({ error: "wrong-password" }, 403);
-  await c.env.DB.prepare("update user_keys set recovery_private_keys = ?, recovery_verifier = ?, updated_at = ? where user_id = ?")
-    .bind(input.recoveryPrivateKeys, input.recoveryVerifier, Date.now(), user.id)
-    .run();
+  await c.env.DB.batch([
+    c.env.DB.prepare("update user_keys set recovery_private_keys = ?, recovery_verifier = ?, updated_at = ? where user_id = ?")
+      .bind(input.recoveryPrivateKeys, input.recoveryVerifier, Date.now(), user.id),
+    ...securityEmailStatements(c.env, user, "kit"),
+  ]);
   return c.json({ ok: true });
 });
 
@@ -408,6 +415,56 @@ app.get("/account/devices", async (c) => {
       current: session.id === c.var.sessionId,
     })),
   });
+});
+
+/** Las llaves de acceso de la cuenta, y si cada una entra sin contraseña (tiene su copia de las claves). */
+app.get("/account/passkeys", async (c) => {
+  const user = await requireUser(c);
+  if (!user) return c.json({ error: "unauthorized" }, 401);
+  const passkeys = await c.env.DB.prepare(
+    `select p."id", p."name", p."createdAt", p."credentialID" as credentialId, u."id" is not null as unlocks
+       from "passkey" p left join "passkeyUnlock" u on u."passkeyId" = p."id"
+      where p."userId" = ? order by p."createdAt"`,
+  )
+    .bind(user.id)
+    .all<{ id: string; name: string | null; createdAt: string; credentialId: string; unlocks: number }>();
+  return c.json({ passkeys: passkeys.results.map((entry) => ({ ...entry, createdAt: Date.parse(entry.createdAt), unlocks: Boolean(entry.unlocks) })) });
+});
+
+/**
+ * Una llave recién sumada que puede abrir los datos (PRF): guarda su copia de las claves privadas,
+ * cifrada en el dispositivo. Pide la contraseña, como sumar la llave.
+ */
+app.post("/account/passkeys/:id/unlock", async (c) => {
+  const user = await requireUser(c);
+  if (!user) return c.json({ error: "unauthorized" }, 401);
+  const input = await parse(c, passkeyUnlockInput);
+  if (!input) return c.json({ error: "invalid" }, 400);
+  if (await tooMany(c.env, `password:${user.id}`, 5, RECOVERY_WINDOW)) return c.json({ error: "rate-limited" }, 429);
+  if (!(await checkPassword(c.env, user.id, input.password))) return c.json({ error: "wrong-password" }, 403);
+  const result = await c.env.DB.prepare(
+    `insert into "passkeyUnlock" ("id", "passkeyId", "userId", "privateKeys", "createdAt")
+     select ?, p."id", p."userId", ?, ? from "passkey" p where p."id" = ? and p."userId" = ?
+     on conflict ("passkeyId") do nothing`,
+  )
+    .bind(crypto.randomUUID(), input.privateKeys, new Date().toISOString(), c.req.param("id"), user.id)
+    .run();
+  if (!result.meta.changes) return c.json({ error: "not-found" }, 404);
+  return c.json({ ok: true }, 201);
+});
+
+/** Después de entrar con una llave: su copia de las claves (solo se abre en el dispositivo, con la llave). */
+app.get("/account/passkeys/unlock/:credentialId", async (c) => {
+  const user = await requireUser(c);
+  if (!user) return c.json({ error: "unauthorized" }, 401);
+  const row = await c.env.DB.prepare(
+    `select u."privateKeys" as privateKeys from "passkeyUnlock" u join "passkey" p on p."id" = u."passkeyId"
+      where p."credentialID" = ? and p."userId" = ?`,
+  )
+    .bind(c.req.param("credentialId"), user.id)
+    .first<{ privateKeys: string }>();
+  if (!row) return c.json({ error: "not-found" }, 404);
+  return c.json(row);
 });
 
 /** Cerrar la sesión de un dispositivo (deja de sincronizar; su copia local queda como estaba). */
@@ -1110,26 +1167,87 @@ platformAdmin.get("/overview", async (c) => {
     credentials: {
       operatorConfigured: operatorConfigured(c.env),
       supabaseConfigured: Boolean(c.env.SUPABASE_SERVICE_ROLE_KEY),
+      mail: mailConfigState(c.env),
     },
     recentAudit: auditRows.results,
   });
 });
+
+/**
+ * La cuenta está o estuvo en una casa que sigue existiendo. Borrarla dejaría una casa sin quien la
+ * administra, y de quien se fue quedan su firma y su rol para verificar sus cambios viejos.
+ */
+const inHouseholds = (user: string) => `(exists (select 1 from memberships where user_id = ${user})
+  or exists (select 1 from former_members where user_id = ${user})
+  or exists (select 1 from households where created_by = ${user})
+  or exists (select 1 from invites where created_by = ${user}))`;
 
 platformAdmin.get("/users", async (c) => {
   const rows = await c.env.DB.prepare(
     `select u.id, u.name, u.email, u."createdAt" as createdAt,
             count(distinct m.household_id) as households,
             count(distinct case when s."expiresAt" > ? then s.id end) as activeSessions,
-            max(s."updatedAt") as lastSessionAt
+            max(s."updatedAt") as lastSessionAt,
+            coalesce(u."twoFactorEnabled", 0) as twoFactorEnabled,
+            (select count(*) from "passkey" p where p."userId" = u.id) as passkeys,
+            case when ${inHouseholds("u.id")} then 0 else 1 end as deletable
        from "user" u
        left join memberships m on m.user_id = u.id
        left join "session" s on s."userId" = u.id
-      group by u.id, u.name, u.email, u."createdAt"
+      group by u.id, u.name, u.email, u."createdAt", u."twoFactorEnabled"
       order by u."createdAt" desc`,
   )
     .bind(new Date().toISOString())
     .all();
   return c.json({ users: rows.results });
+});
+
+/**
+ * Ayudar a alguien a volver a entrar, sin tocar sus claves ni sus datos (están cifrados):
+ * - two-factor: quita los dos pasos (código, códigos de respaldo y llaves que solo eran segundo paso).
+ * - passkeys: quita todas sus llaves de acceso, también las que entran sin contraseña (teléfono perdido).
+ * - sessions: cierra la cuenta en todos los dispositivos.
+ * La contraseña no se cambia desde acá: de ella sale la clave que abre sus datos. Con el kit, la
+ * persona la cambia sola; sin el kit, sus claves no se pueden recuperar.
+ */
+const userResets: Record<string, (env: Env, id: string) => D1PreparedStatement[]> = {
+  "two-factor": (env, id) => [
+    env.DB.prepare(`delete from "twoFactor" where "userId" = ?`).bind(id),
+    env.DB.prepare(`update "user" set "twoFactorEnabled" = 0 where "id" = ?`).bind(id),
+    env.DB.prepare(`delete from "passkey" where "userId" = ? and "id" not in (select "passkeyId" from "passkeyUnlock")`).bind(id),
+  ],
+  passkeys: (env, id) => [env.DB.prepare(`delete from "passkey" where "userId" = ?`).bind(id)],
+  sessions: (env, id) => [env.DB.prepare(`delete from "session" where "userId" = ?`).bind(id)],
+};
+
+for (const [action, statements] of Object.entries(userResets)) {
+  platformAdmin.post(`/users/:id/reset/${action}`, async (c) => {
+    const id = c.req.param("id");
+    const user = await c.env.DB.prepare(`select id, email from "user" where "id" = ?`).bind(id).first<{ id: string; email: string }>();
+    if (!user) return c.json({ error: "not-found" }, 404);
+    const event = action === "two-factor" ? "twoFactor" : action === "passkeys" ? "passkeys" : "sessions";
+    await c.env.DB.batch([...statements(c.env, id), ...securityEmailStatements(c.env, user, event)]);
+    await audit(c, `user.reset.${action}`, "user", id);
+    return c.json({ ok: true });
+  });
+}
+
+/**
+ * Borrar una cuenta sin casas, confirmando con su email: así se puede volver a crear (por ejemplo,
+ * si se perdieron la contraseña y el kit). Sesiones, claves, llaves y dos pasos se van en cascada.
+ */
+platformAdmin.delete("/users/:id", async (c) => {
+  const id = c.req.param("id");
+  const input = await parse(c, deleteUserInput);
+  if (!input) return c.json({ error: "confirmation-required" }, 400);
+  const user = await c.env.DB.prepare(`select email from "user" where id = ?`).bind(id).first<{ email: string }>();
+  if (!user) return c.json({ error: "not-found" }, 404);
+  if (input.confirm !== user.email.toLowerCase()) return c.json({ error: "confirmation-required" }, 400);
+  // La condición va en el mismo delete: si entró a una casa recién, no se borra.
+  const result = await c.env.DB.prepare(`delete from "user" where id = ? and not ${inHouseholds(`"user".id`)}`).bind(id).run();
+  if (!result.meta.changes) return c.json({ error: "has-households" }, 409);
+  await audit(c, "user.delete", "user", id);
+  return c.json({ ok: true });
 });
 
 platformAdmin.get("/households", async (c) => {
@@ -1225,6 +1343,30 @@ platformAdmin.patch("/feedback/:id", async (c) => {
   return c.json({ ok: true });
 });
 
+platformAdmin.get("/mail", async (c) => c.json(await mailOverview(c.env)));
+
+platformAdmin.post("/mail/test", async (c) => {
+  if (mailConfigState(c.env) !== "configured") return c.json({ error: "mail-not-configured" }, 503);
+  if (await tooMany(c.env, "mail:operator:test", 3, 3_600_000)) return c.json({ error: "rate-limited" }, 429);
+  await queueTestEmail(c.env);
+  await audit(c, "mail.test", "mail", "operator");
+  return c.json({ queued: true }, 202);
+});
+
+platformAdmin.post("/mail/process", async (c) => {
+  if (mailConfigState(c.env) !== "configured") return c.json({ error: "mail-not-configured" }, 503);
+  return c.json(await processEmails(c.env));
+});
+
+platformAdmin.post("/mail/retry", async (c) => {
+  const result = await c.env.DB.prepare(
+    `update email_outbox set status = 'pending', first_attempt_at = null, attempts = 0, next_attempt_at = ?
+     where status = 'failed' and last_error <> 'delivery-unknown'`,
+  ).bind(Date.now()).run();
+  await audit(c, "mail.retry", "mail", "failed", { count: result.meta.changes });
+  return c.json({ queued: result.meta.changes });
+});
+
 platformAdmin.get("/notices", async (c) => {
   await processInactivity(c.env);
   const rows = await c.env.DB.prepare(
@@ -1292,11 +1434,15 @@ export default {
     if (url.pathname.startsWith("/api/")) return app.fetch(request, env, ctx);
     return env.ASSETS.fetch(request);
   },
-  scheduled(_controller: ScheduledController, env: Env, ctx: ExecutionContext) {
+  scheduled(controller: ScheduledController, env: Env, ctx: ExecutionContext) {
     ctx.waitUntil(
-      processInactivity(env)
-        .then((result) => console.log(`[inactivity] notices=${result.noticesQueued} paused=${result.householdsPaused}`))
-        .catch((error) => console.error("[inactivity] failed", error)),
+      (async () => {
+        if (controller.cron === "17 4 * * *") {
+          const result = await processInactivity(env);
+          console.log(`[inactivity] notices=${result.noticesQueued} paused=${result.householdsPaused}`);
+        }
+        await processEmails(env);
+      })().catch((error) => console.error("[scheduled] failed", error)),
     );
   },
 } satisfies ExportedHandler<Env>;
