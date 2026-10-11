@@ -13,10 +13,12 @@ export async function operatorFixture(origin = "https://app.example") {
   const database = new DatabaseSync(":memory:");
   database.exec("CREATE TABLE attempts (key TEXT PRIMARY KEY, count INTEGER NOT NULL, window_start INTEGER NOT NULL)");
   database.exec(readFileSync("server/migrations/0007_operator_sessions.sql", "utf8"));
+  database.exec(readFileSync("server/migrations/0011_operator_passkeys.sql", "utf8"));
   function prepare(sql: string, args: (string | number | null)[] = []) {
     return {
       bind: (...values: (string | number | null)[]) => prepare(sql, values),
       first: async () => database.prepare(sql).get(...args) ?? null,
+      all: async () => ({ results: database.prepare(sql).all(...args) }),
       run: async () => ({ success: true, meta: { changes: database.prepare(sql).run(...args).changes } }),
     };
   }

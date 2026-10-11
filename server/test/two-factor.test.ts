@@ -1,60 +1,15 @@
 import assert from "node:assert/strict";
-import { createHash, generateKeyPairSync, sign } from "node:crypto";
 import { DatabaseSync } from "node:sqlite";
 import { test } from "node:test";
 import { betterAuth } from "better-auth";
 import { getMigrations } from "better-auth/db/migration";
 import { createOTP } from "@better-auth/utils/otp";
 import { authOptions } from "../src/auth-options";
+import { softwareAuthenticator } from "./webauthn-fixture";
 
 const origin = "http://localhost:3199";
 const password = "a".repeat(43);
 type Jar = Map<string, string>;
-
-const b64u = (bytes: Uint8Array | Buffer) => Buffer.from(bytes).toString("base64url");
-const sha256 = (data: Uint8Array | string) => createHash("sha256").update(data).digest();
-
-/** CBOR mínimo (mapas, enteros, bytes y texto): lo justo para armar una llave de acceso de prueba. */
-function cbor(value: unknown): Buffer {
-  const head = (major: number, length: number) =>
-    length < 24 ? Buffer.from([(major << 5) | length]) : length < 256 ? Buffer.from([(major << 5) | 24, length]) : Buffer.from([(major << 5) | 25, length >> 8, length & 255]);
-  if (typeof value === "number") return value >= 0 ? head(0, value) : head(1, -1 - value);
-  if (typeof value === "string") return Buffer.concat([head(3, Buffer.byteLength(value)), Buffer.from(value)]);
-  if (value instanceof Uint8Array) return Buffer.concat([head(2, value.length), value]);
-  const entries = value instanceof Map ? [...value] : Object.entries(value as object);
-  return Buffer.concat([head(5, entries.length), ...entries.flatMap(([key, entry]) => [cbor(key), cbor(entry)])]);
-}
-
-/** Un autenticador de software (ES256), como el que trae el teléfono o la computadora. */
-function softwareAuthenticator() {
-  const { privateKey, publicKey } = generateKeyPairSync("ec", { namedCurve: "P-256" });
-  const jwk = publicKey.export({ format: "jwk" });
-  const credentialId = Buffer.from(crypto.getRandomValues(new Uint8Array(16)));
-  const rpIdHash = sha256("localhost");
-  let counter = 0;
-  const clientData = (type: string, challenge: string) => Buffer.from(JSON.stringify({ type, challenge, origin, crossOrigin: false }));
-  return {
-    id: b64u(credentialId),
-    register(challenge: string) {
-      const cose = new Map<number, number | Buffer>([[1, 2], [3, -7], [-1, 1], [-2, Buffer.from(jwk.x!, "base64url")], [-3, Buffer.from(jwk.y!, "base64url")]]);
-      const authData = Buffer.concat([rpIdHash, Buffer.from([0x45]), Buffer.alloc(4), Buffer.alloc(16), Buffer.from([0, credentialId.length]), credentialId, cbor(cose)]);
-      return {
-        id: b64u(credentialId), rawId: b64u(credentialId), type: "public-key", clientExtensionResults: {},
-        response: { clientDataJSON: b64u(clientData("webauthn.create", challenge)), attestationObject: b64u(cbor({ fmt: "none", attStmt: {}, authData })), transports: ["internal"] },
-      };
-    },
-    authenticate(challenge: string) {
-      counter++;
-      const authData = Buffer.concat([rpIdHash, Buffer.from([0x05]), Buffer.from([0, 0, 0, counter])]);
-      const json = clientData("webauthn.get", challenge);
-      const signature = sign("sha256", Buffer.concat([authData, sha256(json)]), privateKey);
-      return {
-        id: b64u(credentialId), rawId: b64u(credentialId), type: "public-key", clientExtensionResults: {},
-        response: { clientDataJSON: b64u(json), authenticatorData: b64u(authData), signature: b64u(signature) },
-      };
-    },
-  };
-}
 
 async function setup(t: { after(fn: () => void): void; mock: { method: typeof import("node:test").mock.method } }) {
   const database = new DatabaseSync(":memory:");
@@ -93,7 +48,7 @@ async function setup(t: { after(fn: () => void): void; mock: { method: typeof im
   return { database, request, sessionUser };
 }
 
-test("dos pasos: código, respaldo, llave de acceso solo como segundo paso y Google/GitHub", async (t) => {
+test("dos pasos: código, respaldo, llaves de acceso (segundo paso o sin contraseña) y Google/GitHub", async (t) => {
   const { database, request, sessionUser } = await setup(t);
   const owner: Jar = new Map();
   const signup = await request("/sign-up/email", owner, { name: "Owner", email: "owner@example.test", password });
@@ -115,7 +70,7 @@ test("dos pasos: código, respaldo, llave de acceso solo como segundo paso y Goo
   assert.notEqual(database.prepare(`select secret from "twoFactor"`).get()?.secret, secret, "el secreto se guarda cifrado");
 
   // La llave de acceso se registra con sesión.
-  const key = softwareAuthenticator();
+  const key = softwareAuthenticator({ origin, rpId: "localhost" });
   const registerOptions = (await (await request("/passkey/generate-register-options", owner)).json()) as { challenge: string; authenticatorSelection: { residentKey: string } };
   assert.equal(registerOptions.authenticatorSelection.residentKey, "required");
   assert.equal((await request("/passkey/verify-registration", owner, { response: key.register(registerOptions.challenge), name: "Teléfono" })).status, 200);
@@ -154,6 +109,25 @@ test("dos pasos: código, respaldo, llave de acceso solo como segundo paso y Goo
   const replayOptions = (await (await request("/passkey/generate-authenticate-options", replay)).json()) as { challenge: string };
   assert.equal((await request("/passkey/verify-authentication", replay, { response: key.authenticate(replayOptions.challenge) })).status, 401);
 
+  // Una llave que abre las claves (su copia, cifrada con lo que da la llave) entra sola, sin
+  // contraseña ni código: ella misma verifica a la persona (huella, cara o PIN). Sin eso, no.
+  const bio = softwareAuthenticator({ origin, rpId: "localhost" });
+  const bioOptions = (await (await request("/passkey/generate-register-options", owner)).json()) as { challenge: string };
+  const bioPasskey = (await (await request("/passkey/verify-registration", owner, { response: bio.register(bioOptions.challenge), name: "Huella" })).json()) as { id: string };
+  database.prepare(`insert into "passkeyUnlock" ("id", "passkeyId", "userId", "privateKeys", "createdAt") values (?, ?, ?, ?, ?)`).run("unlock-1", bioPasskey.id, ownerId, "iv.cifrado", new Date().toISOString());
+  const passwordless = async (userVerified: boolean) => {
+    const jar: Jar = new Map();
+    const options = (await (await request("/passkey/generate-authenticate-options", jar)).json()) as { challenge: string };
+    const status = (await request("/passkey/verify-authentication", jar, { response: bio.authenticate(options.challenge, { userVerified }) })).status;
+    return { status, user: await sessionUser(jar) };
+  };
+  assert.deepEqual(await passwordless(false), { status: 401, user: null });
+  assert.deepEqual(await passwordless(true), { status: 200, user: ownerId });
+  // La que solo es segundo paso sigue sin entrar sola.
+  const alone: Jar = new Map();
+  const aloneOptions = (await (await request("/passkey/generate-authenticate-options", alone)).json()) as { challenge: string };
+  assert.equal((await request("/passkey/verify-authentication", alone, { response: key.authenticate(aloneOptions.challenge) })).status, 401);
+
   // GitHub tampoco saltea el segundo paso.
   const linkUrl = new URL(((await (await request("/link-social", owner, { provider: "github", callbackURL: `${origin}/ajustes`, disableRedirect: true })).json()) as { url: string }).url);
   await request(`/callback/github?code=test&state=${encodeURIComponent(linkUrl.searchParams.get("state")!)}`, owner);
@@ -170,10 +144,14 @@ test("dos pasos: código, respaldo, llave de acceso solo como segundo paso y Goo
   assert.equal((await request("/two-factor/verify-totp", social, { code: await code() })).status, 200);
   assert.equal(await sessionUser(social), ownerId);
 
-  // Apagar pide la contraseña y borra las llaves (solo eran segundo paso).
+  // Apagar pide la contraseña y borra las llaves que solo eran segundo paso. La que entra sola queda.
   assert.equal((await request("/two-factor/disable", owner, { password: "b".repeat(43) })).status, 400);
   assert.equal((await request("/two-factor/disable", owner, { password })).status, 200);
-  assert.equal(database.prepare(`select count(*) as n from passkey`).get()?.n, 0);
+  assert.deepEqual(database.prepare(`select "id" from passkey`).all().map((row) => row.id), [bioPasskey.id]);
+  assert.deepEqual(await passwordless(true), { status: 200, user: ownerId });
+  // Borrar la llave borra su copia de las claves.
+  database.prepare(`delete from passkey where "id" = ?`).run(bioPasskey.id);
+  assert.equal(database.prepare(`select count(*) as n from "passkeyUnlock"`).get()?.n, 0);
   const plain: Jar = new Map();
   await request("/sign-in/email", plain, { email: "owner@example.test", password });
   assert.equal(await sessionUser(plain), ownerId);

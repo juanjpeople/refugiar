@@ -15,6 +15,11 @@ export interface Env extends SocialAuthEnv, OperatorConfig {
   APP_ORIGIN: string;
   /** Orígenes extra separados por coma (en desarrollo: http://localhost:3000). */
   DEV_ORIGINS?: string;
+  /** Explicit opt-in. Enable only after verifying the sending domain and Free plan. */
+  EMAIL_ENABLED?: string;
+  EMAIL_FROM?: string;
+  /** Sending-only Resend key, stored as a Worker secret. */
+  RESEND_API_KEY?: string;
   /** Proyecto de Supabase que guarda únicamente los bytes ya cifrados de las fotos. */
   SUPABASE_URL: string;
   /** Bucket privado de Supabase Storage. */

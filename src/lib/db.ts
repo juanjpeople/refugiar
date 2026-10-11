@@ -211,6 +211,12 @@ export function declareSchema(target: Dexie, upTo = Infinity) {
       await tx.table("syncState").delete("cursor");
     }
   });
+  // Only old sample rows: never infer tool types in the user's own house.
+  if (upTo >= 14) target.version(14).stores({}).upgrade(async (tx) => {
+    if (!["RefugiarDemoDB", "RefugiarTestDB"].includes(target.name)) return;
+    const { backfillDemoTools } = await Dexie.waitFor(import("@/features/demo/seed"));
+    await backfillDemoTools(tx);
+  });
 }
 
 declareSchema(db);

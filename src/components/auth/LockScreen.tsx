@@ -28,18 +28,24 @@ export function LockScreen({ member, onUnlock, onSwitchProfile }: LockScreenProp
   const [error, setError] = useState<string | null>(null);
   const [checking, setChecking] = useState(false);
   const [biometricReady, setBiometricReady] = useState(false);
+  const biometricPending = useRef(false);
   const now = useNow(1000);
   const waitSeconds = Math.ceil((lockedUntil(member.id) - now) / 1000);
   const hasBiometric = (member.credentials?.length ?? 0) > 0;
 
   async function tryBiometric() {
-    if (!member.credentials?.length) return;
+    if (!member.credentials?.length || biometricPending.current) return;
+    biometricPending.current = true;
+    setChecking(true);
     setError(null);
     try {
       if (await verifyBiometric(member.credentials)) onUnlock();
       else setError(t("lock.biometricFailed"));
     } catch {
       setError(t("lock.biometricFailed"));
+    } finally {
+      biometricPending.current = false;
+      setChecking(false);
     }
   }
 
@@ -48,10 +54,11 @@ export function LockScreen({ member, onUnlock, onSwitchProfile }: LockScreenProp
     if (!hasBiometric) return;
     let cancelled = false;
     getBiometricSupport().then((support) => {
-      if (cancelled || support !== "available") return;
+      if (cancelled) return;
+      if (support !== "available") { setError(t("security.biometric.unsupported")); return; }
       setBiometricReady(true);
       tryBiometric();
-    });
+    }).catch(() => { if (!cancelled) setError(t("lock.biometricFailed")); });
     return () => {
       cancelled = true;
     };
@@ -102,7 +109,7 @@ export function LockScreen({ member, onUnlock, onSwitchProfile }: LockScreenProp
 
       <Flex gap={8} wrap justify="center">
         {hasBiometric && biometricReady && (
-          <Button size="large" icon={<Fingerprint />} onClick={tryBiometric}>
+          <Button size="large" icon={<Fingerprint />} loading={checking} onClick={tryBiometric}>
             {t("lock.biometric")}
           </Button>
         )}
