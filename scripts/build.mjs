@@ -8,6 +8,9 @@ const localOnly = demo || process.argv.includes("--local");
 const env = { ...process.env, NEXT_PUBLIC_DEMO: demo ? "1" : "0", ...(localOnly ? { NEXT_PUBLIC_CLOUD: "0", NEXT_PUBLIC_API_URL: "" } : {}) };
 execFileSync(process.execPath, [fileURLToPath(new URL("../node_modules/next/dist/bin/next", import.meta.url)), "build"], { cwd: root, env, stdio: "inherit" });
 await import("./fix-export-segments.mjs");
+// assetlinks.json une la app de Play con refugi.ar: solo va en el build de la nube. El paquete
+// local (NAS, Raspberry) y la demo se sirven en otras direcciones y no la reclaman.
+if (localOnly) rmSync(new URL("../out/.well-known/", import.meta.url), { recursive: true, force: true });
 if (!localOnly) {
   execFileSync(process.execPath, [fileURLToPath(new URL("./build-operator.mjs", import.meta.url)), "--integrated"], { cwd: root, stdio: "inherit" });
 }
