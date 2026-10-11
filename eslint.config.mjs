@@ -14,9 +14,7 @@ const eslintConfig = defineConfig([
     "demo-dist/**",
     "dist/**",
     "build/**",
-    "android/app/src/main/assets/**",
     "android/**/build/**",
-    "android/capacitor-cordova-android-plugins/**",
     "next-env.d.ts",
     // Generados: Wrangler (Cloudflare local) y los reportes de Playwright.
     ".wrangler/**",

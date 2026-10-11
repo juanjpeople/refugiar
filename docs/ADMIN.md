@@ -1,7 +1,7 @@
 # Administración sin Zero Trust
 
 `/admin` forma parte del build cloud y se sirve desde el mismo Worker que la app.
-Los builds local, Android y demo no incluyen el panel. La pantalla de ingreso y su
+Los builds local y demo no incluyen el panel; la app de Android abre la web, sin ningún acceso extra. La pantalla de ingreso y su
 JavaScript son públicos; los datos y todas las operaciones están protegidos en la
 API. Las cuentas domésticas no dan privilegios globales.
 

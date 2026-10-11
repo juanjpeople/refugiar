@@ -1,29 +1,30 @@
 "use client";
 
-import { App, Button, Flex, Form, Input, Modal, Progress, Tag, Tooltip, Typography, theme } from "antd";
-import { KeyRound, Lock, LogIn, LogOut, Monitor, Smartphone } from "lucide-react";
+import { Alert, App, Button, Flex, Form, Input, Modal, Progress, Tag, Tooltip, Typography, theme } from "antd";
+import { KeyRound, Lock, LogIn, LogOut, Monitor, Smartphone, UserX } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { SettingRow, LoadingSkeleton } from "@/components/ui";
 import { useI18n, useT } from "@/i18n";
 import { describeUserAgent, deviceLabel } from "@/lib/device";
 import { getErrorMessage } from "@/lib/errors";
-import { PASSWORD_MIN_LENGTH, passwordStrength, type CloudDevice } from "../domain";
+import { PASSWORD_MIN_LENGTH, passwordStrength, type CloudDevice, type CloudHousehold } from "../domain";
 import { useCloudSession, useCloudStore } from "../hooks";
 import * as service from "../service";
+import { getSyncLink, leaveCloudOnDevice } from "../sync";
 import { RecoveryKit } from "./RecoveryKit";
 import { SocialAccess } from "./SocialAccess";
 import { TwoFactorSettings } from "./TwoFactorSettings";
 
 /**
- * Ajustes → Cuenta: la contraseña, el kit de recuperación, la verificación en dos pasos y los
- * dispositivos donde está abierta.
+ * Ajustes → Cuenta: la contraseña, el kit de recuperación, la verificación en dos pasos, los
+ * dispositivos donde está abierta y borrar la cuenta.
  * Solo con la nube habilitada y la cuenta abierta en este dispositivo.
  */
 export function AccountSettings() {
   const t = useT();
   const { status, session } = useCloudSession();
-  const [dialog, setDialog] = useState<"password" | "kit" | null>(null);
+  const [dialog, setDialog] = useState<"password" | "kit" | "delete" | null>(null);
 
   if (status === "idle" || status === "restoring") return <LoadingSkeleton paragraph={{ rows: 3 }} style={{ paddingBlock: 16 }} />;
   if (!session) {
@@ -54,13 +55,116 @@ export function AccountSettings() {
         </Button>
       </SettingRow>
       <TwoFactorSettings />
-      <SettingRow label={t("cloud.account.devicesTitle")} description={t("cloud.account.devicesText")} stacked last>
+      <SettingRow label={t("cloud.account.devicesTitle")} description={t("cloud.account.devicesText")} stacked>
         <Devices />
       </SettingRow>
       <SocialAccess mode="link" />
+      <SettingRow label={t("cloud.account.delete.title")} description={t("cloud.account.delete.text")} last>
+        <Button danger icon={<UserX />} onClick={() => setDialog("delete")}>
+          {t("cloud.account.delete.button")}
+        </Button>
+      </SettingRow>
       <ChangePasswordModal open={dialog === "password"} onClose={() => setDialog(null)} />
       <NewKitModal open={dialog === "kit"} onClose={() => setDialog(null)} />
+      <Modal open={dialog === "delete"} title={t("cloud.account.delete.confirmTitle")} onCancel={() => setDialog(null)} footer={null} destroyOnHidden>
+        <DeleteAccountForm onCancel={() => setDialog(null)} />
+      </Modal>
     </>
+  );
+}
+
+/**
+ * Borrar la cuenta. Primero se fija si administra sola una casa con más gente (eso lo frena), dice
+ * qué se borra y qué queda, y pide escribir el email. Si este dispositivo sincroniza con esta
+ * cuenta, también queda vacío: su casa era la de la cuenta.
+ */
+function DeleteAccountForm({ onCancel }: { onCancel: () => void }) {
+  const t = useT();
+  const { token } = theme.useToken();
+  const { message } = App.useApp();
+  const session = useCloudStore((s) => s.session);
+  const [blocking, setBlocking] = useState<CloudHousehold[] | null>(null);
+  const [busy, setBusy] = useState(false);
+  const linked = Boolean(session) && getSyncLink()?.userId === session?.user.id;
+
+  useEffect(() => {
+    if (!session) return;
+    let cancelled = false;
+    service
+      .householdsBlockingDeletion(session)
+      .then((list) => !cancelled && setBlocking(list))
+      .catch((error: unknown) => {
+        if (cancelled) return;
+        setBlocking([]);
+        message.error(getErrorMessage(error, t));
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [session, message, t]);
+
+  async function onFinish({ email }: { email: string }) {
+    setBusy(true);
+    try {
+      await service.deleteAccount(email);
+      message.success(t("cloud.account.delete.done"));
+      if (linked) {
+        await leaveCloudOnDevice({ wipe: true });
+        // eslint-disable-next-line @next/next/no-location-assign-relative-destination -- la base local se borró: la app tiene que arrancar de cero, no navegar.
+        window.location.assign("/bienvenida");
+        return;
+      }
+      useCloudStore.getState().setSession(null);
+    } catch (error) {
+      message.error(getErrorMessage(error, t));
+      setBusy(false);
+    }
+  }
+
+  if (!session || !blocking) return <LoadingSkeleton paragraph={{ rows: 3 }} style={{ paddingBlock: 16 }} />;
+  if (blocking.length > 0) {
+    return (
+      <Flex vertical gap={16} style={{ marginTop: 16 }}>
+        <Alert type="warning" showIcon title={t("cloud.account.delete.blocked", { houses: blocking.map((household) => household.name || t("cloud.panel.unnamed")).join(", ") })} />
+        <Typography.Text type="secondary">{t("cloud.account.delete.blockedHow")}</Typography.Text>
+        <Link href="/familia#nube" onClick={onCancel}>
+          <Button type="primary" block>
+            {t("cloud.account.delete.goFamily")}
+          </Button>
+        </Link>
+      </Flex>
+    );
+  }
+
+  const items: ("account" | "alone" | "shared" | "device")[] = linked ? ["account", "alone", "shared", "device"] : ["account", "alone", "shared"];
+  return (
+    <Form layout="vertical" requiredMark={false} onFinish={onFinish} disabled={busy} style={{ marginTop: 16 }}>
+      <ul style={{ paddingInlineStart: token.paddingLG, marginBlock: 0, marginBottom: token.margin }}>
+        {items.map((item) => (
+          <li key={item} style={{ marginBottom: token.marginXS }}>
+            <Typography.Text>{t(`cloud.account.delete.what.${item}`)}</Typography.Text>
+          </li>
+        ))}
+      </ul>
+      <Form.Item
+        name="email"
+        label={t("cloud.account.delete.emailLabel", { email: session.user.email })}
+        rules={[
+          {
+            validator: (_, value?: string) =>
+              value?.trim().toLowerCase() === session.user.email.toLowerCase() ? Promise.resolve() : Promise.reject(new Error(t("cloud.account.delete.mismatch"))),
+          },
+        ]}
+      >
+        <Input type="email" autoComplete="off" autoFocus />
+      </Form.Item>
+      <Typography.Paragraph type="secondary" style={{ fontSize: token.fontSizeSM }}>
+        {t("cloud.account.delete.final")}
+      </Typography.Paragraph>
+      <Button type="primary" danger htmlType="submit" block loading={busy} icon={<UserX />}>
+        {busy ? t("cloud.auth.working") : t("cloud.account.delete.confirm")}
+      </Button>
+    </Form>
   );
 }
 

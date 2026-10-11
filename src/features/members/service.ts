@@ -11,7 +11,7 @@ import { db } from "@/lib/db";
 import { NotFoundError, PermissionError, ValidationError } from "@/lib/errors";
 import { createId } from "@/lib/id";
 import { isValidPin, MEMBER_LIMITS, parseMember, type BiometricCredential, type MemberInput } from "./domain";
-import { hashPin, removeBiometricKey } from "./security";
+import { hashPin } from "./security";
 
 async function adminCount() {
   return (await db.members.toArray()).filter((member) => member.role === "admin").length;
@@ -126,8 +126,6 @@ export async function addCredential(actor: Actor | null, memberId: string, crede
 
 export async function removeCredential(actor: Actor | null, memberId: string, credentialId: string) {
   if (!actor || (actor.id !== memberId && !can(actor, "members.manage"))) throw new PermissionError("members.manage");
-  const existing = (await db.members.get(memberId))?.credentials?.find(credential => credential.id === credentialId);
-  if (existing) await removeBiometricKey(existing);
   await db.transaction("rw", db.members, async () => {
     const member = await db.members.get(memberId);
     if (!member) return;

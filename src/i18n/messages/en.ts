@@ -342,6 +342,7 @@ export const en: Messages = {
       account: "Account",
       feedback: "Feedback",
       privacyPolicy: "Privacy policy",
+      accountDeletion: "Delete your account",
       join: "Join a home",
       compras: "Shopping",
       recipes: "Recipes",
@@ -1593,6 +1594,26 @@ export const en: Messages = {
       revokeTitle: "Sign out {device}?",
       revokeText: "It stops syncing and has to sign in again. What that device already stored isn't wiped remotely.",
       revoked: "That device was signed out.",
+      delete: {
+        title: "Delete my account",
+        text: "Your account and what the cloud keeps about you are deleted. This can't be undone.",
+        button: "Delete my account",
+        confirmTitle: "Delete your account?",
+        what: {
+          account: "Your email, name, password, passkeys and sessions are deleted.",
+          alone: "Homes where nobody else lives are deleted, with their photos and history.",
+          shared: "You leave shared homes. What you wrote there stays with your family.",
+          device: "This device is emptied. If you want to keep something, export a backup first from Settings → Data.",
+        },
+        emailLabel: "To confirm, type {email}",
+        mismatch: "That doesn't match your account email.",
+        final: "This can't be undone. To come back, you'll need to create a new account.",
+        confirm: "Delete my account forever",
+        done: "Your account was deleted.",
+        blocked: "You manage {houses}, and other people live there.",
+        blockedHow: "Before deleting your account, make someone else an admin in Family → Home in the cloud.",
+        goFamily: "Go to Family",
+      },
     },
     access: {
       title: "Access code",
@@ -1866,24 +1887,24 @@ export const en: Messages = {
     privacy: {
       eyebrow: "Privacy policy",
       title: "What {app} does with your data",
-      updated: "Last updated: October 10, 2026",
+      updated: "Last updated: October 11, 2026",
       intro: "{app} is an open source app to organize your home. It is built so your data lives on your devices. It shows no ads, uses no trackers and sells no data.",
       sections: {
         android: {
           title: "The Android app",
-          body: "The Android app works without an account and offline. Everything you add stays on your phone.\nIt does not send your data to our servers or to third parties.\nThe camera is used only when you open it, to take photos or read QR codes. Images stay on the phone.\nBackups are a file you choose where to save. That file is not encrypted: keep it somewhere you trust.\nIf you uninstall the app, Android deletes all its data.",
+          body: "The Android app opens {domain} in Chrome, full screen. It is the same app as the website: everything on this page applies to both.\nWithout an account, everything you add stays on your phone and nothing reaches us.\nThe camera is used only when you open it, to take photos or read QR codes.\nBackups are a file you choose where to save. That file is not encrypted: keep it somewhere you trust.",
         },
         cloud: {
-          title: "The web version with an account (optional)",
-          body: "On {domain} you can create an account to share your home across devices. For that we store your name, your email and your password protected with a hash. If you sign in with Google or GitHub, we receive your name, email and profile picture.\nIf you turn on two-step verification, we store its secret and your backup codes encrypted, plus the public key of each passkey.\nYour home data and photos are encrypted on your device before upload. We do not have the keys and cannot read them.\nFor security, each session stores the IP address and browser you signed in from. A session lasts up to 30 days.\nIf you send us feedback, we store the message and any email you leave.",
+          title: "With an account (optional)",
+          body: "On the website or in the Android app you can create an account to share your home across devices. For that we store your name, your email and your password protected with a hash. If you sign in with Google or GitHub, we receive your name, email and profile picture.\nIf you turn on two-step verification, we store its secret and your backup codes encrypted, plus the public key of each passkey.\nYour home data and photos are encrypted on your device before upload. We do not have the keys and cannot read them.\nFor security, each session stores the IP address and browser you signed in from. A session lasts up to 30 days.\nIf you send us feedback, we store the message and any email you leave.",
         },
         providers: {
           title: "Services we use",
-          body: "Cloudflare hosts the website, the API and the accounts database.\nSupabase stores the encrypted photos of the account version.\nGoogle and GitHub are involved only if you choose to sign in with them.\nNone of them receive your data for advertising.",
+          body: "Cloudflare hosts the website, the API and the accounts database.\nSupabase stores the encrypted photos of the account version.\nGoogle and GitHub are involved only if you choose to sign in with them.\nOn Android, the app uses Google Chrome to show the website.\nNone of them receive your data for advertising.",
         },
         retention: {
           title: "How long we keep data",
-          body: "What is on your device stays there until you delete it or uninstall the app.\nA cloud home with no activity for 90 days is paused, with notices first.\nYou can ask us to delete your account and all its data by writing to {email}. We do it within 30 days.",
+          body: "What is on your device stays there until you delete it or clear the browser data.\nA cloud home with no activity for 90 days is paused, with notices first.\nYou can delete your account at any time from Settings → Account. The steps and what gets deleted are at {domain}/borrar-cuenta.\nIf you cannot sign in, write to {email} from your account email and we delete it within 30 days.",
         },
         children: {
           title: "Children",
@@ -1899,6 +1920,30 @@ export const en: Messages = {
         },
       },
       source: "See the code on GitHub",
+    },
+    deletion: {
+      eyebrow: "Your account",
+      title: "How to delete your {app} account",
+      intro: "You can delete your account at any time, from the website or the Android app. It is the same account and it is deleted right away.",
+      sections: {
+        steps: {
+          title: "From the app",
+          body: "Go to {domain} or open the Android app with your account.\nGo to Settings → Account.\nTap \"Delete my account\" and type your email to confirm.\nIf you manage a home where other people live, first make someone else an admin.",
+        },
+        deleted: {
+          title: "What gets deleted",
+          body: "Your email, name and password.\nYour sessions, passkeys and two-step verification.\nThe encrypted copy of your keys that the cloud kept.\nHomes where nobody else lives, with their photos and history.",
+        },
+        kept: {
+          title: "What stays",
+          body: "What you wrote in a shared home stays with your family, encrypted. We cannot read it.\nA random identifier and your public signing key stay, without your name or email. Your family uses them to verify that your old changes are yours.\nWhat is on your devices is deleted when you remove the app or clear the browser data.",
+        },
+        help: {
+          title: "If you cannot sign in",
+          body: "Write to {email} from your account email. We delete it within 30 days.",
+        },
+      },
+      open: "Go to Settings → Account",
     },
   },
   landing: {

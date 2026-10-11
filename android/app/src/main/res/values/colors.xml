@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Barras del sistema: el fondo de la app en claro y en oscuro. -->
+<resources>
+    <color name="surface">#F5F5F5</color>
+    <color name="surface_dark">#000000</color>
+</resources>
