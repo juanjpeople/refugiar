@@ -108,8 +108,13 @@ export `localOnly: true`, revisión `9d4197db8a7ea0915670a6c8bb4c9fbbdfbdcd4c`.
 otro origen (`https://refugi.ar`): conservar/exportar la casa anterior antes de
 actualizar y verificar el traslado explícitamente. Copia del APK inspeccionado
 en `.family-lab/physical-a55/installed-v1-base.apk` (ignorada, sin copiar datos
-privados de la app). Pendiente respuesta sobre contenido existente y respaldo;
-el recorrido funcional aún no está ejecutado. Consultar ADB con `--user 0`
+privados de la app). Esta identificación describe el estado previo al borrado.
+El usuario confirmó que no había datos importantes y autorizó borrar los datos
+de prueba. Se ejecutó `pm clear --user 0 ar.refugi.app` únicamente en el A55
+seleccionado; ADB devolvió `Success`. El paquete continúa en versionCode 1:
+queda pendiente actualizar desde Play a la versión 3 y ejecutar el recorrido.
+Este ensayo partirá de datos limpios y **no certificará migración** desde localhost.
+El recorrido funcional aún no está ejecutado. Consultar ADB con `--user 0`
 cuando corresponda: los perfiles secundarios del teléfono no forman parte del ensayo.
 
 Preparación previa (instalaciones/alta de cuentas no están incluidas en los 15 minutos):
