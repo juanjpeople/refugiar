@@ -477,7 +477,7 @@ Para que una función nueva no rehaga su página de lista ni su página de detal
   - Proyectos ahora avisa "No hay proyectos en curso" cuando todos están terminados, en vez
     de una grilla vacía.
   - El mosaico usa `minmax(min(Npx, 100%), 1fr)`: a 320 px las tarjetas no desbordan.
-- [x] Compras e Inventario (#77): el recinto (`/inventario/lugar`) pasa a `DetailPage`. El plano
+- [x] Compras e Inventario (#78): el recinto (`/inventario/lugar`) pasa a `DetailPage`. El plano
   de la casa (`/inventario`) y Compras quedan como están, a propósito: no son una lista con
   buscador sino espacios de trabajo (vistas plano/lista/tarjetas; listas con "Para revisar",
   pendientes y comprados). Ya usan `PageHeader` y `SectionHeader`; forzarlos a `ListPage`
