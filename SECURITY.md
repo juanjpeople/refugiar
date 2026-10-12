@@ -90,6 +90,27 @@ Encender, apagar o regenerar códigos pide la contraseña. Quien pierde el telé
 los códigos de respaldo y las passkeys queda afuera de la cuenta en la nube (sus datos
 siguen en sus dispositivos): todavía no hay un camino de soporte para eso.
 
+## Altas, claves y topes de la nube
+
+- **Nube cerrada.** El servidor rechaza un alta sin un código de acceso vigente o una invitación
+  para una cuenta, sin usar y sin vencer. El código no se consume al crear la cuenta: se consume al
+  crear la casa. Los intentos tienen límite por IP. El servidor de casa (`HOUSEHOLD_ACCESS=open`)
+  deja el alta abierta.
+- **Entrega de claves.** Solo un admin entrega un sobre a otro miembro, en la versión vigente, y
+  nunca pisa uno que ya existe. Así nadie de la casa puede dejar a otro sin sus claves ni trabar la
+  rotación al sacar a alguien.
+- **Topes por casa** (operaciones por día, tamaño del registro y fotos). Protegen la capa gratuita,
+  que es de toda la cuenta, de un dispositivo con un error o de un abuso. El operador los cambia
+  desde `/admin`; llegar a uno frena, nunca pasa a consumo pago. Ver
+  [nube](docs/features/nube.md#límites).
+- **Lista de espera.** Guarda nombre y email sin cuenta, con límite por IP y la misma respuesta si el
+  email ya estaba. Se borra al crear la casa con ese código. El código va por correo y el cuerpo
+  del correo se vacía al entregarse.
+- **Encabezados de la app** (`public/_headers`): no se puede meter dentro de otra página, cámara
+  solo para la app, sin micrófono ni ubicación, y HTTPS recordado por el navegador. No hay todavía
+  una CSP de scripts: la app estática usa scripts en línea.
+- Los avisos por correo nunca van a cuentas sin buzón (el celular de un chico o una cuenta borrada).
+
 Queremos mejorar estas protecciones con contribuciones y revisión pública. No
 prometemos ausencia de vulnerabilidades: documentamos límites, verificamos cambios
 y corregimos los problemas que se detectan.

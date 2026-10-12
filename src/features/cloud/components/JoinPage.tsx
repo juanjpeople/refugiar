@@ -284,7 +284,13 @@ export function JoinPage() {
                         { value: "signin", label: t("cloud.auth.signInTab") },
                       ]}
                     />
-                    <AuthForm key={mode} mode={mode} onCreated={(code) => setView({ kind: "kit", preview: view.preview, code })} onSignedIn={() => join(view.preview)} />
+                    <AuthForm
+                      key={mode}
+                      mode={mode}
+                      access={link ? { invite: link } : undefined}
+                      onCreated={(code) => setView({ kind: "kit", preview: view.preview, code })}
+                      onSignedIn={() => join(view.preview)}
+                    />
                   </>
                 )}
               </Flex>

@@ -8,6 +8,15 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 
 <!-- END:nextjs-agent-rules -->
 
+## Forma de trabajo
+
+- Una tanda = un PR = un deploy. Lo pedido se termina entero en ese PR, sin partirlo en PRs chicos.
+- Ramas `feat/…` o `fix/…`. Nunca `claude/…`.
+- El dueño prueba en la UI. No sumar tests extra ni correr navegadores (Playwright, capturas) desde el
+  agente. Los checks que ya existen (`npm run check`, recorrido de la API) se corren, y se actualizan
+  si el cambio los deja desactualizados.
+- El PR que cierra algo lo anota en `ROADMAP.md` (✅ Hecho) y actualiza la página de esa funcionalidad.
+
 ## Costos y servicios externos
 
 Refugiar debe poder mantenerse dentro de la capa gratuita. No introducir dependencias
