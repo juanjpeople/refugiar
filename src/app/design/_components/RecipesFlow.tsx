@@ -1,11 +1,11 @@
 "use client";
 
-import { App, Button, Card, Col, Flex, Input, Row, Segmented, Tag, Tooltip, Typography, theme } from "antd";
-import { AnimatePresence, motion } from "framer-motion";
-import { ChefHat, Clock, ListPlus, Pencil, Plus, Search, SearchX, Users } from "lucide-react";
+import { App, Button, Card, Col, Flex, Row, Segmented, Tag, Tooltip, Typography, theme } from "antd";
+import { motion } from "framer-motion";
+import { ChefHat, Clock, ListPlus, Pencil, Plus, Users } from "lucide-react";
 import { useState } from "react";
 import { Reveal, Stagger } from "@/components/motion";
-import { EmptyState, PageHeader, QuantityStepper } from "@/components/ui";
+import { ListPage, QuantityStepper } from "@/components/ui";
 import type { InventoryItem } from "@/features/inventory/domain";
 import { AvailabilityTag, RatingBadge, RecipeCover } from "@/features/recipes/components/RecipeBits";
 import { RecipeCard } from "@/features/recipes/components/RecipesPage";
@@ -123,28 +123,26 @@ function ListScreen({ onOpen }: { onOpen: (id: string) => void }) {
   const usedTags = RECIPE_TAGS.filter((tag) => SUMMARIES.some((entry) => entry.tags.includes(tag)));
 
   return (
-    <>
-      <PageHeader
-        eyebrow={t("recipes.eyebrow")}
-        title={t("recipes.title")}
-        description={t("recipes.description")}
-        extra={
-          <Button type="primary" icon={<Plus />}>
-            {t("recipes.new")}
-          </Button>
-        }
-      />
-      <Reveal delay={0.05}>
-        <Flex gap={12} wrap align="center" style={{ marginBottom: 12 }}>
-          <Input
-            allowClear
-            prefix={<Search style={{ color: token.colorTextTertiary }} />}
-            placeholder={t("recipes.search")}
-            aria-label={t("recipes.search")}
-            value={query}
-            onChange={(event) => setQuery(event.target.value)}
-            style={{ flex: "1 1 240px", maxWidth: 360 }}
-          />
+    <NoNavigate onLink={(href) => onOpen(idFromHref(href))}>
+      <ListPage
+        header={{
+          eyebrow: t("recipes.eyebrow"),
+          title: t("recipes.title"),
+          description: t("recipes.description"),
+          extra: (
+            <Button type="primary" icon={<Plus />}>
+              {t("recipes.new")}
+            </Button>
+          ),
+        }}
+        items={SUMMARIES}
+        visible={visible}
+        getKey={(entry) => entry.id}
+        renderItem={(entry) => <RecipeCard recipe={entry} />}
+        empty={{ icon: ChefHat, title: t("recipes.emptyTitle"), description: t("recipes.emptyText") }}
+        noMatch={{ title: t("recipes.noMatchTitle"), description: t("recipes.noMatchText") }}
+        search={{ value: query, onChange: setQuery, placeholder: t("recipes.search") }}
+        filters={
           <Segmented<"all" | "ready">
             value={show}
             onChange={setShow}
@@ -153,37 +151,24 @@ function ListScreen({ onOpen }: { onOpen: (id: string) => void }) {
               { value: "ready", label: t("recipes.filter.ready", { count: readyCount }) },
             ]}
           />
-        </Flex>
-        <Flex gap={6} wrap style={{ marginBottom: 20 }}>
-          {usedTags.map((tag) => (
-            <Tag.CheckableTag
-              key={tag}
-              checked={tags.includes(tag)}
-              onChange={(checked) => setTags((current) => (checked ? [...current, tag] : current.filter((value) => value !== tag)))}
-              style={{ margin: 0, paddingBlock: 2, border: `1px solid ${tags.includes(tag) ? "transparent" : token.colorBorderSecondary}` }}
-            >
-              {t(`recipes.tags.${tag}`)}
-            </Tag.CheckableTag>
-          ))}
-        </Flex>
-      </Reveal>
-
-      {visible.length === 0 ? (
-        <Card>
-          <EmptyState icon={SearchX} title={t("recipes.noMatchTitle")} description={t("recipes.noMatchText")} />
-        </Card>
-      ) : (
-        <NoNavigate onLink={(href) => onOpen(idFromHref(href))}>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(min(240px, 100%), 1fr))", gap: 16 }}>
-            <AnimatePresence initial={false}>
-              {visible.map((entry, index) => (
-                <RecipeCard key={entry.id} recipe={entry} index={index} />
-              ))}
-            </AnimatePresence>
-          </div>
-        </NoNavigate>
-      )}
-    </>
+        }
+        below={
+          <Flex gap={6} wrap>
+            {usedTags.map((tag) => (
+              <Tag.CheckableTag
+                key={tag}
+                checked={tags.includes(tag)}
+                onChange={(checked) => setTags((current) => (checked ? [...current, tag] : current.filter((value) => value !== tag)))}
+                style={{ margin: 0, paddingBlock: 2, border: `1px solid ${tags.includes(tag) ? "transparent" : token.colorBorderSecondary}` }}
+              >
+                {t(`recipes.tags.${tag}`)}
+              </Tag.CheckableTag>
+            ))}
+          </Flex>
+        }
+        minItemWidth={240}
+      />
+    </NoNavigate>
   );
 }
 
@@ -296,13 +281,11 @@ export function RecipesFlow() {
       title="Flujo: recetas"
       description="La referencia de calidad: así se veía la app desde el principio. Son los componentes reales (RecipeCard, IngredientRow, RecipeSteps) con datos de ejemplo, y la disponibilidad sale de checkAvailability. Filtrá, abrí una receta, cambiá las porciones (los ingredientes pasan de 'alcanza' a 'falta poco') y tachá pasos. Fijate en: el héroe con título clamp y portada que se asienta con resorte, una sola acción primaria grande, columnas que entran en cascada (0.1 → 0.15) y la grilla que se reacomoda con layout al filtrar."
       code={`
-// Recetario: toolbar en Reveal + grilla con AnimatePresence (las tarjetas usan layout, entran escalonadas y salen achicándose).
-<Reveal delay={0.05}><Flex gap={12} wrap>{/* Input + Segmented */}</Flex>{/* Tag.CheckableTag */}</Reveal>
-<div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))", gap: 16 }}>
-  <AnimatePresence initial={false}>
-    {visible.map((recipe, index) => <RecipeCard key={recipe.id} recipe={recipe} index={index} />)}
-  </AnimatePresence>
-</div>
+// Recetario: la plantilla ListPage (buscador, filtros, etiquetas, grilla animada, vacío y sin resultados).
+<ListPage header={{ eyebrow, title, description, extra: newButton }} items={recipes} visible={visible}
+  getKey={(recipe) => recipe.id} renderItem={(recipe) => <RecipeCard recipe={recipe} />}
+  empty={{ icon: ChefHat, title, description, action: newButton }} noMatch={{ title, description }}
+  search={{ value: query, onChange: setQuery, placeholder }} filters={<Segmented … />} below={/* Tag.CheckableTag */} />
 
 // Detalle: héroe (portada + título clamp + una acción primaria size="large"), y dos columnas en cascada.
 <Reveal><Row gutter={[32, 24]} align="middle">…</Row></Reveal>
