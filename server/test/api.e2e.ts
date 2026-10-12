@@ -67,10 +67,17 @@ class Client {
   }
 }
 
-async function signUp(name: string, email: string, password: string, ip?: string) {
+/** Nube cerrada: cada alta lleva un código de acceso vigente (no se consume) o una invitación. */
+let accessCode: Promise<string> | undefined;
+function signUpCode() {
+  accessCode ??= adminCall("POST", "/platform/licenses", { count: 1, maxHouseholds: 10, note: `altas ${unique}` }).then((issued) => issued.body.licenses[0].code as string);
+  return accessCode;
+}
+
+async function signUp(name: string, email: string, password: string, ip?: string, access?: unknown) {
   const client = new Client(ip);
   const keys = await derivePasswordKeys(email, password, FAST);
-  const signUp = await client.call("POST", "/api/auth/sign-up/email", { name, email, password: keys.authKey });
+  const signUp = await client.call("POST", "/api/auth/sign-up/email", { name, email, password: keys.authKey, access: access ?? { code: await signUpCode() } });
   assert.equal(signUp.status, 200, JSON.stringify(signUp.body));
   const { identity, upload, recoveryCode } = await createIdentity(keys.encKey);
   assert.equal((await client.call("POST", "/api/keys", upload)).status, 201);
@@ -157,9 +164,19 @@ test("cuenta, casa, invitación y unión, de punta a punta y cifrado", async (t)
   const createdInvite = await ana.client.call("POST", `/api/households/${householdId}/invites`, { id: inviteId, role: "adult", tokenHash: await sha256(invite.authToken), wrappedKeys });
   assert.equal(createdInvite.status, 201, JSON.stringify(createdInvite.body));
 
-  // Flor abre el link (sin cuenta todavía): ve quién la invita y el nombre de la casa.
-  const flor = await signUp("Flor", `flor-${unique}@casa.test`, "otra frase larga para flor");
+  // Nube cerrada: sin código de acceso ni invitación no se crea una cuenta.
+  const outsider = await derivePasswordKeys(`afuera-${unique}@casa.test`, "una frase larga de alguien de afuera", FAST);
+  // Cada intento desde otra IP: el límite de altas de Better Auth (tres por minuto) corre antes.
+  let outsiderIp = 40;
+  const outsiderSignUp = (access?: unknown) =>
+    new Client(`198.51.100.${outsiderIp++}`).call("POST", "/api/auth/sign-up/email", { name: "Afuera", email: `afuera-${unique}@casa.test`, password: outsider.authKey, access });
+  assert.equal((await outsiderSignUp()).status, 403);
+  assert.equal((await outsiderSignUp({ code: "OD-AAAA-AAAA-AAAA-AAAA" })).status, 403);
+  assert.equal((await outsiderSignUp({ invite: { id: inviteId, authToken: toB64u(crypto.getRandomValues(new Uint8Array(32))) } })).status, 403);
+
+  // Flor abre el link (sin cuenta todavía): crea su cuenta con la invitación y ve quién la invita y el nombre de la casa.
   const joinWith = await inviteSecrets(invite.secret);
+  const flor = await signUp("Flor", `flor-${unique}@casa.test`, "otra frase larga para flor", undefined, { invite: { id: inviteId, authToken: joinWith.authToken } });
   const preview = await new Client().call("POST", `/api/invites/${inviteId}/preview`, { authToken: joinWith.authToken });
   assert.equal(preview.status, 200);
   assert.equal(preview.body.inviterName, "Ana");
@@ -194,9 +211,18 @@ test("cuenta, casa, invitación y unión, de punta a punta y cifrado", async (t)
   assert.deepEqual(members.body.members.map((member: { name: string; role: string }) => `${member.name}:${member.role}`), ["Ana:admin", "Flor:adult"]);
 
   // --- Lo que no tiene que pasar ---
-  // La misma invitación no sirve dos veces.
+  // La misma invitación no sirve dos veces: ni para entrar ni para crear otra cuenta.
   const reuse = await ana.client.call("POST", `/api/invites/${inviteId}/accept`, { authToken: joinWith.authToken, envelopes: florEnvelopes });
   assert.equal(reuse.status, 410);
+  assert.equal((await outsiderSignUp({ invite: { id: inviteId, authToken: joinWith.authToken } })).status, 403);
+  // Solo un admin entrega claves, en la versión vigente, y nunca pisa un sobre que ya existe.
+  const handOver = (who: { client: Client }, version: number) =>
+    who.client.call("POST", `/api/households/${householdId}/envelopes`, { recipientUserId: ana.userId, envelopes: [{ scope: "family", version, envelope: florEnvelopes[0].envelope }] });
+  assert.equal((await handOver(flor, 1)).status, 403);
+  assert.equal((await handOver(ana, 2)).status, 409);
+  assert.equal((await handOver(ana, 1)).status, 200);
+  const anaFamilyEnvelope = (await ana.client.call("GET", "/api/me")).body.households[0].envelopes.find((entry: { scope: string }) => entry.scope === "family");
+  assert.equal(anaFamilyEnvelope.envelope, familyEnvelope.envelope);
   // Sin el secreto del link, la invitación "no existe".
   assert.equal((await new Client().call("POST", `/api/invites/${inviteId}/preview`, { authToken: toB64u(crypto.getRandomValues(new Uint8Array(32))) })).status, 404);
   // Flor no es admin: no puede invitar.
@@ -220,7 +246,7 @@ test("cuenta, casa, invitación y unión, de punta a punta y cifrado", async (t)
   assert.equal((await ana.client.call("POST", `/api/households/${householdId}/invites`, {}, { origin: null })).status, 403);
   assert.equal((await ana.client.call("POST", `/api/households/${householdId}/invites`, {}, { origin: "https://malicioso.example" })).status, 403);
   // Una contraseña humana cruda (no derivada) no se acepta.
-  const raw1 = await new Client().call("POST", "/api/auth/sign-up/email", { name: "X", email: `x-${unique}@casa.test`, password: "123456789" });
+  const raw1 = await new Client().call("POST", "/api/auth/sign-up/email", { name: "X", email: `x-${unique}@casa.test`, password: "123456789", access: { code: await signUpCode() } });
   assert.notEqual(raw1.status, 200);
   // Sin sesión, nada: /me responde que no hay nadie y lo demás exige sesión.
   assert.equal((await new Client().call("GET", "/api/me")).body.user, null);
@@ -761,6 +787,9 @@ test("el celular de un chico entra sin email ni contraseña, solo a lo de la fam
   assert.equal((await mom.client.call("POST", `/api/households/${home.householdId}/invites`, wrong)).status, 400);
   const code = await deviceInvite(mom, home);
   assert.ok(code.expiresAt - Date.now() <= 15 * 60_000 + 5_000);
+  // Tampoco sirve para crear una cuenta con email.
+  const viaDevice = await new Client("203.0.113.35").call("POST", "/api/auth/sign-up/email", { name: "X", email: `celular-x-${unique}@casa.test`, password: "x".repeat(43), access: { invite: { id: code.inviteId, authToken: code.invite.authToken } } });
+  assert.equal(viaDevice.status, 403);
   const preview = await new Client().call("POST", `/api/invites/${code.inviteId}/preview`, { authToken: code.invite.authToken });
   assert.equal(preview.body.kind, "device");
   assert.equal(preview.body.role, "kid");

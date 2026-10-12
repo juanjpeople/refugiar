@@ -1,0 +1,14 @@
+# Cloudflare (Workers Static Assets): encabezados de la app. La API y /admin ponen los suyos en el Worker.
+# - Nadie puede meter la app dentro de otra página (clickjacking).
+# - Sin <object>/<embed>, sin cambiar la base de las rutas y los formularios solo van a refugi.ar.
+# - Cámara solo para la app (escanear etiquetas). Micrófono, ubicación, pagos y USB: apagados.
+#   Si una función nueva los necesita, se habilitan acá en el mismo PR.
+# - El navegador recuerda que refugi.ar va siempre por HTTPS.
+# serve.json (paquete local) lleva lo mismo.
+/*
+  X-Content-Type-Options: nosniff
+  X-Frame-Options: DENY
+  Referrer-Policy: no-referrer
+  Content-Security-Policy: frame-ancestors 'none'; object-src 'none'; base-uri 'self'; form-action 'self'
+  Permissions-Policy: camera=(self), microphone=(), geolocation=(), payment=(), usb=(), serial=(), bluetooth=()
+  Strict-Transport-Security: max-age=31536000

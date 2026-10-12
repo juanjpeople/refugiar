@@ -86,6 +86,15 @@ export const createHouseholdInput = z.object({
 
 export const licenseCheckInput = z.object({ code: licenseCode });
 
+/**
+ * Nube cerrada: con qué se crea una cuenta. Una licencia vigente (no se consume: se consume al
+ * crear la casa) o una invitación para una cuenta, sin usar y sin vencer.
+ */
+export const signUpAccessInput = z.union([
+  z.object({ code: licenseCode }),
+  z.object({ invite: z.object({ id: uuid, authToken: b64(64) }) }),
+]);
+
 /** Administración: emitir licencias (a mano hoy; mañana, el webhook del cobro). */
 export const createLicensesInput = z.object({
   count: z.number().int().min(1).max(50).default(1),

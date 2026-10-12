@@ -224,6 +224,8 @@ async function push(ctx: SyncContext, onProgress?: Progress) {
     try {
       response = await api<PushResponse>("POST", `/households/${ctx.link.householdId}/ops`, { ops: inflight.ops });
     } catch (error) {
+      // La casa llegó a su tope en la nube: el lote no entró y queda listo para el próximo intento.
+      if (error instanceof CloudError && error.code === "sync-quota") throw new SyncStop("quota");
       // Rechazado por el servidor (no por la red): ese lote no entró, se descarta y se vuelve a armar.
       if (error instanceof CloudError && error.status >= 400 && error.status < 500 && error.status !== 401 && error.status !== 429) {
         await db.syncState.delete(STATE.inflight);
@@ -488,21 +490,26 @@ class Engine {
     // "Sincronizando…" solo si tarda: una vuelta rápida no hace parpadear el indicador.
     const slow = setTimeout(() => status.update({ phase: "syncing" }), 700);
     try {
-      // En pausa no se sube, pero se sigue bajando: nadie se queda sin lo que hacen los demás.
-      let paused = false;
+      // En pausa, o con la casa en su tope, no se sube, pero se sigue bajando: nadie se queda sin
+      // lo que hacen los demás. Lo de este dispositivo queda guardado para cuando se pueda.
+      let held: SyncStop | null = null;
       try {
         await push(this.ctx);
       } catch (error) {
-        if (!(error instanceof SyncStop && error.code === "paused")) throw error;
-        paused = true;
+        if (!(error instanceof SyncStop && (error.code === "paused" || error.code === "quota"))) throw error;
+        held = error;
       }
       await pull(this.ctx);
-      if (paused) throw new SyncStop("paused");
+      if (held?.code === "paused") throw held;
       await flushPendingPhotoDeletes(this.ctx.link.householdId).catch((error: unknown) => console.warn("[fotos] no se pudieron borrar", error));
       // Las fotos que este dispositivo tiene y la nube todavía no (cifradas). Si falla, la próxima vuelta.
-      await uploadPendingPhotos(this.ctx.link.householdId).catch((error: unknown) => console.warn("[fotos] no se pudieron subir", error));
+      await uploadPendingPhotos(this.ctx.link.householdId).catch((error: unknown) => {
+        if (error instanceof CloudError && error.code === "storage-quota") held = new SyncStop("quota");
+        else console.warn("[fotos] no se pudieron subir", error);
+      });
       this.failures = 0;
       this.connect();
+      if (held) throw held;
       status.update({ phase: "synced", error: null, lastSyncAt: Date.now() });
     } catch (error) {
       const next = errorPhase(error);
@@ -511,7 +518,7 @@ class Engine {
         this.stop();
         return;
       }
-      if (next.error === "keys-changed" || next.error === "stale-key" || next.error === "paused") return;
+      if (next.error === "keys-changed" || next.error === "stale-key" || next.error === "paused" || next.error === "quota") return;
       // Reintento con espera creciente (2 s, 4 s, 8 s… hasta 1 min).
       this.failures++;
       this.schedule(Math.min(60_000, 2_000 * 2 ** (this.failures - 1)));
