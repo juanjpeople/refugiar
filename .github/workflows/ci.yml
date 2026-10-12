@@ -1,6 +1,6 @@
 # Cada PR: tipos, lint, tests, API y las pruebas de punta a punta esenciales, en escritorio.
 # Al mergear a main corre todo: celular (lo que cambia de diseño), temas, capturas y el paquete local para NAS.
-# La app de Android abre esta misma web; su compilación corre aparte (android.yml).
+# Android empaqueta esta interfaz; su compilación corre aparte (android.yml).
 name: CI
 
 on:

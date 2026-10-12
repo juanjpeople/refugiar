@@ -1,9 +1,14 @@
 # Publicar en Google Play
 
-Guía de la primera subida y de cada actualización. La app de Play es la misma web: una Trusted Web
-Activity que abre `https://refugi.ar` en Chrome ([ANDROID.md](ANDROID.md)). Tiene todo lo que tiene
-la web: sin cuenta en el teléfono, o con cuenta y la casa compartida en la nube cifrada. Las
-respuestas de Play Console de abajo valen para eso.
+> La migración de TWA a Android autónomo está en curso. Antes de publicar se deben verificar arranque
+> offline, conservación de datos al actualizar y sincronización real, según
+> [Cimientos del MVP](CIMIENTOS_MVP.md). Firma y controles de versión siguen siendo necesarios.
+
+Guía de la primera subida y de cada actualización. Android empaqueta la interfaz de
+Refugiar y conserva la nube opcional ([ANDROID.md](ANDROID.md)). El acceso social y
+las passkeys de cuenta todavía requieren validación en la migración. Las respuestas
+de Play Console de abajo son una base de revisión: contrastarlas con el comportamiento
+verificado y los proveedores usados antes de publicar.
 
 Costo: la cuenta de desarrollador es un pago único. Nada de esto suma cuotas ni servicios pagos.
 
@@ -31,8 +36,11 @@ si se pierde, se pide un reemplazo desde Play Console; no se pierde la app.
 queda como artefacto `refugiar-<versionCode>-aab` durante 7 días; adentro está `app-release.aab`.
 El workflow solo corre a pedido: no agrega tiempo a los PR. Si faltan los secretos, falla sin
 generar un paquete sin firmar. Antes de subirlo comprueba la firma.
+La opción `subir_a_play` está desmarcada por defecto: generar el artefacto no lo
+publica. Activarla requiere haber completado la validación de la versión que se
+quiere distribuir; esta entrega experimental todavía tiene pendientes documentados.
 
-**Local:** con JDK 21, Android SDK 36 y `android/keystore.properties` (`storeFile`,
+**Local:** ejecutar `npm ci` y `npm run android:sync` antes de Gradle. Con JDK 21, Android SDK 36 y `android/keystore.properties` (`storeFile`,
 `storePassword`, `keyAlias`, `keyPassword`), desde `android/`: `./gradlew bundleRelease -PappVersionCode=N`.
 Queda en `android/app/build/outputs/bundle/release/app-release.aab`. `storeFile` tiene que apuntar a
 la clave de subida que está en GitHub: con otra, Play rechaza el paquete.
@@ -50,7 +58,7 @@ El nombre del paquete queda fijo en `ar.refugi.app` con la primera subida.
 
 ### Unir la app con refugi.ar (una sola vez, después de la primera subida)
 
-Sin esto la app funciona, pero con una barra de dirección arriba.
+Esto asocia invitaciones y QR de la web con la instalación Android.
 
 1. Play Console → Prueba y lanza → Configuración → **Integridad de la app** → Firma de apps.
 2. Copiar el **SHA-256** del *Certificado de la clave de firma de apps* (el de Google, no el de subida).
@@ -177,17 +185,38 @@ Open source (AGPL-3.0): github.com/juanjpeople/refugiar
 
 ## 4. Cada actualización
 
-La mayoría de los cambios son de la web: se publican con su deploy y llegan a la app sin pasar por
-Play. Un paquete nuevo hace falta solo si cambia algo de `android/` (ícono, nombre, colores,
-dominio, librería):
+### Descargar para subir manualmente
+
+Ejecutar `npm run android:download` descarga el AAB del último workflow
+**Android release** exitoso, incluso si se compiló desde una rama de prueba.
+Requiere GitHub CLI (`gh`) instalado y `gh auth login`. No requiere acceso a la API
+de Google ni una cuenta de servicio. No genera una compilación nueva.
+
+El archivo queda en una carpeta única bajo `android/downloads/`, ignorada por Git,
+junto con `build.json` (commit, rama, versionCode y SHA-256). No pisa descargas anteriores.
+Para elegir destino: `npm run android:download -- --dir "C:\Users\juanparedez\Downloads"`.
+Si el artefacto venció (retención: 7 días), pide ejecutar de nuevo **Android release**
+con `subir_a_play=false`; no descarga silenciosamente un paquete más viejo.
+
+Subir `app-release.aab` desde Play Console a la pista de prueba elegida. Verificar
+que su versionCode supere el último aceptado por Play y revisar los límites de la
+versión antes de distribuirla. Descargar o compilar no publica la versión.
+
+### Compilar y distribuir
+
+Los cambios de interfaz Android necesitan un paquete nuevo: su código está dentro
+del APK/AAB. Publicar la web no actualiza la interfaz instalada. Los datos sí se
+sincronizan sin reinstalar. Para cada entrega verificada:
 
 1. Mergear a `main`.
 2. Correr *Android release* (el `versionCode` sube solo).
-3. Con la cuenta de servicio (abajo), el workflow sube el `.aab` a **Prueba interna** por su cuenta.
-   Sin ella, descargar el artefacto y subirlo a mano. Pasar de interna a cerrada o producción
+3. Solo si se activa `subir_a_play` y hay cuenta de servicio (abajo), el workflow sube
+   el `.aab` a **Prueba interna**. Si no, ejecutar `npm run android:download` y subirlo
+   a mano. Pasar de interna a cerrada o producción
    se hace desde Play Console.
 
-Solo corre con el botón, nunca en cada merge: cada ejecución crea una versión nueva en Play.
+Solo corre con el botón, nunca en cada merge. Compilar con la subida desactivada
+genera el artefacto; no crea una versión en Play.
 
 ### Subida automática a Prueba interna (opcional, una sola vez)
 

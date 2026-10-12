@@ -1,5 +1,10 @@
 # 🏠 Refugiar: arquitectura y especificaciones
 
+> Prioridad desde el 11 de octubre de 2026: [Cimientos del MVP](docs/CIMIENTOS_MVP.md).
+> La entrega actual cierra Android empaquetado experimental, resiliencia de sincronización
+> y laboratorio local. ESP y el resto del MVP quedan para siguientes entregas.
+> Ese documento registra dependencias y aceptación; distingue lo existente de lo pendiente.
+
 Este documento guarda la arquitectura y el diseño de las funcionalidades. Qué hay y qué sigue está en [ROADMAP.md](ROADMAP.md). Los principios que guían cada decisión están en [VALORES.md](VALORES.md); las convenciones de código, en la página **`/design`** de la app y en [CONTRIBUTING.md](CONTRIBUTING.md). El camino a producción (cuentas, sincronización, deploy, Android, suscripciones) está en [docs/PLAN_PRODUCCION.md](docs/PLAN_PRODUCCION.md).
 
 ---

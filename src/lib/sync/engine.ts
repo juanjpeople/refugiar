@@ -29,6 +29,7 @@ import { PRIVACY_TABLES, resolveScope } from "./scope";
 import { useSyncStatus, type SyncErrorCode } from "./status";
 import { isSyncTable, SYNC_META_TABLES, SYNC_TABLES, type SyncTable } from "./tables";
 import { CONTAINER_BACKFILL, SETTINGS_BACKFILL, shouldApplyAfterStorageUpgrade, storageCompatibleGroups } from "./upgrades";
+import { confirmedSequences } from "./confirmation";
 
 export interface RosterEntry {
   role: Role;
@@ -235,7 +236,9 @@ async function push(ctx: SyncContext, onProgress?: Progress) {
       }
       throw error;
     }
-    const seqs = new Map(response.acks.map((ack) => [ack.id, ack.seq]));
+    const seqs = confirmedSequences(inflight.ops, response);
+    // No descartar ni regenerar: el servidor puede haber guardado el lote completo.
+    if (!seqs) throw new SyncStop("server");
     const sent = inflight;
     await db.transaction("rw", db.syncRecords, db.syncState, async () => {
       for (const entry of sent.records) {

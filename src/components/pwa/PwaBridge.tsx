@@ -37,6 +37,9 @@ export function PwaBridge() {
   }, [set]);
 
   useEffect(() => {
+    // Android lleva la interfaz en el APK. Un SW podría sustituirla por archivos remotos
+    // y mezclar versiones; sus actualizaciones corresponden al paquete firmado.
+    if (process.env.NEXT_PUBLIC_NATIVE === "1") return;
     if (!("serviceWorker" in navigator)) return;
     // En desarrollo no hay service worker: cachearía archivos que cambian a cada rato.
     if (process.env.NODE_ENV !== "production") {
