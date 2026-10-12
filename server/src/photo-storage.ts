@@ -180,6 +180,12 @@ export function photoStorage(env: PhotoStorageEnv): PhotoStorage {
     }
     return new LocalR2PhotoStorage(env.LOCAL_PHOTOS);
   }
+  // Servidor de casa (`npm run casa`): fotos cifradas en el disco del equipo, en cualquier
+  // dirección de la red local. Producción no tiene el binding LOCAL_PHOTOS.
+  if (env.PHOTO_STORAGE === "home") {
+    if (!env.LOCAL_PHOTOS) throw new PhotoStorageError("configure", 500);
+    return new LocalR2PhotoStorage(env.LOCAL_PHOTOS);
+  }
   if (env.PHOTO_STORAGE === "memory") {
     const hostname = new URL(env.APP_ORIGIN).hostname;
     if (hostname !== "localhost" && hostname !== "127.0.0.1") throw new PhotoStorageError("configure", 500);
