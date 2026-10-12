@@ -1,5 +1,10 @@
 # Refugiar: plan para llevarla a producción
 
+> Repriorización del 11 de octubre de 2026: [Cimientos del MVP](CIMIENTOS_MVP.md)
+> reemplaza el orden de etapas de este documento. Se priorizan Android autónomo,
+> recuperación y familia local; ESP se evalúa como intermediario cifrado, no solo
+> como sensor. Los detalles de la implementación cloud existente siguen como referencia.
+
 > Estado: ✅ Etapa 0 · ✅ Etapa 1 · 🔄 Etapa 2 (✅ landing + bienvenida · ✅ hito 1: cuentas, casas e invitaciones cifradas · ✅ hito 2: sincronización cifrada y privacidad · ✅ hito 3a: recuperación con el kit, contraseña, dispositivos y rotación de claves · 🔄 MVP: beta por invitación con licencias, fotos cifradas y prueba con la familia; después el 3b). Repo: https://github.com/juanjpeople/opendomus · App: https://refugi.ar
 > Mantener este archivo al día al cerrar cada paso.
 

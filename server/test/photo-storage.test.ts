@@ -1,9 +1,43 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { PhotoStorageError, SupabasePhotoStorage } from "../src/photo-storage";
+import { LocalR2PhotoStorage, photoStorage, PhotoStorageError, SupabasePhotoStorage } from "../src/photo-storage";
 
 const KEY = "secret";
 const BUCKET = "opendomus-photos";
+
+test("R2 local borra varias páginas sin saltar objetos ni tocar prefijos vecinos", async () => {
+  const keys = new Set(Array.from({ length: 215 }, (_, i) => `households/a/photos/${i}/thumb`));
+  keys.add("households/a/photos-other/keep");
+  keys.add("households/b/photos/keep");
+  const bucket = {
+    async list({ prefix, limit }: R2ListOptions) {
+      const matches = [...keys].filter((key) => key.startsWith(prefix!));
+      return { objects: matches.slice(0, limit).map((key) => ({ key })), truncated: matches.length > limit! };
+    },
+    async delete(batch: string[]) { for (const key of batch) keys.delete(key); },
+  } as unknown as R2Bucket;
+  const storage = new LocalR2PhotoStorage(bucket);
+  await assert.rejects(storage.deletePrefix("/"), PhotoStorageError);
+  await storage.deletePrefix("households/a/photos/");
+  assert.deepEqual([...keys], ["households/a/photos-other/keep", "households/b/photos/keep"]);
+});
+
+test("R2 local requiere origen loopback y binding, sin habilitarse por defecto en nube", () => {
+  const env = { APP_ORIGIN: "http://localhost:4195", SUPABASE_URL: "", SUPABASE_PHOTOS_BUCKET: "", SUPABASE_SERVICE_ROLE_KEY: "", PHOTO_STORAGE: "local-r2", LOCAL_PHOTOS: {} as R2Bucket };
+  assert.ok(photoStorage(env) instanceof LocalR2PhotoStorage);
+  for (const APP_ORIGIN of ["https://refugi.ar", "http://localhost.example.com", "http://192.168.1.2"]) {
+    assert.throws(() => photoStorage({ ...env, APP_ORIGIN }), PhotoStorageError);
+  }
+  assert.throws(() => photoStorage({ ...env, LOCAL_PHOTOS: undefined }), PhotoStorageError);
+});
+
+test("R2 local informa fallos sin exponer nombres ni contenido", async () => {
+  const fail = async () => { throw new Error("sensitive-path-and-content"); };
+  const storage = new LocalR2PhotoStorage({ put: fail, get: fail, delete: fail, list: fail } as unknown as R2Bucket);
+  for (const operation of [() => storage.put("private-key", new ArrayBuffer(4)), () => storage.get("private-key"), () => storage.delete(["private-key"]), () => storage.deletePrefix("private-key")]) {
+    await assert.rejects(operation, (error: unknown) => error instanceof PhotoStorageError && !error.message.includes("sensitive"));
+  }
+});
 
 test("Supabase sube bytes opacos con upsert y credenciales solo en headers", async () => {
   const body = new Uint8Array([1, 2, 3]).buffer;
