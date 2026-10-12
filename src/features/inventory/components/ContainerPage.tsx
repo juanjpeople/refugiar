@@ -1,21 +1,21 @@
 "use client";
 
 import { App, Button, Card, Col, Dropdown, Flex, Row, Typography, theme } from "antd";
-import { ArrowLeft, Boxes, Camera, EllipsisVertical, Layers, NotebookPen, PackageOpen, PackageX, Pencil, Plus, Printer, QrCode, RotateCcwClock, Trash2 } from "lucide-react";
+import { Boxes, Camera, EllipsisVertical, Layers, NotebookPen, PackageOpen, PackageX, Pencil, Plus, Printer, QrCode, RotateCcwClock, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useContext, useState, type CSSProperties } from "react";
 import { Can } from "@/components/auth/Can";
 import { RequirePermission } from "@/components/auth/RequirePermission";
-import { Reveal, Stagger, StaggerItem } from "@/components/motion";
+import { Stagger, StaggerItem } from "@/components/motion";
 import { HeaderDensityContext } from "@/components/ui/PageHeader";
-import { EmptyState, PageHeader, PathCrumbs, RoomFloor, SectionHeader, StatTile, type StatTone, LoadingSkeleton } from "@/components/ui";
+import { DetailMissing, DetailPage, EmptyState, PathCrumbs, RoomFloor, StatTile, type StatTone } from "@/components/ui";
 import { ActivityDrawer } from "@/features/activity/components/ActivityButton";
 import { usePhotos } from "@/features/media/hooks";
 import { AddTile, ContainerTile } from "@/features/storage/components/ContainerTiles";
 import { ContainerScene } from "@/features/storage/components/ContainerScene";
 import type { LabelData } from "@/features/storage/components/ContainerLabel";
-import { ANCHOR_OFFSET, NotesSection, PhotosSection } from "@/features/storage/components/ContainerContents";
+import { NotesSection, PhotosSection } from "@/features/storage/components/ContainerContents";
 import { LabelModal } from "@/features/storage/components/LabelModal";
 import { ContainerModal } from "@/features/storage/components/StorageForms";
 import { containerAppearance, spaceAppearance, STORAGE_LIMITS } from "@/features/storage/domain";
@@ -74,22 +74,8 @@ export function ContainerPage() {
       : null,
   );
 
-  if (container === undefined) return <LoadingSkeleton />;
-
-  if (container === null) {
-    return (
-      <Card>
-        <EmptyState
-          icon={PackageX}
-          title={t("errors.notFound.container")}
-          action={
-            <Link href="/inventario">
-              <Button icon={<ArrowLeft />}>{t("qr.back")}</Button>
-            </Link>
-          }
-        />
-      </Card>
-    );
+  if (!container) {
+    return <DetailMissing loading={container === undefined} icon={PackageX} title={t("errors.notFound.container")} backHref="/inventario" backLabel={t("qr.back")} />;
   }
 
   const space = spaces?.find((candidate) => candidate.id === container.spaceId);
@@ -126,132 +112,130 @@ export function ContainerPage() {
 
   return (
     <RequirePermission perform="inventory.view">
-      <PageHeader
-        crumbs={
-          <PathCrumbs
-            items={[
-              { label: t("storage.title"), href: "/inventario", icon: Boxes },
-              { label: container.spaceName, href: spaceHref(container.spaceId), icon: space ? spaceAppearance(space).Icon : undefined },
-              ...container.ancestors.map((ancestor) => ({ label: ancestor.name, href: containerHref(ancestor.id) })),
-              { label: container.name },
-            ]}
-          />
-        }
-        leading={<ContainerScene container={container} compact open key={container.id} />}
-        title={container.name}
-        description={
-          <>
-            {t(`storage.containerKinds.${container.kind}`)} · {t("storage.code")}{" "}
-            <span style={{ fontFamily: "var(--font-geist-mono)", letterSpacing: "0.08em" }}>{container.code}</span>
-          </>
-        }
-        extra={
-          <>
-            <Link href={cameraHref(container.id)}><Button icon={<Camera />}>{t("camera.openMode")}</Button></Link>
-            <Button icon={<QrCode />} onClick={() => setLabels([labelOf(container, place)])}>
-              {t("storage.label")}
-            </Button>
-            {(canManage || canViewActivity) && (
-              <Dropdown
-                trigger={["click"]}
-                menu={{
-                  items: [
-                    ...(canManage ? [{ key: "edit", icon: <Pencil />, label: t("storage.edit"), onClick: () => setDialog("edit") }] : []),
-                    ...(canAddChild ? [{ key: "child", icon: <Layers />, label: t("storage.addSubcontainer"), onClick: () => setDialog("addChild") }] : []),
-                    ...(canViewActivity ? [{ key: "activity", icon: <RotateCcwClock />, label: t("activity.button"), onClick: () => setActivityOpen(true) }] : []),
-                    ...(canManage ? [{ type: "divider" as const }, { key: "delete", danger: true, icon: <Trash2 />, label: t("storage.delete"), onClick: confirmDelete }] : []),
-                  ],
-                }}
-              >
-                <Button icon={<EllipsisVertical />} aria-label={t("common.moreActions")} />
-              </Dropdown>
-            )}
-          </>
-        }
-      />
-
-      {loaded && !empty && <Summary counts={counts} />}
-
-      {empty && (
-        <Reveal delay={0.1}>
-          <Card style={{ marginBottom: token.marginXL }}>
-            <EmptyState
-              icon={PackageOpen}
-              title={t("storage.emptyContainer.title")}
-              description={t("storage.emptyContainer.text")}
-              action={
-                <Flex gap={token.marginXS} wrap justify="center">
-                  <Can perform="inventory.create"><Button type="primary" icon={<Plus />} onClick={() => setDialog("product")}>{t("inventory.form.title")}</Button></Can>
-                  <Can perform="storage.manage"><Button icon={<NotebookPen />} onClick={addNote}>{t("storage.contents.new")}</Button></Can>
-                  {canAddChild && <Button icon={<Layers />} onClick={() => setDialog("addChild")}>{t("storage.addSubcontainer")}</Button>}
-                </Flex>
-              }
+      <DetailPage
+        header={{
+          crumbs: (
+            <PathCrumbs
+              items={[
+                { label: t("storage.title"), href: "/inventario", icon: Boxes },
+                { label: container.spaceName, href: spaceHref(container.spaceId), icon: space ? spaceAppearance(space).Icon : undefined },
+                ...container.ancestors.map((ancestor) => ({ label: ancestor.name, href: containerHref(ancestor.id) })),
+                { label: container.name },
+              ]}
             />
-          </Card>
-        </Reveal>
-      )}
-
-      {counts.children > 0 && (
-        <Reveal delay={0.1}>
-          <section id={SECTIONS.children} style={{ scrollMarginTop: ANCHOR_OFFSET, marginBottom: token.marginXL }}>
-            <SectionHeader
-              icon={Layers}
-              color={appearance.color}
-              title={t("storage.subcontainers")}
-              description={t("storage.childCount", { count: counts.children })}
-              extra={
+          ),
+          leading: <ContainerScene container={container} compact open key={container.id} />,
+          title: container.name,
+          description: (
+            <>
+              {t(`storage.containerKinds.${container.kind}`)} · {t("storage.code")}{" "}
+              <span style={{ fontFamily: "var(--font-geist-mono)", letterSpacing: "0.08em" }}>{container.code}</span>
+            </>
+          ),
+          extra: (
+            <>
+              <Link href={cameraHref(container.id)}><Button icon={<Camera />}>{t("camera.openMode")}</Button></Link>
+              <Button icon={<QrCode />} onClick={() => setLabels([labelOf(container, place)])}>
+                {t("storage.label")}
+              </Button>
+              {(canManage || canViewActivity) && (
+                <Dropdown
+                  trigger={["click"]}
+                  menu={{
+                    items: [
+                      ...(canManage ? [{ key: "edit", icon: <Pencil />, label: t("storage.edit"), onClick: () => setDialog("edit") }] : []),
+                      ...(canAddChild ? [{ key: "child", icon: <Layers />, label: t("storage.addSubcontainer"), onClick: () => setDialog("addChild") }] : []),
+                      ...(canViewActivity ? [{ key: "activity", icon: <RotateCcwClock />, label: t("activity.button"), onClick: () => setActivityOpen(true) }] : []),
+                      ...(canManage ? [{ type: "divider" as const }, { key: "delete", danger: true, icon: <Trash2 />, label: t("storage.delete"), onClick: confirmDelete }] : []),
+                    ],
+                  }}
+                >
+                  <Button icon={<EllipsisVertical />} aria-label={t("common.moreActions")} />
+                </Dropdown>
+              )}
+            </>
+          ),
+        }}
+        summary={loaded && !empty && <Summary counts={counts} />}
+        sections={[
+          empty && {
+            id: "vacio",
+            content: (
+              <Card style={{ marginBottom: token.marginXL }}>
+                <EmptyState
+                  icon={PackageOpen}
+                  title={t("storage.emptyContainer.title")}
+                  description={t("storage.emptyContainer.text")}
+                  action={
+                    <Flex gap={token.marginXS} wrap justify="center">
+                      <Can perform="inventory.create"><Button type="primary" icon={<Plus />} onClick={() => setDialog("product")}>{t("inventory.form.title")}</Button></Can>
+                      <Can perform="storage.manage"><Button icon={<NotebookPen />} onClick={addNote}>{t("storage.contents.new")}</Button></Can>
+                      {canAddChild && <Button icon={<Layers />} onClick={() => setDialog("addChild")}>{t("storage.addSubcontainer")}</Button>}
+                    </Flex>
+                  }
+                />
+              </Card>
+            ),
+          },
+          counts.children > 0 && {
+            id: SECTIONS.children,
+            header: {
+              icon: Layers,
+              color: appearance.color,
+              title: t("storage.subcontainers"),
+              description: t("storage.childCount", { count: counts.children }),
+              extra: (
                 <>
                   <Button icon={<Printer />} onClick={() => setLabels(container.children.map((child) => labelOf(child, `${place} › ${container.name}`)))}>{t("storage.printLabels")}</Button>
                   {canAddChild && <Button icon={<Plus />} onClick={() => setDialog("addChild")}>{t("storage.addSubcontainer")}</Button>}
                 </>
-              }
-            />
-            <RoomFloor color={appearance.color} minTileWidth={token.controlHeightLG * 3}>
-              {container.children.map((child) => (
-                <ContainerTile key={child.id} container={child} onLabel={() => setLabels([labelOf(child, `${place} › ${container.name}`)])} />
-              ))}
-              {canAddChild && <AddTile color={tint(token, appearance.color).solid} label={t("storage.addSubcontainer")} onClick={() => setDialog("addChild")} />}
-            </RoomFloor>
-            {canManage && container.depth + 1 >= STORAGE_LIMITS.maxDepth && (
-              <Typography.Text type="secondary" style={{ display: "block", marginTop: token.marginXS, fontSize: token.fontSizeSM }}>
-                {t("storage.maxDepth")}
-              </Typography.Text>
-            )}
-          </section>
-        </Reveal>
-      )}
-
-      {!empty && (
-        <Reveal delay={0.15}>
-          <section id={SECTIONS.items} style={{ scrollMarginTop: ANCHOR_OFFSET, marginBottom: token.marginXL }}>
-            <SectionHeader
-              icon={Boxes}
-              title={t("storage.contents.inventory")}
-              description={counts.items ? t("storage.itemCount", { count: counts.items }) : t("inventory.list.emptyHint")}
-              extra={canCreate && <Button type="primary" icon={<Plus />} onClick={() => setDialog("product")}>{t("inventory.form.title")}</Button>}
-            />
-            {(items ?? []).some((item) => !item.reusable) && <StockTiles statuses={(items ?? []).filter((item) => !item.reusable).map(getStockStatus)} />}
-            <InventoryList containerId={container.id} onOpen={setOpenItem} highlightId={arrivedItem} />
-          </section>
-        </Reveal>
-      )}
-
-      {(!empty || notesOpen) && (
-        <Reveal delay={0.2}>
-          <NotesSection key={container.id} containerId={container.id} id={SECTIONS.notes} startOpen={notesOpen} />
-        </Reveal>
-      )}
-
-      <Reveal delay={0.25}>
-        <PhotosSection containerId={container.id} id={SECTIONS.photos} />
-      </Reveal>
-
-      <ActivityDrawer containerId={container.id} place={container.name} open={activityOpen} onClose={() => setActivityOpen(false)} />
-      <ItemDrawer itemId={shownItem} onClose={closeItem} />
-      <ProductModal containerId={container.id} place={container.name} open={dialog === "product"} onClose={() => setDialog(null)} />
-      <ContainerModal open={dialog === "edit"} container={container} onClose={() => setDialog(null)} />
-      <ContainerModal open={dialog === "addChild"} parentId={container.id} onClose={() => setDialog(null)} />
-      <LabelModal open={!!labels} labels={labels ?? []} onClose={() => setLabels(null)} />
+              ),
+            },
+            content: (
+              <>
+                <RoomFloor color={appearance.color} minTileWidth={token.controlHeightLG * 3}>
+                  {container.children.map((child) => (
+                    <ContainerTile key={child.id} container={child} onLabel={() => setLabels([labelOf(child, `${place} › ${container.name}`)])} />
+                  ))}
+                  {canAddChild && <AddTile color={tint(token, appearance.color).solid} label={t("storage.addSubcontainer")} onClick={() => setDialog("addChild")} />}
+                </RoomFloor>
+                {canManage && container.depth + 1 >= STORAGE_LIMITS.maxDepth && (
+                  <Typography.Text type="secondary" style={{ display: "block", marginTop: token.marginXS, fontSize: token.fontSizeSM }}>
+                    {t("storage.maxDepth")}
+                  </Typography.Text>
+                )}
+              </>
+            ),
+          },
+          !empty && {
+            id: SECTIONS.items,
+            header: {
+              icon: Boxes,
+              title: t("storage.contents.inventory"),
+              description: counts.items ? t("storage.itemCount", { count: counts.items }) : t("inventory.list.emptyHint"),
+              extra: canCreate && <Button type="primary" icon={<Plus />} onClick={() => setDialog("product")}>{t("inventory.form.title")}</Button>,
+            },
+            content: (
+              <>
+                {(items ?? []).some((item) => !item.reusable) && <StockTiles statuses={(items ?? []).filter((item) => !item.reusable).map(getStockStatus)} />}
+                <InventoryList containerId={container.id} onOpen={setOpenItem} highlightId={arrivedItem} />
+              </>
+            ),
+          },
+          (!empty || notesOpen) && {
+            id: SECTIONS.notes,
+            content: <NotesSection key={container.id} containerId={container.id} id={SECTIONS.notes} startOpen={notesOpen} />,
+          },
+          { id: SECTIONS.photos, content: <PhotosSection containerId={container.id} id={SECTIONS.photos} /> },
+        ]}
+      >
+        <ActivityDrawer containerId={container.id} place={container.name} open={activityOpen} onClose={() => setActivityOpen(false)} />
+        <ItemDrawer itemId={shownItem} onClose={closeItem} />
+        <ProductModal containerId={container.id} place={container.name} open={dialog === "product"} onClose={() => setDialog(null)} />
+        <ContainerModal open={dialog === "edit"} container={container} onClose={() => setDialog(null)} />
+        <ContainerModal open={dialog === "addChild"} parentId={container.id} onClose={() => setDialog(null)} />
+        <LabelModal open={!!labels} labels={labels ?? []} onClose={() => setLabels(null)} />
+      </DetailPage>
     </RequirePermission>
   );
 }
@@ -269,18 +253,16 @@ function Summary({ counts }: { counts: Record<keyof typeof SECTIONS, number> }) 
   const headerDensity = useContext(HeaderDensityContext);
   const link: CSSProperties = { display: "inline-flex", alignItems: "center", minHeight: token.controlHeightLG + token.paddingXXS, color: token.colorTextSecondary, textDecoration: "underline", textDecorationColor: token.colorBorder, textUnderlineOffset: 4 };
   return (
-    <Reveal delay={0.05}>
-      <nav aria-label={t("storage.summary")} style={{ marginTop: headerDensity === "compact" ? -token.marginXS : -token.marginLG, marginBottom: token.marginLG }}>
-        <Flex wrap align="center" gap={token.marginXS}>
-          {parts.map((part, index) => (
-            <Flex key={part.key} align="center" gap={token.marginXS}>
-              {index > 0 && <Typography.Text type="secondary" aria-hidden>·</Typography.Text>}
-              <a href={`#${SECTIONS[part.key]}`} className="od-focusable" style={link}>{part.text}</a>
-            </Flex>
-          ))}
-        </Flex>
-      </nav>
-    </Reveal>
+    <nav aria-label={t("storage.summary")} style={{ marginTop: headerDensity === "compact" ? -token.marginXS : -token.marginLG, marginBottom: token.marginLG }}>
+      <Flex wrap align="center" gap={token.marginXS}>
+        {parts.map((part, index) => (
+          <Flex key={part.key} align="center" gap={token.marginXS}>
+            {index > 0 && <Typography.Text type="secondary" aria-hidden>·</Typography.Text>}
+            <a href={`#${SECTIONS[part.key]}`} className="od-focusable" style={link}>{part.text}</a>
+          </Flex>
+        ))}
+      </Flex>
+    </nav>
   );
 }
 
