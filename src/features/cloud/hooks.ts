@@ -75,9 +75,9 @@ export function useCloudActions() {
   };
 
   return {
-    signUp: (input: { name: string; email: string; password: string }) =>
+    signUp: (input: { name: string; email: string; password: string }, access: service.SignUpAccess) =>
       run(async () => {
-        const result = await service.signUp(input);
+        const result = await service.signUp(input, access);
         useCloudStore.getState().setSession(result.session);
         return result;
       }),

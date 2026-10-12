@@ -11,6 +11,7 @@ import { twoFactor } from "better-auth/plugins/two-factor";
 import { passkey } from "@better-auth/passkey";
 import { refugiarDevices } from "./device-auth";
 import { passkeyAsSecondStep, refugiarTwoFactor } from "./two-factor";
+import { closedSignUp, type SignUpGate } from "./closed-sign-up";
 
 export interface AuthEnv {
   google?: { clientId: string; clientSecret: string };
@@ -21,6 +22,8 @@ export interface AuthEnv {
   baseURL: string;
   /** Otros orígenes permitidos (en desarrollo, la app de `next dev`). */
   trustedOrigins: string[];
+  /** Nube cerrada: qué habilita una cuenta nueva. Sin esto (servidor de casa), el alta queda abierta. */
+  signUpGate?: SignUpGate;
 }
 
 /** La clave de autenticación derivada mide 43 caracteres (32 bytes en base64url). */
@@ -94,6 +97,7 @@ export function authOptions(database: BetterAuthOptions["database"], env: AuthEn
       refugiarTwoFactor(),
       // El celular de un chico: entra firmando con su llave del dispositivo (ver device-auth.ts).
       refugiarDevices(),
+      ...(env.signUpGate ? [closedSignUp(env.signUpGate)] : []),
     ],
   };
 }

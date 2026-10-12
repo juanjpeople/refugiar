@@ -34,8 +34,10 @@ type Step = "access" | "auth" | "kit" | "second" | "house" | "setup" | "upload" 
 
 /**
  * `/cuenta?modo=crear|entrar&siguiente=casa`.
- * - Crear mi casa en la nube: licencia (beta por invitación) → crear la cuenta → guardar el kit de
- *   recuperación → nombrar la casa → la casa de este dispositivo se sube cifrada → ¡listo!
+ * - Crear una cuenta: la nube es cerrada, así que primero va el código de acceso (a quien invitaron
+ *   le alcanza con abrir su link, en `/unirme`) → crear la cuenta → guardar el kit de recuperación.
+ * - Crear mi casa en la nube: lo mismo → nombrar la casa → la casa de este dispositivo se sube
+ *   cifrada → ¡listo!
  * - Entrar en un dispositivo → se baja la casa de la nube (si este tenía otra, se avisa antes).
  * - Olvidé mi contraseña (`modo=recuperar`) → con el kit, contraseña nueva y kit nuevo.
  */
@@ -51,8 +53,8 @@ export function AccountPage() {
   });
   const wantsHouse = params.get("siguiente") === "casa";
   // Google/GitHub con los dos pasos encendidos: el servidor no abre la sesión hasta el segundo paso.
-  const [step, setStep] = useState<Step>(() => (params.get("dos-pasos") === "1" ? "second" : wantsHouse && mode === "create" ? "access" : "auth"));
-  // La licencia validada en el primer paso (la consume el servidor al crear la casa).
+  const [step, setStep] = useState<Step>(() => (params.get("dos-pasos") === "1" ? "second" : mode === "create" ? "access" : "auth"));
+  // La licencia validada en el primer paso: habilita la cuenta y la consume el servidor al crear la casa.
   const [accessCode, setAccessCode] = useState("");
   const [recoveryCode, setRecoveryCode] = useState("");
   const [household, setHousehold] = useState<CloudHousehold | null>(null);
@@ -120,9 +122,9 @@ export function AccountPage() {
   const steps = wantsHouse
     ? [t("cloud.steps.access"), t("cloud.steps.account"), t("cloud.steps.kit"), t("cloud.steps.house")]
     : mode === "create"
-      ? [t("cloud.steps.account"), t("cloud.steps.kit")]
+      ? [t("cloud.steps.access"), t("cloud.steps.account"), t("cloud.steps.kit")]
       : [];
-  const order: Step[] = wantsHouse ? ["access", "auth", "kit", "house"] : ["auth", "kit"];
+  const order: Step[] = wantsHouse ? ["access", "auth", "kit", "house"] : ["access", "auth", "kit"];
   const current = Math.max(0, order.indexOf(step === "upload" || step === "setup" ? "house" : step));
 
   return (
@@ -161,23 +163,23 @@ export function AccountPage() {
                   block
                   vertical={!screens.sm}
                   value={mode === "create" ? "create" : "signin"}
-                  onChange={setMode}
+                  onChange={(next) => {
+                    setMode(next);
+                    // Crear una cuenta empieza por el código de acceso.
+                    if (next === "create" && !accessCode) setStep("access");
+                  }}
                   options={[
                     { value: "create", label: t("cloud.auth.createTab") },
                     { value: "signin", label: t("cloud.auth.signInTab") },
                   ]}
                 />
-                {mode === "create" && !wantsHouse && (
-                  <Callout tone="primary" action={<Link href="/unirme"><Button>{t("cloud.auth.invitedLink")}</Button></Link>}>
-                    {t("cloud.auth.invitedHint")}
-                  </Callout>
-                )}
                 {params.get("socialError") === "1" && <Callout tone="danger" role="alert">{t(params.get("error") === "email_not_verified" ? "social.verificationPending" : "social.signinFailed")}</Callout>}
                 {params.get("social") === "1" && mode === "signin" ? <SocialUnlock onUnlocked={afterSignIn} onForgot={() => setMode("recover")} /> : <>
                 {mode === "signin" && <PasskeySignIn onSignedIn={afterSignIn} />}
                 <AuthForm
                   key={mode}
                   mode={mode === "create" ? "create" : "signin"}
+                  access={accessCode ? { code: accessCode } : undefined}
                   onCreated={(code) => {
                     setRecoveryCode(code);
                     setStep("kit");

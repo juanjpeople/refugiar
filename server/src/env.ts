@@ -35,6 +35,11 @@ export interface Env extends SocialAuthEnv, OperatorConfig {
    * licencia; solo para desarrollo). Cualquier otro valor, o ninguno, cuenta como `codes`.
    */
   HOUSEHOLD_ACCESS?: string;
+  /**
+   * Topes por casa (cambios por día, tamaño del registro y fotos) que cuidan la capa gratuita de
+   * la cuenta. `off` los apaga: el servidor de casa guarda todo en su propio disco.
+   */
+  HOUSEHOLD_QUOTAS?: string;
 }
 
 export interface SessionUser {

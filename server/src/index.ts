@@ -20,6 +20,7 @@ import { operatorAuth, operatorConfigured, operatorRequestAllowed, operatorSessi
 import { operatorPage } from "./operator-page";
 import { mailConfigState, mailOverview, processEmails, queueTestEmail, securityEmailStatements } from "./mail";
 import { OP_CONFLICT } from "./sync";
+import { HOUSEHOLD_QUOTAS, QUOTA_EXCEEDED, quotasOn } from "./quotas";
 import { DEVICE_LINK_MINUTES } from "../../src/lib/cloud/device-protocol";
 import {
   acceptInviteInput,
@@ -44,6 +45,7 @@ import {
   recoveryKitInput,
   recoveryStartInput,
   removeMemberInput,
+  signUpAccessInput,
   userId,
   userKeysInput,
   uuid,
@@ -63,6 +65,8 @@ function createAuth(env: Env) {
       secret: env.BETTER_AUTH_SECRET,
       baseURL: env.APP_ORIGIN,
       trustedOrigins: allowedOrigins(env),
+      // Nube cerrada, salvo en el servidor de casa y el laboratorio (`HOUSEHOLD_ACCESS=open`).
+      signUpGate: env.HOUSEHOLD_ACCESS === "open" ? undefined : (access) => signUpAllowed(env, access),
       ...socialProviders(env),
     }),
   );
@@ -147,6 +151,25 @@ app.post("/auth/passkey/verify-registration", async (c) => {
   return createAuth(c.env).handler(c.req.raw);
 });
 app.on(["GET", "POST"], "/auth/*", (c) => createAuth(c.env).handler(c.req.raw));
+
+/** Nube cerrada (ver closed-sign-up.ts): una licencia vigente o una invitación para una cuenta, sin usar. */
+async function signUpAllowed(env: Env, raw: unknown) {
+  const access = signUpAccessInput.safeParse(raw);
+  if (!access.success) return false;
+  if ("code" in access.data) return licenseAvailable(env, access.data.code);
+  const found = await findInvite(env, access.data.invite.id, access.data.invite.authToken);
+  return !("error" in found) && found.invite.kind === "account";
+}
+
+/** ¿La licencia sirve todavía? (Vigente, sin vencer y con usos.) No la consume. */
+async function licenseAvailable(env: Env, code: string) {
+  const license = await env.DB.prepare(
+    "select 1 from cloud_licenses where code_hash = ? and status = 'active' and used < max_households and (expires_at is null or expires_at > ?)",
+  )
+    .bind(await sha256(normalizeLicenseCode(code)), Date.now())
+    .first();
+  return Boolean(license);
+}
 
 app.get("/health", (c) => c.json({ ok: true }));
 
@@ -614,12 +637,7 @@ app.post("/licenses/check", async (c) => {
   if (!input) return c.json({ error: "invalid" }, 400);
   if (await tooMany(c.env, `license-check:${clientIp(c)}`, 20, RECOVERY_WINDOW)) return c.json({ error: "rate-limited" }, 429);
   if (c.env.HOUSEHOLD_ACCESS === "open") return c.json({ valid: true });
-  const license = await c.env.DB.prepare(
-    "select 1 from cloud_licenses where code_hash = ? and status = 'active' and used < max_households and (expires_at is null or expires_at > ?)",
-  )
-    .bind(await sha256(normalizeLicenseCode(input.code)), Date.now())
-    .first();
-  return c.json({ valid: !!license });
+  return c.json({ valid: await licenseAvailable(c.env, input.code) });
 });
 
 app.get("/households/:id/members", async (c) => {
@@ -772,27 +790,33 @@ app.patch("/households/:id/members/:userId", async (c) => {
 
 /**
  * Entregar claves a otro miembro (ej. al pasar de chico a adulto, se le entrega "Adultos").
- * El servidor no puede verificar el contenido; sí que quien entrega tenga ese nivel y que el
- * destinatario lo pueda tener según su rol.
+ * El servidor no puede verificar el contenido. Sí exige que entregue un admin, que el destinatario
+ * pueda tener ese nivel según su rol y que sea la versión vigente. Nunca pisa un sobre que ya
+ * existe: si no, cualquiera de la casa podría dejar a otro sin sus claves, o cargarle una versión
+ * futura que después trabe la rotación al sacar a alguien.
  */
 app.post("/households/:id/envelopes", async (c) => {
   const user = await requireUser(c);
   if (!user) return c.json({ error: "unauthorized" }, 401);
   const householdId = c.req.param("id");
-  const sender = await membership(c.env, householdId, user.id);
+  if ((await membership(c.env, householdId, user.id))?.role !== "admin") return c.json({ error: "forbidden" }, 403);
   const body = (await c.req.json().catch(() => null)) as { recipientUserId?: unknown; envelopes?: unknown } | null;
   const recipientId = userId.safeParse(body?.recipientUserId);
   const envelopes = envelopeInput.array().min(1).max(2).safeParse(body?.envelopes);
-  if (!sender || !recipientId.success || !envelopes.success) return c.json({ error: "invalid" }, 400);
-  const recipient = await membership(c.env, householdId, recipientId.data);
-  if (!recipient) return c.json({ error: "not-found" }, 404);
-  const allowed = envelopes.data.every((entry) => entry.scope !== "private" && scopesFor(sender.role).includes(entry.scope) && scopesFor(recipient.role).includes(entry.scope));
+  if (!recipientId.success || !envelopes.success) return c.json({ error: "invalid" }, 400);
+  const [recipient, household] = await Promise.all([
+    membership(c.env, householdId, recipientId.data),
+    c.env.DB.prepare("select family_key_version as family, adults_key_version as adults from households where id = ?").bind(householdId).first<{ family: number; adults: number }>(),
+  ]);
+  if (!recipient || !household) return c.json({ error: "not-found" }, 404);
+  const allowed = envelopes.data.every((entry) => entry.scope !== "private" && scopesFor(recipient.role).includes(entry.scope));
   if (!allowed) return c.json({ error: "forbidden" }, 403);
+  if (envelopes.data.some((entry) => entry.version !== household[entry.scope as "family" | "adults"])) return c.json({ error: "stale-key" }, 409);
   const now = Date.now();
   await c.env.DB.batch(
     envelopes.data.map((entry) =>
       c.env.DB.prepare(
-        "insert into key_envelopes (household_id, scope, version, recipient_user_id, envelope, created_by, created_at) values (?, ?, ?, ?, ?, ?, ?) on conflict do update set envelope = excluded.envelope, created_by = excluded.created_by, created_at = excluded.created_at",
+        "insert into key_envelopes (household_id, scope, version, recipient_user_id, envelope, created_by, created_at) values (?, ?, ?, ?, ?, ?, ?) on conflict do nothing",
       ).bind(householdId, entry.scope, entry.version, recipientId.data, entry.envelope, user.id, now),
     ),
   );
@@ -1082,6 +1106,9 @@ app.post("/households/:id/ops", async (c) => {
     return c.json(await householdLog(c.env, householdId).push(user.id, input.ops));
   } catch (error) {
     if (error instanceof Error && error.message === OP_CONFLICT) return c.json({ error: "conflict" }, 409);
+    // Tope de la casa: el lote no entró y el dispositivo lo guarda para más tarde. 507 como las
+    // fotos: un 429 lo toma la app como "demasiados intentos" y no vería el motivo.
+    if (error instanceof Error && error.message === QUOTA_EXCEEDED) return c.json({ error: QUOTA_EXCEEDED }, 507);
     throw error;
   }
 });
@@ -1134,13 +1161,25 @@ app.put("/households/:id/photos/:photoId/:variant", async (c) => {
   // iv (12) + etiqueta de AES-GCM (16): menos que eso no es una foto cifrada.
   if (body.byteLength > PHOTO_MAX_BYTES) return c.json({ error: "too-large" }, 413);
   if (body.byteLength < 29) return c.json({ error: "invalid" }, 400);
+  if (quotasOn(c.env)) {
+    // Lo que ya ocupa la casa, sin contar la versión anterior de esta misma foto (se reemplaza).
+    const used = await c.env.DB.prepare("select coalesce(sum(bytes), 0) as bytes from photo_objects where household_id = ? and not (photo_id = ? and variant = ?)")
+      .bind(householdId, photoId, variant)
+      .first<{ bytes: number }>();
+    if ((used?.bytes ?? 0) + body.byteLength > HOUSEHOLD_QUOTAS.photoBytes) return c.json({ error: "storage-quota" }, 507);
+  }
   const key = photoKey(householdId, photoId, variant);
   try {
     await photoStorage(c.env).put(key, body);
-    return c.json({ ok: true });
   } catch (error) {
     return photoStorageFailure(c, error);
   }
+  await c.env.DB.prepare(
+    "insert into photo_objects (household_id, photo_id, variant, bytes, created_at) values (?, ?, ?, ?, ?) on conflict (household_id, photo_id, variant) do update set bytes = excluded.bytes",
+  )
+    .bind(householdId, photoId, variant, body.byteLength, Date.now())
+    .run();
+  return c.json({ ok: true });
 });
 
 app.get("/households/:id/photos/:photoId/:variant", async (c) => {
@@ -1164,10 +1203,11 @@ app.delete("/households/:id/photos/:photoId", async (c) => {
   const keys = PHOTO_VARIANTS.map((variant) => photoKey(householdId, photoId, variant));
   try {
     await photoStorage(c.env).delete(keys);
-    return c.json({ ok: true });
   } catch (error) {
     return photoStorageFailure(c, error);
   }
+  await c.env.DB.prepare("delete from photo_objects where household_id = ? and photo_id = ?").bind(householdId, photoId).run();
+  return c.json({ ok: true });
 });
 
 /** Bajar cambios desde `since`: solo los niveles que la persona puede abrir. */
