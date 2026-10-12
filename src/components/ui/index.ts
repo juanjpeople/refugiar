@@ -35,3 +35,4 @@ export { PlaceChip } from "./PlaceChip";
 export { LoadingSkeleton } from "./LoadingSkeleton";
 export { CodeInput } from "./CodeInput";
 export { ListGrid, ListPage } from "./ListPage";
+export { DETAIL_ANCHOR_OFFSET, DetailMissing, DetailPage, type DetailSection } from "./DetailPage";
