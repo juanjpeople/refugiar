@@ -42,6 +42,7 @@ const CLOUD_ERRORS: Record<string, MessageKey> = {
   "wrong-password": "errors.cloud.wrongPassword",
   "members-changed": "errors.cloud.membersChanged",
   "stale-key": "errors.cloud.membersChanged",
+  ACCESS_REQUIRED: "errors.cloud.accessRequired",
   "license-required": "errors.cloud.licenseInvalid",
   "license-invalid": "errors.cloud.licenseInvalid",
   "plan-paused": "errors.cloud.planPaused",

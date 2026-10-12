@@ -89,12 +89,23 @@ async function sessionFrom(me: MeResponse, identity: Identity): Promise<CloudSes
 }
 
 /**
+ * Nube cerrada: con qué se crea la cuenta. El código de acceso (la licencia; no se consume hasta
+ * crear la casa) o la invitación que se abrió. El secreto del link no viaja: solo su prueba.
+ */
+export type SignUpAccess = { code: string } | { invite: { id: string; secret: string } };
+
+async function signUpAccess(access: SignUpAccess) {
+  if ("code" in access) return { code: access.code.trim() };
+  return { invite: { id: access.invite.id, authToken: (await inviteSecrets(access.invite.secret)).authToken } };
+}
+
+/**
  * Crea la cuenta: deriva las claves de la contraseña, crea la identidad y el kit de recuperación,
  * y sube solo lo público y lo cifrado. Devuelve el código del kit (se muestra una sola vez).
  */
-export async function signUp(input: { name: string; email: string; password: string }): Promise<{ session: CloudSession; recoveryCode: string }> {
+export async function signUp(input: { name: string; email: string; password: string }, access: SignUpAccess): Promise<{ session: CloudSession; recoveryCode: string }> {
   const keys = await derivePasswordKeys(input.email, input.password);
-  await api("POST", "/auth/sign-up/email", { name: input.name.trim(), email: input.email.trim(), password: keys.authKey });
+  await api("POST", "/auth/sign-up/email", { name: input.name.trim(), email: input.email.trim(), password: keys.authKey, access: await signUpAccess(access) });
   const { identity, upload, recoveryCode } = await createIdentity(keys.encKey);
   await api("POST", "/keys", upload);
   const me = await api<MeResponse>("GET", "/me");
@@ -254,6 +265,11 @@ export async function refreshHouseholds(session: CloudSession): Promise<CloudHou
 }
 
 /** ¿Sirve este código de licencia? Se pregunta antes de crear la cuenta (no la consume). */
+/** Lista de espera de la nube: el operador habilita y manda el código por email. */
+export async function joinWaitlist(input: { name: string; email: string }) {
+  await api("POST", "/waitlist", { name: input.name.trim(), email: input.email.trim() });
+}
+
 export async function checkLicense(code: string): Promise<boolean> {
   return (await api<{ valid: boolean }>("POST", "/licenses/check", { code: code.trim() })).valid;
 }

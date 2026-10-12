@@ -7,7 +7,7 @@ import { useT } from "@/i18n";
 import { Callout, TrustNote } from "@/components/ui";
 import { PASSWORD_MIN_LENGTH, passwordStrength } from "../domain";
 import { useCloudActions } from "../hooks";
-import type { SecondStep } from "../service";
+import type { SecondStep, SignUpAccess } from "../service";
 
 interface AuthFormProps {
   mode: "create" | "signin";
@@ -20,6 +20,8 @@ interface AuthFormProps {
   defaultEmail?: string;
   /** "¿Olvidaste tu contraseña?" (al entrar): lleva a recuperar la cuenta con el kit. */
   onForgot?: () => void;
+  /** Al crear la cuenta: el código de acceso o la invitación (la nube es cerrada). */
+  access?: SignUpAccess;
 }
 
 /**
@@ -27,7 +29,7 @@ interface AuthFormProps {
  * para autenticarse y la que abre tus datos. Por eso tarda un segundo (es a propósito: frena a
  * quien quiera adivinarla) y se avisa que olvidarla exige el kit de recuperación.
  */
-export function AuthForm({ mode, onCreated, onSignedIn, onSecondStep, defaultEmail, onForgot }: AuthFormProps) {
+export function AuthForm({ mode, onCreated, onSignedIn, onSecondStep, defaultEmail, onForgot, access }: AuthFormProps) {
   const t = useT();
   const { token } = theme.useToken();
   const [form] = Form.useForm<{ name: string; email: string; password: string; confirm: string }>();
@@ -40,7 +42,8 @@ export function AuthForm({ mode, onCreated, onSignedIn, onSecondStep, defaultEma
   async function onFinish(values: { name: string; email: string; password: string }) {
     setBusy(true);
     if (mode === "create") {
-      const result = await signUp(values);
+      // La página pide el código (o abre la invitación) antes de mostrar este formulario.
+      const result = access && (await signUp(values, access));
       setBusy(false);
       if (result) onCreated?.(result.recoveryCode);
     } else {

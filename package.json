@@ -75,5 +75,8 @@
     "serve": "14.2.6",
     "typescript": "^5",
     "ws": "8.22.0"
+  },
+  "overrides": {
+    "compression": "1.8.2"
   }
 }

@@ -19,19 +19,38 @@ export function mailConfigState(env: Pick<Env, "EMAIL_ENABLED" | "EMAIL_FROM" | 
   return isEmailAddress(env.EMAIL_FROM) && /^re_[A-Za-z0-9_-]+$/.test(env.RESEND_API_KEY ?? "") ? "configured" : "incomplete";
 }
 
+/**
+ * El celular de un chico (`device-…@device.invalid`) y una cuenta borrada (`deleted-…@deleted.invalid`)
+ * no tienen buzón: escribirles solo deja rebotes, que dañan la reputación del remitente.
+ */
+const deliverable = (email: string) => !email.endsWith(".invalid");
+
 function sender(env: Env) {
   if (mailConfigState(env) !== "configured") throw new Error("Email is enabled but its configuration is incomplete");
   return `Refugiar <${env.EMAIL_FROM}>`;
 }
 
 export function securityEmailStatements(env: Env, user: { id: string; email: string }, event: SecurityEmail): D1PreparedStatement[] {
-  if (env.EMAIL_ENABLED !== "1") return [];
+  if (env.EMAIL_ENABLED !== "1" || !deliverable(user.email)) return [];
   const now = Date.now();
   return [env.DB.prepare(
     `insert into email_outbox (id, user_id, recipient, sender, subject, body, created_at, next_attempt_at)
      values (?, ?, ?, ?, ?, ?, ?, ?)`,
   ).bind(crypto.randomUUID(), user.id, user.email, sender(env), t("subject"),
     `${t(event)}\n\n${t("help").replace("{url}", `${env.APP_ORIGIN}/cuenta`)}`, now, now)];
+}
+
+/**
+ * El código de acceso para quien estaba en la lista de espera. Sin correo configurado no se encola:
+ * el operador lo ve en /admin y lo manda por su cuenta. Al enviarse, el código se borra del cuerpo.
+ */
+export function accessEmailStatement(env: Env, job: { id: string; name: string; email: string; code: string }): D1PreparedStatement | null {
+  if (env.EMAIL_ENABLED !== "1" || mailConfigState(env) !== "configured" || !deliverable(job.email)) return null;
+  const now = Date.now();
+  const body = t("access").replace("{name}", job.name).replace("{code}", job.code).replace("{url}", `${env.APP_ORIGIN}/cuenta?modo=crear&siguiente=casa`);
+  return env.DB.prepare(
+    `insert into email_outbox (id, recipient, sender, subject, body, created_at, next_attempt_at) values (?, ?, ?, ?, ?, ?, ?)`,
+  ).bind(job.id, job.email, sender(env), t("accessSubject"), body, now, now);
 }
 
 export async function queueTestEmail(env: Env) {
@@ -68,7 +87,7 @@ async function queueInactivityEmails(env: Env, now: number) {
          from inactivity_notices n join households h on h.id = n.household_id
          join household_plans p on p.household_id = h.id
          join memberships m on m.household_id = h.id join "user" u on u.id = m.user_id
-        where n.status = 'pending' and n.days_before_pause = ? and p.status = 'active'
+        where n.status = 'pending' and n.days_before_pause = ? and p.status = 'active' and u.email not like '%.invalid'
           and n.due_at = coalesce(h.last_activity_at, h.created_at) + ?
           and coalesce(h.last_activity_at, h.created_at) <= ? and coalesce(h.last_activity_at, h.created_at) > ?`,
     ).bind(from, t("inactivitySubject"), body, now, now, days, window.dueAtOffset, window.activeBefore, window.activeAfter);
@@ -175,7 +194,8 @@ export async function processEmails(env: Env, now = Date.now(), request: typeof 
     await env.DB.prepare("update email_outbox set first_attempt_at = coalesce(first_attempt_at, ?), attempts = attempts + 1 where id = ?").bind(current, job.id).run();
     try {
       const id = await sendEmail(env, job, request);
-      await env.DB.prepare("update email_outbox set status = 'sent', provider_id = ?, last_error = null where id = ?").bind(id, job.id).run();
+      // Un código de acceso no queda guardado en claro una vez entregado.
+      await env.DB.prepare("update email_outbox set status = 'sent', provider_id = ?, last_error = null, body = case when id like 'access/%' then '' else body end where id = ?").bind(id, job.id).run();
       accepted++;
     } catch (error) {
       if (!(error instanceof DeliveryError)) throw error;

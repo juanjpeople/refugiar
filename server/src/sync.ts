@@ -13,6 +13,8 @@ import { DurableObject } from "cloudflare:workers";
 import { SYNC_LIMITS, type PullResponse, type PushResponse, type StoredOp, type SyncScope, type WireOp } from "../../src/lib/sync/protocol";
 import type { Env } from "./env";
 import { authorizedLiveSessions, LIVE_LIMITS, liveIdentity } from "./live-access";
+import { DAY } from "./inactivity";
+import { quotaError, type Quotas } from "./quotas";
 
 /** Se reintentó una operación con un id que ya usó otra persona (el error cruza la llamada RPC por su mensaje). */
 export const OP_CONFLICT = "op-conflict";
@@ -34,6 +36,8 @@ export class HouseholdLog extends DurableObject<Env> {
       sig text not null,
       created_at integer not null
     )`);
+    // Operaciones nuevas de cada día, para el tope diario (contarlas en `ops` leería todo el registro).
+    this.sql.exec("create table if not exists usage (day integer primary key, ops integer not null)");
     // Los dispositivos mandan "ping" para mantener viva la conexión: se responde sin despertar al objeto.
     ctx.setWebSocketAutoResponse(new WebSocketRequestResponsePair("ping", "pong"));
   }
@@ -42,19 +46,36 @@ export class HouseholdLog extends DurableObject<Env> {
     return this.sql.exec<{ head: number | null }>("select max(seq) as head from ops").one().head ?? 0;
   }
 
+  /** Operaciones nuevas de un día. */
+  private opsOn(day: number): number {
+    return this.sql.exec<{ ops: number }>("select ops from usage where day = ?", day).toArray()[0]?.ops ?? 0;
+  }
+
+  /** Para /admin: cuánto lleva hoy y cuánto ocupa el registro. */
+  stats() {
+    return { opsToday: this.opsOn(Math.floor(Date.now() / DAY)), logBytes: this.sql.databaseSize };
+  }
+
   /**
    * Agrega operaciones, todas o ninguna. Reintentar una que ya entró devuelve el mismo número
-   * (idempotente), siempre que sea del mismo autor.
+   * (idempotente), siempre que sea del mismo autor. `limits`: los topes de la casa (los decide el
+   * Worker; sin topes en el servidor de casa).
    */
-  async push(author: string, ops: WireOp[]): Promise<PushResponse> {
+  async push(author: string, ops: WireOp[], limits: Pick<Quotas, "opsPerDay" | "logBytes"> | null): Promise<PushResponse> {
     const now = Date.now();
-    const acks = this.ctx.storage.transactionSync(() =>
-      ops.map((op) => {
+    const day = Math.floor(now / DAY);
+    // Ya en el tope: se corta antes de escribir nada.
+    if (limits && this.sql.databaseSize > limits.logBytes) throw quotaError("log");
+    if (limits && this.opsOn(day) >= limits.opsPerDay) throw quotaError("ops");
+    const acks = this.ctx.storage.transactionSync(() => {
+      let added = 0;
+      const acks = ops.map((op) => {
         const existing = this.sql.exec<{ seq: number; author: string }>("select seq, author from ops where id = ?", op.id).toArray()[0];
         if (existing) {
           if (existing.author !== author) throw new Error(OP_CONFLICT);
           return { id: op.id, seq: existing.seq };
         }
+        added++;
         const { seq } = this.sql
           .exec<{ seq: number }>(
             "insert into ops (id, scope, key_version, author, body, sig, created_at) values (?, ?, ?, ?, ?, ?, ?) returning seq",
@@ -68,8 +89,15 @@ export class HouseholdLog extends DurableObject<Env> {
           )
           .one();
         return { id: op.id, seq };
-      }),
-    );
+      });
+      // Un reintento de lo que ya entró no cuenta. Pasarse deshace el lote entero.
+      if (limits && added > 0) {
+        this.sql.exec("delete from usage where day < ?", day);
+        const today = this.sql.exec<{ ops: number }>("insert into usage (day, ops) values (?, ?) on conflict (day) do update set ops = ops + excluded.ops returning ops", day, added).one();
+        if (today.ops > limits.opsPerDay) throw quotaError("ops");
+      }
+      return acks;
+    });
     // El aviso es auxiliar: una caída de D1 no debe convertir un push ya guardado en un error.
     await this.broadcast(JSON.stringify({ type: "head", seq: this.head() }));
     return { acks };
