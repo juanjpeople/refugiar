@@ -68,7 +68,7 @@ test("el catálogo filtra, consulta referencias y espera la confirmación para g
 
 test("las referencias se leen en inglés y conservan la fecha de consulta", async ({ home: page }, testInfo) => {
   if (testInfo.project.name === "celular") await page.setViewportSize({ width: 320, height: 740 });
-  await page.goto("/ajustes");
+  await page.goto("/ajustes#idioma");
   await page.getByText("English", { exact: true }).click();
   await page.goto("/inventario");
   await page.getByRole("link", { name: /^Alacena/ }).click();

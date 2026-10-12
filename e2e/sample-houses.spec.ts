@@ -32,7 +32,7 @@ test('casas integradas: demo y pruebas conservan cambios sin tocar la casa habit
   await expect(page.getByRole('link', { name: /^Herramientas inventariadas/ })).toHaveCount(0);
   await addItem(page, 'Estantería de herramientas', 'Herramienta de mi casa habitual', 2, 0);
   const ordinarySession = await page.evaluate(() => localStorage.getItem('refugiar-session'));
-  await page.goto('/ajustes');
+  await page.goto('/ajustes#datos');
   await page.getByRole('link', { name: 'Explorar casa demo', exact: true }).click();
   await page.getByRole('button', { name: 'Explorar casa demo', exact: true }).click();
   await page.getByRole('heading', { name: 'Administrador', exact: true }).click();

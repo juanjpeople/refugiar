@@ -152,6 +152,7 @@ Cada fase es un PR. Antes de empezar una, recorré `/design` y el flujo correspo
   | `TrustNote` | Nota de cifrado | AccountPage, AuthForm, JoinPage |
   | `ChoiceCards` v2 | Modo lista, ranura de ícono o avatar, multi-selección, compacto | KindPicker, ChooseProfile, los radios de HouseSetup y LeaveCloud |
   | `SettingRow` | Compartida en `components/ui` | Ajustes y acceso social, con grupo accesible |
+  | `SectionPanes` | Compartida en `components/ui` | Ajustes: lista de secciones y una abierta; una pantalla por vez en mobile |
   | `ProviderButton` | Botón de proveedor con SVG monocromo | Espera y vinculación documentadas en Entrada |
 
   Implementadas y documentadas: `PanelHeader`, `Callout`, `StepFlow`, `ResultState` y
