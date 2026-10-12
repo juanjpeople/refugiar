@@ -1,4 +1,5 @@
-import { Capacitor, registerPlugin } from "@capacitor/core";
+import { registerPlugin } from "@capacitor/core";
+import { isAndroidApp } from "./platform";
 
 const Backup = registerPlugin<{
   save(options: { filename: string; data: string }): Promise<{ saved: boolean }>;
@@ -7,7 +8,7 @@ const Backup = registerPlugin<{
 /** Android confirma la escritura; web inicia la descarga del navegador. Cancelar devuelve false. */
 export async function downloadJson(data: unknown, filename: string): Promise<boolean> {
   const json = JSON.stringify(data, null, 2);
-  if (Capacitor.getPlatform() === "android") {
+  if (isAndroidApp()) {
     return (await Backup.save({ filename, data: json })).saved;
   }
   const blob = new Blob([json], { type: "application/json" });
