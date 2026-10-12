@@ -1667,6 +1667,8 @@ export const en: Messages = {
       title: "This browser can't open the encrypted cloud",
       text: "It's missing part of the encryption we use. Update Chrome (or use a recent Chrome, Firefox, Safari or Edge) and try again.",
       insecure: "The encrypted cloud only works over a secure connection (https).",
+      androidTitle: "This phone can't open the encrypted cloud",
+      android: "It needs a system update. In the Play Store, update “Android System WebView” and Chrome. Then open {app} again.",
       local: "Use {app} on this device",
     },
     install: {

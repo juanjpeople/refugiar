@@ -161,6 +161,10 @@ Verificado el 11/10/2026:
 - Los chicos recuperan el producto compartido. No tienen acciones para agregar
   productos o miembros; crear invitaciones directamente por API devuelve `403`.
 
+Desde el 12/10/2026 el administrador no recarga Familia: el pedido del otro adulto
+tiene que aparecer solo en 20 s. Sin la consulta periódica de pedidos, el test falla
+en ese paso, como pasó en el A55.
+
 El test cierra sus navegadores al terminar y deja las cuentas ficticias en la base.
 Es independiente de la preparación persistente que ahora hace `local:family`.
 La matriz de privacidad Familia/Adultos/Privado y la recuperación independiente siguen
