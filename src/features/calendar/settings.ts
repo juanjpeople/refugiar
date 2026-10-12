@@ -1,3 +1,4 @@
+import { db } from "@/lib/db";
 export interface CalendarSettings {
   id: "calendar";
   country: string;
@@ -13,3 +14,6 @@ export function parseCalendarPreferences(value: CalendarPreferences): CalendarPr
   if (typeof value.schoolEnabled !== "boolean" || [value.country, value.state, value.region].some((code) => typeof code !== "string" || !/^[A-Za-z0-9_-]{0,20}$/.test(code)) || (!value.country && (value.state || value.region)) || (!value.state && value.region)) throw new Error("Invalid calendar preferences");
   return { country: value.country, state: value.state, region: value.region, schoolEnabled: value.schoolEnabled };
 }
+
+/** La configuración del calendario (la tabla también guarda la escuela de cada chico). */
+export const readCalendarSettings = () => db.houseSettings.get("calendar") as Promise<CalendarSettings | undefined>;

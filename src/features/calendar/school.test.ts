@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { after, test } from "node:test";
 import Dexie from "dexie";
 import { db, declareSchema } from "@/lib/db";
-import { DEFAULT_CALENDAR } from "./settings";
+import { DEFAULT_CALENDAR, readCalendarSettings } from "./settings";
 import { holidayOccurrences } from "./holidays";
 import { applySchoolBreaks, expandEvents, parseEvent, type CalendarEvent } from "./domain";
 import { createEvent, saveCalendarPreferences, updateEvent } from "./service";
@@ -44,7 +44,7 @@ test("calendar settings and school records persist and reject child writes", asy
   const kid = { id: "profile-kid", name: "Kid", role: "kid" as const };
   await saveCalendarPreferences(adult, { ...DEFAULT_CALENDAR, country: "AR", schoolEnabled: true });
   await assert.rejects(saveCalendarPreferences(kid, DEFAULT_CALENDAR));
-  assert.equal((await db.houseSettings.get("calendar"))?.country, "AR");
+  assert.equal((await readCalendarSettings())?.country, "AR");
   const id = await createEvent(adult, { ...lesson, participantIds: ["profile-kid"] });
   assert.equal((await db.events.get(id))?.repeatUntil, lesson.repeatUntil);
   await updateEvent(adult, id, { ...lesson, eventKind: "event", repeatUntil: undefined, participantIds: ["profile-kid"] });
