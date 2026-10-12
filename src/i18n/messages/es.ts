@@ -2053,20 +2053,24 @@ export const es = {
     privacy: {
       eyebrow: "Política de privacidad",
       title: "Qué hace {app} con tus datos",
-      updated: "Última actualización: 11 de octubre de 2026",
+      updated: "Última actualización: 12 de octubre de 2026",
       intro: "{app} es una app de código abierto para organizar la casa. Está pensada para que tus datos vivan en tus dispositivos. No muestra publicidad, no usa rastreadores y no vende datos.",
       sections: {
         android: {
           title: "La app de Android",
-          body: "La app de Android abre {domain} en Chrome, a pantalla completa. Es la misma app que la web: lo que dice esta página vale igual para las dos.\nSin cuenta, todo lo que cargás queda en tu teléfono y no nos llega nada.\nLa cámara se usa solo cuando la abrís, para sacar fotos o leer códigos QR.\nLos respaldos son un archivo que vos elegís dónde guardar. Ese archivo no está cifrado: guardalo en un lugar de confianza.",
+          body: "La app de Android trae la app completa adentro: abre y funciona sin internet. Es la misma app que la web, así que lo que dice esta página vale igual para las dos.\nSin cuenta, todo lo que cargás queda en tu teléfono y no nos llega nada.\nLa cámara se usa solo cuando la abrís, para sacar fotos o leer códigos QR.\nLos respaldos son un archivo que vos elegís dónde guardar. Ese archivo no está cifrado: guardalo en un lugar de confianza.",
         },
         cloud: {
           title: "Con cuenta (opcional)",
           body: "En la web o en la app de Android podés crear una cuenta para compartir la casa entre varios dispositivos. Para eso guardamos tu nombre, tu email y tu contraseña protegida con un hash. Si entrás con Google o GitHub, recibimos tu nombre, tu email y tu foto de perfil.\nSi encendés la verificación en dos pasos, guardamos su secreto y tus códigos de respaldo cifrados, y la clave pública de cada llave de acceso.\nLos datos de tu casa y tus fotos se cifran en tu dispositivo antes de subir. Nosotros no tenemos las claves y no podemos leerlos.\nPor seguridad, cada sesión guarda la dirección IP y el navegador desde donde entraste. Una sesión dura hasta 30 días.\nSi nos mandás un comentario, guardamos el mensaje y el email que dejes.",
         },
+        homeServer: {
+          title: "Con tu propio servidor (opcional)",
+          body: "Podés instalar {app} en una PC o una Raspberry de tu casa y usarla desde la red de tu casa.\nAhí las cuentas, la casa y las fotos quedan en ese equipo. A nosotros no nos llega nada.\nTambién podés probar una base ESP32 que pasa cambios cifrados entre teléfonos dentro de tu casa. No guarda claves ni puede leer lo que pasa.",
+        },
         providers: {
           title: "Servicios que usamos",
-          body: "Cloudflare aloja la web, la API y la base de datos de las cuentas.\nSupabase guarda las fotos cifradas de la versión con cuenta.\nGoogle y GitHub solo intervienen si elegís entrar con ellos.\nEn Android, la app usa Chrome, de Google, para mostrar la web.\nNinguno recibe tus datos para publicidad.",
+          body: "Cloudflare aloja la web, la API y la base de datos de las cuentas.\nSupabase guarda las fotos cifradas de la versión con cuenta.\nGoogle y GitHub solo intervienen si elegís entrar con ellos.\nEn Android, la app muestra su pantalla con el componente WebView del sistema, de Google, sin mandarle tus datos.\nNinguno recibe tus datos para publicidad.",
         },
         retention: {
           title: "Cuánto tiempo guardamos los datos",

@@ -8,7 +8,7 @@ import { SectionTitle } from "@/components/ui";
 import { LEGAL } from "@/config/legal";
 import { useT } from "@/i18n";
 
-const SECTIONS = ["android", "cloud", "providers", "retention", "children", "changes", "contact"] as const;
+const SECTIONS = ["android", "cloud", "homeServer", "providers", "retention", "children", "changes", "contact"] as const;
 
 /**
  * Política de privacidad pública (la pide Google Play). Es una página fija: se lee sin sesión y sin
