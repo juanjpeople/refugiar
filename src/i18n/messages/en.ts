@@ -2048,20 +2048,24 @@ export const en: Messages = {
     privacy: {
       eyebrow: "Privacy policy",
       title: "What {app} does with your data",
-      updated: "Last updated: October 11, 2026",
+      updated: "Last updated: October 12, 2026",
       intro: "{app} is an open source app to organize your home. It is built so your data lives on your devices. It shows no ads, uses no trackers and sells no data.",
       sections: {
         android: {
           title: "The Android app",
-          body: "The Android app opens {domain} in Chrome, full screen. It is the same app as the website: everything on this page applies to both.\nWithout an account, everything you add stays on your phone and nothing reaches us.\nThe camera is used only when you open it, to take photos or read QR codes.\nBackups are a file you choose where to save. That file is not encrypted: keep it somewhere you trust.",
+          body: "The Android app carries the full app inside: it opens and works without internet. It is the same app as the website, so everything on this page applies to both.\nWithout an account, everything you add stays on your phone and nothing reaches us.\nThe camera is used only when you open it, to take photos or read QR codes.\nBackups are a file you choose where to save. That file is not encrypted: keep it somewhere you trust.",
         },
         cloud: {
           title: "With an account (optional)",
           body: "On the website or in the Android app you can create an account to share your home across devices. For that we store your name, your email and your password protected with a hash. If you sign in with Google or GitHub, we receive your name, email and profile picture.\nIf you turn on two-step verification, we store its secret and your backup codes encrypted, plus the public key of each passkey.\nYour home data and photos are encrypted on your device before upload. We do not have the keys and cannot read them.\nFor security, each session stores the IP address and browser you signed in from. A session lasts up to 30 days.\nIf you send us feedback, we store the message and any email you leave.",
         },
+        homeServer: {
+          title: "With your own server (optional)",
+          body: "You can install {app} on a PC or a Raspberry Pi at home and use it from your home network.\nThere, accounts, the home and photos stay on that machine. Nothing reaches us.\nYou can also try an ESP32 base that passes encrypted changes between phones inside your home. It holds no keys and cannot read what passes through.",
+        },
         providers: {
           title: "Services we use",
-          body: "Cloudflare hosts the website, the API and the accounts database.\nSupabase stores the encrypted photos of the account version.\nGoogle and GitHub are involved only if you choose to sign in with them.\nOn Android, the app uses Google Chrome to show the website.\nNone of them receive your data for advertising.",
+          body: "Cloudflare hosts the website, the API and the accounts database.\nSupabase stores the encrypted photos of the account version.\nGoogle and GitHub are involved only if you choose to sign in with them.\nOn Android, the app draws its screens with the system WebView component, from Google, without sending it your data.\nNone of them receive your data for advertising.",
         },
         retention: {
           title: "How long we keep data",
