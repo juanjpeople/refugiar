@@ -478,7 +478,14 @@ Para que una función nueva no rehaga su página de lista ni su página de detal
     de una grilla vacía.
   - El mosaico usa `minmax(min(Npx, 100%), 1fr)`: a 320 px las tarjetas no desbordan.
 - [ ] Compras e Inventario: tienen listas dentro de otras secciones; migrarlas con cuidado.
-- [ ] **`DetailPage`**: encabezado con identidad, secciones y panel lateral.
+- [x] **`DetailPage`** (#75): `PageHeader` con identidad, resumen opcional, secciones con
+  `SectionHeader` que entran en cascada y son anclas (`DETAIL_ANCHOR_OFFSET`), y panel lateral
+  opcional (fijo en escritorio, debajo en celular). `DetailMissing` cubre la carga y el "ya no
+  existe" con un botón para volver. Documentada en `/design` → Plantillas → Detalle.
+  - Adoptada en Proyecto (`/proyectos/ver`) y Contenedor (`/inventario/ver`).
+  - Las listas de un proyecto usan `ListGrid`: ahora suben en hover y ceden al apretar como
+    el resto de las tarjetas.
+  - Recetas queda con su héroe propio: es la referencia de calidad y no gana nada con el cambio.
 - [ ] **Registro de funcionalidades**: ruta, ícono, permisos, sección de Ajustes y comandos
   en un solo lugar por función.
 
