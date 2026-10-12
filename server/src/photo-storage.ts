@@ -23,6 +23,7 @@ interface PhotoStorageEnv {
   SUPABASE_PHOTOS_BUCKET: string;
   SUPABASE_SERVICE_ROLE_KEY: string;
   PHOTO_STORAGE?: string;
+  LOCAL_PHOTOS?: R2Bucket;
 }
 
 const encodePath = (path: string) => path.split("/").map(encodeURIComponent).join("/");
@@ -112,6 +113,47 @@ export class SupabasePhotoStorage implements PhotoStorage {
 
 const localPhotos = new Map<string, Uint8Array>();
 
+/** Solo para el emulador local de Wrangler. Guarda bytes ya cifrados en disco. */
+export class LocalR2PhotoStorage implements PhotoStorage {
+  private readonly bucket: R2Bucket;
+  constructor(bucket: R2Bucket) { this.bucket = bucket; }
+
+  async put(key: string, body: ArrayBuffer) {
+    try {
+      const stored = await this.bucket.put(key, body, { httpMetadata: { contentType: "application/octet-stream" } });
+      if (!stored) throw new Error("not stored");
+    } catch { throw new PhotoStorageError("upload", 500); }
+  }
+
+  async get(key: string) {
+    try {
+      const object = await this.bucket.get(key);
+      return object ? new Response(object.body, { headers: { "Content-Type": "application/octet-stream" } }) : null;
+    } catch { throw new PhotoStorageError("download", 500); }
+  }
+
+  async delete(keys: string[]) {
+    try {
+      for (let offset = 0; offset < keys.length; offset += 100) await this.bucket.delete(keys.slice(offset, offset + 100));
+    } catch { throw new PhotoStorageError("delete", 500); }
+  }
+
+  async deletePrefix(prefix: string) {
+    const normalized = prefix.replace(/^\/+|\/+$/g, "");
+    if (!normalized) throw new PhotoStorageError("delete", 400);
+    try {
+      for (;;) {
+        // Volver a la primera página después de borrar: un cursor calculado antes
+        // del borrado puede saltarse objetos. La barra evita afectar casas vecinas.
+        const page = await this.bucket.list({ prefix: `${normalized}/`, limit: 100 });
+        if (page.objects.length === 0) return;
+        await this.delete(page.objects.map((object) => object.key));
+        if (!page.truncated) return;
+      }
+    } catch { throw new PhotoStorageError("delete", 500); }
+  }
+}
+
 const localPhotoStorage: PhotoStorage = {
   async put(key, body) {
     localPhotos.set(key, new Uint8Array(body).slice());
@@ -131,6 +173,13 @@ const localPhotoStorage: PhotoStorage = {
 };
 
 export function photoStorage(env: PhotoStorageEnv): PhotoStorage {
+  if (env.PHOTO_STORAGE === "local-r2") {
+    const origin = new URL(env.APP_ORIGIN);
+    if (origin.protocol !== "http:" || !["localhost", "127.0.0.1"].includes(origin.hostname) || !env.LOCAL_PHOTOS) {
+      throw new PhotoStorageError("configure", 500);
+    }
+    return new LocalR2PhotoStorage(env.LOCAL_PHOTOS);
+  }
   if (env.PHOTO_STORAGE === "memory") {
     const hostname = new URL(env.APP_ORIGIN).hostname;
     if (hostname !== "localhost" && hostname !== "127.0.0.1") throw new PhotoStorageError("configure", 500);

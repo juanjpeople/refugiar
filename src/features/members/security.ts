@@ -8,10 +8,25 @@
  */
 import { BRAND } from "@/config/brand";
 import { deviceLabel } from "@/lib/device";
+import { Capacitor, registerPlugin } from "@capacitor/core";
+import { getTranslator } from "@/i18n/translate";
 import type { BiometricCredential, PinHash } from "./domain";
 
 const PBKDF2_ITERATIONS = 310_000;
 const encoder = new TextEncoder();
+interface NativeBiometricResult { id: string; publicKey: string; signature: string }
+interface NativeBiometricPrompt { challenge: string; title: string; subtitle: string; cancel: string }
+const NativeBiometric = registerPlugin<{
+  support(): Promise<{ available: boolean }>;
+  register(input: NativeBiometricPrompt): Promise<NativeBiometricResult>;
+  authenticate(input: NativeBiometricPrompt & { ids: string[] }): Promise<NativeBiometricResult>;
+  remove(input: { id: string }): Promise<void>;
+}>("LocalBiometric");
+const isNative = () => Capacitor.getPlatform() === "android";
+function nativePrompt(challenge: Uint8Array, name = BRAND.name): NativeBiometricPrompt {
+  const t = getTranslator("es");
+  return { challenge: toBase64Url(challenge), title: BRAND.name, subtitle: t("lock.title", { name }), cancel: t("common.cancel") };
+}
 
 // --- Base64 ----------------------------------------------------------------------
 
@@ -93,6 +108,10 @@ export type BiometricSupport = "available" | "insecure-context" | "unsupported";
 /** WebAuthn exige HTTPS (o localhost) y un autenticador del dispositivo con verificación (huella, rostro, Hello). */
 export async function getBiometricSupport(): Promise<BiometricSupport> {
   if (typeof window === "undefined") return "unsupported";
+  if (isNative()) {
+    if (!Capacitor.isPluginAvailable("LocalBiometric")) return "unsupported";
+    return (await NativeBiometric.support()).available ? "available" : "unsupported";
+  }
   if (!window.isSecureContext) return "insecure-context";
   if (!window.PublicKeyCredential || !(await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable().catch(() => false))) {
     return "unsupported";
@@ -102,6 +121,16 @@ export async function getBiometricSupport(): Promise<BiometricSupport> {
 
 /** Registra la biometría de este dispositivo para un miembro. */
 export async function registerBiometric(member: { id: string; name: string }): Promise<BiometricCredential> {
+  if (isNative()) {
+    const challenge = crypto.getRandomValues(new Uint8Array(32));
+    const result = await NativeBiometric.register(nativePrompt(challenge, member.name));
+    const credential: BiometricCredential = { id: result.id, publicKey: result.publicKey, algorithm: -7, label: deviceLabel(navigator.userAgent) || "Android", createdAt: Date.now(), kind: "native" };
+    if (!(await verifyNativeSignature(credential, result.signature, challenge))) {
+      await NativeBiometric.remove({ id: result.id });
+      throw new Error("Invalid native biometric signature");
+    }
+    return credential;
+  }
   const credential = (await navigator.credentials.create({
     publicKey: {
       challenge: crypto.getRandomValues(new Uint8Array(32)),
@@ -151,8 +180,14 @@ function derToRaw(der: Uint8Array): Uint8Array<ArrayBuffer> {
  */
 export async function verifyBiometric(credentials: BiometricCredential[]): Promise<string | null> {
   const challenge = crypto.getRandomValues(new Uint8Array(32));
-  // Las de la app de Android anterior viven en su Keystore: un navegador no las puede usar.
-  const web = credentials.filter((credential) => credential.kind !== "native");
+  if (isNative()) {
+    const native = credentials.filter(credential => credential.kind === "native");
+    if (!native.length) throw new Error("No biometric key on this device");
+    const result = await NativeBiometric.authenticate({ ...nativePrompt(challenge), ids: native.map(credential => credential.id) });
+    const stored = native.find(credential => credential.id === result.id);
+    return stored && await verifyNativeSignature(stored, result.signature, challenge) ? stored.id : null;
+  }
+  const web = credentials.filter(credential => credential.kind !== "native");
   if (!web.length) throw new Error("No biometric key on this device");
   const assertion = (await navigator.credentials.get({
     publicKey: {
@@ -200,4 +235,13 @@ export async function verifyBiometric(credentials: BiometricCredential[]): Promi
           signed,
         );
   return valid ? stored.id : null;
+}
+
+async function verifyNativeSignature(credential: BiometricCredential, signature: string, challenge: Uint8Array<ArrayBuffer>) {
+  const key = await crypto.subtle.importKey("spki", fromBase64(credential.publicKey), { name: "ECDSA", namedCurve: "P-256" }, false, ["verify"]);
+  return crypto.subtle.verify({ name: "ECDSA", hash: "SHA-256" }, key, derToRaw(fromBase64(signature)), challenge);
+}
+
+export async function removeBiometricKey(credential: BiometricCredential) {
+  if (isNative() && credential.kind === "native") await NativeBiometric.remove({ id: credential.id });
 }
