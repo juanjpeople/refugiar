@@ -47,7 +47,7 @@ Lo último arriba. El PR que termina algo lo agrega acá.
 
 | Cuándo | Qué | PR |
 | --- | --- | --- |
-| 2026-10 | Ajustes en dos paneles y apariencia rápida desde el avatar | #PR |
+| 2026-10 | Ajustes en dos paneles y apariencia rápida desde el avatar | #72 |
 | 2026-10 | El celular de un chico entra sin email ni contraseña | #67 |
 | 2026-10 | Android igual a la web (Trusted Web Activity) y borrar la cuenta desde la app | #66 |
 | 2026-10 | El deploy aplica las migraciones de D1 | #54 |
