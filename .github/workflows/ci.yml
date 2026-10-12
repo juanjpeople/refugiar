@@ -1,6 +1,6 @@
-# Cada PR: tipos, lint, tests, API y las pruebas de punta a punta esenciales, en escritorio.
-# Al mergear a main corre todo: celular (lo que cambia de diseño), temas, capturas y el paquete local para NAS.
-# Android empaqueta esta interfaz; su compilación corre aparte (android.yml).
+# Cada PR (en paralelo, menos de 2 minutos): tipos, lint, tests unitarios, build y recorrido de la API.
+# Al mergear a main corre además todo Playwright: escritorio, celular, temas, casa demo, capturas
+# y el paquete local para NAS. Android empaqueta esta interfaz; su compilación corre aparte (android.yml).
 name: CI
 
 on:
@@ -30,10 +30,9 @@ jobs:
       - run: npm run build:operator
 
   api:
-    name: API (Worker + D1 local)
-    timeout-minutes: 15
+    name: Build y API (Worker + D1 local)
+    timeout-minutes: 10
     runs-on: ubuntu-latest
-    needs: check
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-node@v7
@@ -41,8 +40,9 @@ jobs:
           node-version: 24
           cache: npm
       - run: npm ci
-      # El Worker sirve la app desde out/: alcanza con una carpeta vacía para probar la API.
-      - run: mkdir -p out
+      # El mismo build que publica Cloudflare: un error se ve en el PR, no en el deploy.
+      - run: npm run build
+      - run: npx wrangler deploy --dry-run
       - name: Secretos de prueba (solo para este job)
         run: |
           {
@@ -69,7 +69,9 @@ jobs:
           node --import ./scripts/test-hooks.mjs --test server/test/api.e2e.ts || (cat wrangler.log; exit 1)
 
   e2e:
-    name: Build y pruebas de punta a punta
+    name: Pruebas de punta a punta
+    # Solo al mergear a main: en los PR no se espera a Playwright.
+    if: github.event_name == 'push'
     timeout-minutes: 15
     runs-on: ubuntu-latest
     needs: check
@@ -81,14 +83,13 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run build
-      - run: npx wrangler deploy --dry-run
       - run: npx playwright install --with-deps chromium
       - run: npm run build:operator
       - run: npx playwright test --config playwright.operator.config.ts
-      # En los PR solo lo esencial en escritorio; en main, todo y también en celular.
+      # Todo, en escritorio y en celular.
       - run: npm run e2e
         env:
-          E2E_FULL: ${{ github.event_name == 'push' && '1' || '' }}
+          E2E_FULL: '1'
       - uses: actions/upload-artifact@v7
         if: failure()
         with:
@@ -97,7 +98,6 @@ jobs:
           retention-days: 7
       # Build cloud: necesita la API. El paquete para NAS se genera en local-package.
       - uses: actions/upload-artifact@v7
-        if: github.ref == 'refs/heads/main'
         with:
           name: sitio
           path: out
@@ -130,6 +130,7 @@ jobs:
 
   demo:
     name: Casa demo aislada
+    if: github.event_name == 'push'
     runs-on: ubuntu-latest
     timeout-minutes: 15
     needs: check
@@ -144,7 +145,7 @@ jobs:
       - run: npx playwright install --with-deps chromium
       - run: npm run e2e:demo
         env:
-          E2E_FULL: ${{ github.event_name == 'push' && '1' || '' }}
+          E2E_FULL: '1'
       - run: npx wrangler deploy --config wrangler.demo.jsonc --dry-run
       - uses: actions/upload-artifact@v7
         if: always()
