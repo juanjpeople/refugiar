@@ -98,6 +98,20 @@ real. Base revisada: `main` en `84d9cbc`. Candidato disponible: AAB versionCode 
 versión 0.1.0, código de app `a994050`, workflow 38188403731. Que el AAB exista o
 esté cargado en Play Console no demuestra que esté instalado en el teléfono.
 
+Actualización de identificación: A55 físico `SM-A556E` conectado y autorizado por
+USB; Android 16/API 36, WebView `com.google.android.webview` 153.0.8010.57.
+En el usuario principal está instalado `ar.refugi.app`, versionCode 1 / 0.1.0,
+instalador `com.android.vending`. No se actualizó, borró ni reinstaló la app.
+La lectura del APK instalado confirmó Capacitor con origen `https://localhost`,
+export `localOnly: true`, revisión `9d4197db8a7ea0915670a6c8bb4c9fbbdfbdcd4c`.
+**Este caso es migración de Capacitor localhost, no de TWA.** La versión 3 tiene
+otro origen (`https://refugi.ar`): conservar/exportar la casa anterior antes de
+actualizar y verificar el traslado explícitamente. Copia del APK inspeccionado
+en `.family-lab/physical-a55/installed-v1-base.apk` (ignorada, sin copiar datos
+privados de la app). Pendiente respuesta sobre contenido existente y respaldo;
+el recorrido funcional aún no está ejecutado. Consultar ADB con `--user 0`
+cuando corresponda: los perfiles secundarios del teléfono no forman parte del ensayo.
+
 Preparación previa (instalaciones/alta de cuentas no están incluidas en los 15 minutos):
 
 - Registrar modelo, Android, proveedor/versión WebView, paquete, versionCode y
