@@ -100,8 +100,12 @@ siguen en sus dispositivos): todavía no hay un camino de soporte para eso.
   nunca pisa uno que ya existe. Así nadie de la casa puede dejar a otro sin sus claves ni trabar la
   rotación al sacar a alguien.
 - **Topes por casa** (operaciones por día, tamaño del registro y fotos). Protegen la capa gratuita,
-  que es de toda la cuenta, de un dispositivo con un error o de un abuso. Ver
+  que es de toda la cuenta, de un dispositivo con un error o de un abuso. El operador los cambia
+  desde `/admin`; llegar a uno frena, nunca pasa a consumo pago. Ver
   [nube](docs/features/nube.md#límites).
+- **Lista de espera.** Guarda nombre y email sin cuenta, con límite por IP y la misma respuesta si el
+  email ya estaba. Se borra al crear la casa con ese código. El código va por correo y el cuerpo
+  del correo se vacía al entregarse.
 - **Encabezados de la app** (`public/_headers`): no se puede meter dentro de otra página, cámara
   solo para la app, sin micrófono ni ubicación, y HTTPS recordado por el navegador. No hay todavía
   una CSP de scripts: la app estática usa scripts en línea.

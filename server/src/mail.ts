@@ -40,6 +40,19 @@ export function securityEmailStatements(env: Env, user: { id: string; email: str
     `${t(event)}\n\n${t("help").replace("{url}", `${env.APP_ORIGIN}/cuenta`)}`, now, now)];
 }
 
+/**
+ * El código de acceso para quien estaba en la lista de espera. Sin correo configurado no se encola:
+ * el operador lo ve en /admin y lo manda por su cuenta. Al enviarse, el código se borra del cuerpo.
+ */
+export function accessEmailStatement(env: Env, job: { id: string; name: string; email: string; code: string }): D1PreparedStatement | null {
+  if (env.EMAIL_ENABLED !== "1" || mailConfigState(env) !== "configured" || !deliverable(job.email)) return null;
+  const now = Date.now();
+  const body = t("access").replace("{name}", job.name).replace("{code}", job.code).replace("{url}", `${env.APP_ORIGIN}/cuenta?modo=crear&siguiente=casa`);
+  return env.DB.prepare(
+    `insert into email_outbox (id, recipient, sender, subject, body, created_at, next_attempt_at) values (?, ?, ?, ?, ?, ?, ?)`,
+  ).bind(job.id, job.email, sender(env), t("accessSubject"), body, now, now);
+}
+
 export async function queueTestEmail(env: Env) {
   if (!isEmailAddress(env.OPERATOR_EMAIL)) throw new Error("Operator email is not configured");
   const now = Date.now();
@@ -181,7 +194,8 @@ export async function processEmails(env: Env, now = Date.now(), request: typeof 
     await env.DB.prepare("update email_outbox set first_attempt_at = coalesce(first_attempt_at, ?), attempts = attempts + 1 where id = ?").bind(current, job.id).run();
     try {
       const id = await sendEmail(env, job, request);
-      await env.DB.prepare("update email_outbox set status = 'sent', provider_id = ?, last_error = null where id = ?").bind(id, job.id).run();
+      // Un código de acceso no queda guardado en claro una vez entregado.
+      await env.DB.prepare("update email_outbox set status = 'sent', provider_id = ?, last_error = null, body = case when id like 'access/%' then '' else body end where id = ?").bind(id, job.id).run();
       accepted++;
     } catch (error) {
       if (!(error instanceof DeliveryError)) throw error;

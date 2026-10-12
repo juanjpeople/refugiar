@@ -3,6 +3,8 @@ import { App, Alert, Button, Card, Col, Descriptions, Dropdown, Flex, Form, Grid
 import { CircleAlert, Gauge, KeyRound, MessageSquare, RefreshCw, ShieldCheck, Users } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { OperatorAccess, type OperatorPasskey } from "./Access";
+import { HouseholdQuotaModal, OperatorCapacity, type CapacityData } from "./Capacity";
+import { OperatorWaitlist, type WaitlistEntry } from "./Waitlist";
 import { OperatorLayout, useT, api, CloudError, date, getErrorMessage } from "./support";
 import { PageHeader } from "../src/components/ui/PageHeader";
 import { Reveal } from "../src/components/motion/Reveal";
@@ -17,6 +19,7 @@ interface Overview {
     availableLicenses: number;
     openFeedback: number;
     pendingNotices: number;
+    waiting: number;
   };
   risks: Record<string, unknown>[];
   credentials: { operatorConfigured: boolean; supabaseConfigured: boolean; mail: "disabled" | "incomplete" | "configured" };
@@ -82,6 +85,8 @@ interface AdminData {
   feedback: AdminFeedback[];
   notices: AdminNotice[];
   passkeys: OperatorPasskey[];
+  waitlist: WaitlistEntry[];
+  capacity: CapacityData;
   mail: {
     config: "disabled" | "incomplete" | "configured";
     counts: Record<string, number>;
@@ -91,7 +96,7 @@ interface AdminData {
 }
 const shortId = (value: string) => `${value.slice(0, 8)}…`;
 async function fetchAdminData(): Promise<AdminData> {
-  const [overview, users, households, licenses, feedback, notices, passkeys, mail] = await Promise.all([
+  const [overview, users, households, licenses, feedback, notices, passkeys, mail, waitlist, capacity] = await Promise.all([
     api<Overview>("GET", "/api/admin/platform/overview"),
     api<{ users: AdminUser[] }>("GET", "/api/admin/platform/users"),
     api<{ households: AdminHousehold[] }>("GET", "/api/admin/platform/households"),
@@ -100,8 +105,10 @@ async function fetchAdminData(): Promise<AdminData> {
     api<{ notices: AdminNotice[] }>("GET", "/api/admin/platform/notices"),
     api<{ passkeys: OperatorPasskey[] }>("GET", "/api/admin/auth/passkeys"),
     api<AdminData["mail"]>("GET", "/api/admin/platform/mail"),
+    api<{ waitlist: WaitlistEntry[] }>("GET", "/api/admin/platform/waitlist"),
+    api<CapacityData>("GET", "/api/admin/platform/capacity"),
   ]);
-  return { overview, users: users.users, households: households.households, licenses: licenses.licenses, feedback: feedback.feedback, notices: notices.notices, passkeys: passkeys.passkeys, mail };
+  return { overview, users: users.users, households: households.households, licenses: licenses.licenses, feedback: feedback.feedback, notices: notices.notices, passkeys: passkeys.passkeys, mail, waitlist: waitlist.waitlist, capacity };
 }
 export function PlatformAdminPage() {
   const t = useT();
@@ -117,6 +124,7 @@ export function PlatformAdminPage() {
   const pending = useRef(false);
   const notice = useRef<{ destroy: () => void } | null>(null);
   const [licenseOpen, setLicenseOpen] = useState(false);
+  const [quotaHousehold, setQuotaHousehold] = useState<string | null>(null);
   const [form] = Form.useForm<{ count: number; expiresInDays?: number; note?: string }>();
   const fail = useCallback((error: unknown) => {
     setData(null);
@@ -145,7 +153,7 @@ export function PlatformAdminPage() {
       .finally(() => { if (!cancelled) setLoading(false); });
     return () => { cancelled = true; };
   }, [fail]);
-  async function action(method: "POST" | "PATCH" | "DELETE", path: string, body?: unknown) {
+  async function action(method: "POST" | "PATCH" | "PUT" | "DELETE", path: string, body?: unknown) {
     if (pending.current) return false;
     pending.current = true;
     setBusy(true);
@@ -180,6 +188,39 @@ export function PlatformAdminPage() {
               <Typography.Text key={license.code} copyable code>
                 {license.code}
               </Typography.Text>
+            ))}
+          </Flex>
+        ),
+      });
+    } catch (error) {
+      fail(error);
+    } finally {
+      pending.current = false;
+      setBusy(false);
+    }
+  }
+  /** Habilitar de la lista de espera: los códigos se ven una sola vez (con correo, también salen por mail). */
+  async function enableWaitlist(ids: string[]) {
+    if (pending.current) return;
+    pending.current = true;
+    setBusy(true);
+    try {
+      const result = await api<{ enabled: { id: string; name: string; email: string; code: string; emailed: boolean }[] }>("POST", "/api/admin/platform/waitlist/enable", { ids });
+      notice.current = modal.info({
+        title: t("platformAdmin.waitlist.doneTitle"),
+        width: 640,
+        afterClose: () => { void load(); },
+        content: (
+          <Flex vertical gap={token.marginSM} style={{ marginTop: token.margin }}>
+            <Alert type="warning" showIcon title={t("platformAdmin.waitlist.once")} />
+            {result.enabled.map((entry) => (
+              <Flex key={entry.id} vertical gap={2}>
+                <Typography.Text strong>{entry.name} · {entry.email}</Typography.Text>
+                <Flex gap={token.marginXS} align="center" wrap>
+                  <Typography.Text copyable code>{entry.code}</Typography.Text>
+                  <Tag color={entry.emailed ? "green" : "gold"}>{t(entry.emailed ? "platformAdmin.waitlist.emailed" : "platformAdmin.waitlist.manual")}</Tag>
+                </Flex>
+              </Flex>
             ))}
           </Flex>
         ),
@@ -230,6 +271,7 @@ export function PlatformAdminPage() {
                   { key: "paused", label: t("platformAdmin.metrics.paused"), children: overview.metrics.pausedHouseholds },
                   { key: "licenses", label: t("platformAdmin.metrics.availableLicenses"), children: `${overview.metrics.availableLicenses}/${overview.metrics.licenses}` },
                   { key: "notices", label: t("platformAdmin.metrics.notices"), children: overview.metrics.pendingNotices },
+                  { key: "waiting", label: t("platformAdmin.metrics.waiting"), children: overview.metrics.waiting },
                 ]}
               />
               <Descriptions
@@ -263,7 +305,7 @@ export function PlatformAdminPage() {
         <Reveal delay={0.15}><Card>
           {!screens.sm && <Select virtual={false} aria-label={t("operator.section")} value={section} onChange={setSection}
             style={{ width: "100%", minHeight: 44, marginBottom: token.margin }}
-            options={["households", "users", "licenses", "feedback", "notices", "mail", "access"].map(value => ({ value, label: t(`platformAdmin.tabs.${value}`) }))} />}
+            options={["households", "waitlist", "capacity", "users", "licenses", "feedback", "notices", "mail", "access"].map(value => ({ value, label: t(`platformAdmin.tabs.${value}`) }))} />}
           <Tabs activeKey={section} onChange={setSection} tabBarStyle={screens.sm ? undefined : { display: "none" }}
             items={[
               {
@@ -283,6 +325,7 @@ export function PlatformAdminPage() {
                         title: t("platformAdmin.actions"),
                         render: (_: unknown, row: AdminHousehold) => (
                           <Flex gap={8} wrap>
+                            <Button disabled={busy} style={{ minHeight: 44 }} onClick={() => setQuotaHousehold(row.id)}>{t("platformAdmin.capacity.open")}</Button>
                             <Button disabled={busy} style={{ minHeight: 44 }} onClick={() => action("POST", `/api/admin/platform/households/${row.id}/${row.status === "active" ? "pause" : "resume"}`)}>
                               {t(row.status === "active" ? "platformAdmin.pause" : "platformAdmin.resume")}
                             </Button>
@@ -310,6 +353,17 @@ export function PlatformAdminPage() {
                     ]}
                   />
                 ),
+              },
+              {
+                key: "waitlist",
+                label: t("platformAdmin.tabs.waitlist"),
+                children: <OperatorWaitlist entries={data.waitlist} busy={busy} mailConfigured={data.mail.config === "configured"}
+                  onEnable={enableWaitlist} onDelete={(id) => action("DELETE", `/api/admin/platform/waitlist/${id}`)} />,
+              },
+              {
+                key: "capacity",
+                label: t("platformAdmin.tabs.capacity"),
+                children: <OperatorCapacity capacity={data.capacity} busy={busy} onSaveDefaults={(quotas) => action("PUT", "/api/admin/platform/quotas", quotas)} onOpenHousehold={setQuotaHousehold} />,
               },
               {
                 key: "users",
@@ -513,6 +567,7 @@ export function PlatformAdminPage() {
           />
         </Card></Reveal>
       </Flex>
+      <HouseholdQuotaModal householdId={quotaHousehold} onClose={() => setQuotaHousehold(null)} onSaved={() => void load()} />
       <Modal title={t("platformAdmin.licenses.create")} open={licenseOpen} onCancel={() => { if (!pending.current) setLicenseOpen(false); }} closable={!busy} keyboard={!busy} mask={{ closable: !busy }} footer={null} destroyOnHidden>
         <Form form={form} disabled={busy} requiredMark={false} layout="vertical" initialValues={{ count: 1 }} onFinish={createLicenses}>
           <Form.Item name="count" label={t("platformAdmin.quantity")} rules={[{ required: true }]}>
