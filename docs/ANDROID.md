@@ -111,11 +111,50 @@ en `.family-lab/physical-a55/installed-v1-base.apk` (ignorada, sin copiar datos
 privados de la app). Esta identificación describe el estado previo al borrado.
 El usuario confirmó que no había datos importantes y autorizó borrar los datos
 de prueba. Se ejecutó `pm clear --user 0 ar.refugi.app` únicamente en el A55
-seleccionado; ADB devolvió `Success`. El paquete continúa en versionCode 1:
-queda pendiente actualizar desde Play a la versión 3 y ejecutar el recorrido.
+seleccionado; ADB devolvió `Success`. Luego el usuario actualizó desde Play:
+ADB confirmó versionCode 3 / 0.1.0 en el A55, con `lastUpdateTime`
+`2026-10-11 22:16:13`. Quedan pendientes el ingreso y el recorrido funcional.
 Este ensayo partirá de datos limpios y **no certificará migración** desde localhost.
 El recorrido funcional aún no está ejecutado. Consultar ADB con `--user 0`
 cuando corresponda: los perfiles secundarios del teléfono no forman parte del ensayo.
+
+#### Evidencia física parcial: casa local (11/10/2026)
+
+El usuario preparó la casa local con la plantilla completa y autorizó operar el
+A55 por USB. Se probó la versión 3 instalada desde Play, sin reinstalar ni borrar
+esta casa. La interfaz mostraba `This device`, perfil Administrador y el producto
+`Rice` en `Kitchen / Kitchen cupboard`, inicialmente con 2 paquetes.
+
+- ADB activó modo avión y desactivó Wi-Fi y datos móviles; lecturas de estado:
+  `airplane_mode_on=1`, `wifi_on=0`, `mobile_data=0`.
+- Desde la UI, `Used one` dejó 1 paquete y registró un consumo.
+- `am force-stop --user 0 ar.refugi.app` terminó el proceso (`pidof` sin salida).
+  La reapertura informó `LaunchState: COLD`. Todavía sin red, se pudo navegar
+  hasta Rice: conservaba 1 paquete y un único consumo.
+- Desde Ajustes, Exportar abrió el selector nativo y guardó el respaldo sin red
+  en Downloads. Copia local: `.family-lab/physical-a55/backup-offline.json`,
+  31.200 bytes, SHA-256
+  `39ff7ef14d1f4cd86f98bd736d58984be4a880154d9d3c32e7f6ac52d93e08fe`.
+- Se restauró por la UI de `https://refugi.ar/ajustes` en un contexto Chromium
+  nuevo y aislado, con una casa local inicialmente vacía. La confirmación de
+  importación y posterior recarga completaron. Una segunda exportación verificó
+  igualdad exacta de todas las tablas con el archivo del teléfono: 69 productos,
+  6 ambientes, 9 contenedores, 3 perfiles y 1 actividad, entre otras tablas.
+  El detalle de Rice mostró 1 paquete y un consumo; se capturó también con el
+  contexto puesto offline. Esto no prueba arranque en frío offline de la web.
+- Se restableció la conectividad del A55 al estado inicial:
+  `airplane_mode_on=0`, `wifi_on=1`, `mobile_data=1`.
+
+Capturas y script del ensayo quedan ignorados en `.family-lab/physical-a55/`:
+`rice-before.png`, `rice-offline.png`, `reopened-offline.png`,
+`rice-persisted-offline.png`, `restored-rice-offline.png`, `restore-check.mjs`
+y `restore-result.json`. No se modificó código de la app.
+
+**Límites:** el respaldo no tenía fotos ni anotaciones; no quedaron verificadas.
+Todavía faltan acceso cloud, dos adultos distintos, descarga inicial, sincronización
+bidireccional y concurrencia. Este ensayo local no reemplaza esas comprobaciones
+ni certifica migración de la versión 1. La restauración usó la web desplegada en
+ese momento; no se verificó el commit de ese despliegue.
 
 Preparación previa (instalaciones/alta de cuentas no están incluidas en los 15 minutos):
 
