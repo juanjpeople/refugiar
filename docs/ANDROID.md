@@ -90,6 +90,57 @@ local, no una opción necesaria para release ni un cambio de seguridad de la app
 
 ## Pruebas y entrega
 
+### Recorrido manual en teléfono real: 15 minutos
+
+Estado del 11/10/2026: **pendiente de ejecución física**. `adb devices -l` solo
+mostró `emulator-5556`; no se identificó teléfono ni paquete instalado en hardware
+real. Base revisada: `main` en `84d9cbc`. Candidato disponible: AAB versionCode 3,
+versión 0.1.0, código de app `a994050`, workflow 38188403731. Que el AAB exista o
+esté cargado en Play Console no demuestra que esté instalado en el teléfono.
+
+Preparación previa (instalaciones/alta de cuentas no están incluidas en los 15 minutos):
+
+- Registrar modelo, Android, proveedor/versión WebView, paquete, versionCode y
+  procedencia de instalación. Si hay ADB, consultar solo el dispositivo físico
+  elegido: `shell dumpsys package ar.refugi.app` y `shell dumpsys webviewupdate`.
+- Adulto A en Android y adulto B en un perfil de navegador exclusivo de pruebas,
+  con cuentas distintas, contraseña y acceso a la misma casa ficticia. Usar acceso
+  autorizado a la nube existente, sin emitir licencias ni enviar invitaciones por
+  correo automáticamente. No usar la casa real ni datos personales.
+- En esa casa preparar Alacena y «Arroz prueba teléfono» con 10 unidades, una
+  anotación «Foto de prueba» y una foto ficticia visible en ambos clientes.
+- Preparar un tercer perfil de navegador vacío, en modo local, para restaurar.
+  Confirmar que no está conectado a la casa cloud. No usar el navegador del adulto B.
+- Mantener desactivados PIN/biometría en los perfiles ficticios de este recorrido;
+  si ya existen, conservarlos y disponer del PIN. No confundir respaldo de datos
+  con recuperación de una cuenta, kit de claves o credenciales biométricas.
+
+| Minutos | Acción | Resultado esperado |
+| --- | --- | --- |
+| 0–2 | A entra en Android; B entra en la web. Abrir el producto y la foto. | Misma casa ficticia, identidades distintas, ambos ven 10 y la foto descargada. |
+| 2–5 | En Android activar modo avión y comprobar Wi-Fi/datos apagados. Consumir 1. En Ajustes de Android → Aplicaciones → Refugiar, forzar detención; reabrir todavía sin red. | Android conserva 9, anotación y foto. B sigue en 10. No exige acceso remoto para consultar. No borrar almacenamiento ni desinstalar. |
+| 5–7 | Reconectar Android y esperar sincronización. Después B consume 1 desde web. | Primero ambos ven 9; después ambos ven 8. Verificar tras recargar web y reabrir Android. |
+| 7–10 | Con ambos en 8, desconectar Android; poner solo la pestaña web de B en Offline desde herramientas de red. Consumir 1 en cada cliente. Reconectar ambos. | Aislados ven 7 cada uno; al sincronizar ambos ven 6, no 7 ni 5. Recargar/reabrir conserva 6. Usar Consumir, no fijar manualmente la cantidad. |
+| 10–13 | Android → Ajustes → Datos → Exportar. Elegir destino y comprobar guardado. Transferir ese archivo ficticio al perfil local aislado; importar allí, revisar vista previa y confirmar. | La copia restaurada contiene el producto en 6, anotación y foto. Importar no toca los clientes A/B ni su casa cloud. |
+| 13–15 | Desconectar el perfil restaurado y navegar al producto, sin recargar inicialmente la web. Revisar cantidades en A/B y anotar resultados. | Copia local legible con 6 y foto. A/B conservan 6. Registrar cada paso como aprobado, fallido o no ejecutado. |
+
+Si la sincronización no converge o una etapa no cabe en su tiempo, registrar el
+fallo y detener el recorrido para diagnosticarlo: no cambiar cantidades a mano ni
+recrear la casa para simular éxito. La navegación del perfil restaurado verifica
+sus datos locales; no acredita un primer arranque web sin caché.
+
+Migración, solo si existe instalación anterior: antes de actualizar, exportar
+desde esa instalación/Chrome y registrar versión y contenido. Conservar el archivo
+y el origen anterior. Tras actualizar por Play, comprobar qué datos aparecen y si
+hace falta importar o volver a sincronizar. Registrar ese ensayo por separado;
+una instalación nueva no lo cubre. Nunca instalar un APK debug encima de Play ni
+desinstalar para resolver una incompatibilidad de firma.
+
+Registro mínimo por ejecución: fecha, versiones, entorno y origen API, identidades
+ficticias A/B (sin correos, contraseñas ni kits), valores observados en cada paso,
+foto restaurada y errores literales sin secretos. La evidencia de emulador y los
+tests previos de navegador que siguen abajo no cierran este recorrido físico.
+
 ### Android contra el laboratorio de la PC
 
 La variante `lab` instala **Refugiar Lab**, con paquete `ar.refugi.app.lab` y firma
