@@ -1,19 +1,8 @@
 name: Android
 
 # Android incluye el export web. Compilarlo antes de Gradle es obligatorio.
+# Solo al mergear a main (o a pedido): en los PR no se espera a Gradle.
 on:
-  pull_request:
-    paths:
-      - 'android/**'
-      - 'public/**'
-      - 'next.config.ts'
-      - 'tsconfig.json'
-      - 'scripts/build-android.mjs'
-      - 'scripts/build.mjs'
-      - 'capacitor.config.ts'
-      - 'package*.json'
-      - 'src/**'
-      - '.github/workflows/android.yml'
   push:
     branches: [main]
     paths:

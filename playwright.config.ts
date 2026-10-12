@@ -10,9 +10,9 @@ import { defineConfig, devices } from "@playwright/test";
 const PORT = 4173;
 
 /**
- * En los PR corre solo lo esencial, en escritorio: entrar, armar la casa, inventario, escanear,
- * compras, recetas, respaldo, sin conexión y compartir. Lo demás (celular, temas, calendario,
- * estadísticas, opiniones, portada) corre al mergear a main (E2E_FULL=1) y en local.
+ * En CI corre al mergear a main, con E2E_FULL=1: todo, en escritorio y celular. Los PR no esperan
+ * a Playwright. Con CI=1 y sin E2E_FULL queda lo esencial en escritorio (entrar, armar la casa,
+ * inventario, escanear, compras, recetas, respaldo, sin conexión y compartir), para una pasada rápida.
  */
 const FULL = !process.env.CI || process.env.E2E_FULL === "1";
 // En CI, el celular repite solo lo que cambia de diseño en pantalla chica; en local, todo.
