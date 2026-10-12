@@ -11,7 +11,7 @@ import { getErrorMessage } from "@/lib/errors";
 import { canSee } from "@/lib/sync/scope";
 import { applySchoolBreaks, birthdayOccurrences, compareOccurrences, expandEvents, type EventInput, type Occurrence } from "./domain";
 import { holidayOccurrences } from "./holidays";
-import { DEFAULT_CALENDAR } from "./settings";
+import { DEFAULT_CALENDAR, readCalendarSettings } from "./settings";
 import { createEvent, deleteEvent, updateEvent } from "./service";
 
 /**
@@ -20,7 +20,7 @@ import { createEvent, deleteEvent, updateEvent } from "./service";
  */
 export function useOccurrences(from: number, to: number): Occurrence[] | undefined {
   const { locale } = useI18n();
-  const preferences = useLiveQuery(() => db.houseSettings.get("calendar"));
+  const preferences = useLiveQuery(readCalendarSettings);
   const members = useMembers();
   const viewer = useCurrentUser();
   const events = useLiveQuery(async () => {

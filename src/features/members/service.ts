@@ -8,6 +8,7 @@ import { recordActivity } from "@/features/activity/service";
 import { APPEARANCE_COLORS } from "@/lib/appearance";
 import { assertCan, can, type Actor, type Role } from "@/lib/auth/permissions";
 import { db } from "@/lib/db";
+import { schoolProfileId } from "@/features/school/domain";
 import { NotFoundError, PermissionError, ValidationError } from "@/lib/errors";
 import { createId } from "@/lib/id";
 import { isValidPin, MEMBER_LIMITS, parseMember, type BiometricCredential, type MemberInput } from "./domain";
@@ -44,7 +45,7 @@ export async function updateMember(actor: Actor | null, id: string, input: Membe
 export async function deleteMember(actor: Actor | null, id: string) {
   assertCan(actor, "members.manage");
   if (actor.id === id) throw new ValidationError("errors.members.deleteSelf");
-  await db.transaction("rw", db.members, db.events, db.activity, async () => {
+  await db.transaction("rw", db.members, db.events, db.houseSettings, db.activity, async () => {
     const member = await db.members.get(id);
     if (!member) return;
     if (member.role === "admin" && (await adminCount()) <= 1) throw new ValidationError("errors.members.lastAdmin");
@@ -53,6 +54,7 @@ export async function deleteMember(actor: Actor | null, id: string) {
     await db.events.toCollection().modify((event) => {
       event.participantIds = event.participantIds.filter((participantId) => participantId !== id);
     });
+    await db.houseSettings.delete(schoolProfileId(id));
     await recordActivity(actor, { module: "members", action: "delete", entityId: id, entityName: member.name });
   });
 }
