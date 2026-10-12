@@ -20,7 +20,7 @@ import { VoiceSection } from "./VoiceSection";
 import { EntryFlow, EntrySection } from "./EntrySection";
 import { CatalogSection } from "./CatalogSection";
 import { PanesSection } from "./PanesSection";
-import { TemplatesSection } from "./TemplatesSection";
+import { DetailTemplateSection, TemplatesSection } from "./TemplatesSection";
 
 // El orden de cada grupo es el orden en la página (el índice sigue el scroll).
 const TOC = [
@@ -31,7 +31,7 @@ const TOC = [
   { group: "Componentes antd", items: [["botones", "Botones"], ["feedback", "Feedback"], ["formularios", "Formularios"], ["tablas", "Tablas"]] },
   {
     group: "Componentes propios",
-    items: [["componentes-estructura", "Estructura"], ["componentes-estados", "Estados"], ["componentes-seleccion", "Selección"], ["componentes-datos", "Datos"], ["componentes-espacios", "Espacios"], ["componentes-entrada", "Entrada"], ["componentes-paneles", "Paneles"], ["componentes-plantillas", "Plantillas"]],
+    items: [["componentes-estructura", "Estructura"], ["componentes-estados", "Estados"], ["componentes-seleccion", "Selección"], ["componentes-datos", "Datos"], ["componentes-espacios", "Espacios"], ["componentes-entrada", "Entrada"], ["componentes-paneles", "Paneles"], ["componentes-plantillas", "Plantillas"], ["componentes-plantillas-detalle", "Detalle"]],
   },
   { group: "Flujos", items: [["flujo-almacenamiento", "Almacenamiento"], ["flujo-catalogo", "Catálogo"], ["flujo-recetas", "Recetas"], ["flujo-entrada", "Entrada"]] },
   { group: "Calidad", items: [["revision", "Revisión antes de un PR"]] },
@@ -76,6 +76,7 @@ export function DesignSystem() {
             <EntrySection />
             <PanesSection />
             <TemplatesSection />
+            <DetailTemplateSection />
           </Section>
           <Section title="Flujos">
             <StorageFlow />

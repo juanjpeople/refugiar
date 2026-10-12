@@ -20,7 +20,7 @@ Orden, dependencias, estados y criterios de aceptación: [Cimientos del MVP](doc
 - **Base ESP32 local**: medir viabilidad con hardware real antes de cerrar el protocolo; nube opcional de apoyo.
 - **Validación familiar completa**: variante cloud, alacena/compras y sincronización Android/web en teléfonos reales.
 - **Correos verificables**: entrega real, plantillas y límites gratuitos.
-- **Plantillas de página**: `ListPage` ya está (Recetas y Proyectos). Faltan `DetailPage`, el registro de funcionalidades y migrar Compras e Inventario. → [unificación visual](docs/UNIFICACION_VISUAL.md#plantillas-de-página)
+- **Plantillas de página**: `ListPage` (Recetas y Proyectos) y `DetailPage` (Proyecto y Contenedor) ya están. Faltan el registro de funcionalidades y migrar Compras e Inventario. → [unificación visual](docs/UNIFICACION_VISUAL.md#plantillas-de-página)
 - **Votaciones** ("¿qué comemos?"). → [especificación](PLAN.md#4-votaciones)
 - **Tutoriales reproducibles y release**: dos recorridos reales, clips por capítulo y gates de autonomía/sincronización. → [Cimientos del MVP](docs/CIMIENTOS_MVP.md)
 - **Más skins** con vista previa en Ajustes. → [ajustes](docs/features/ajustes.md)
@@ -47,6 +47,7 @@ Lo último arriba. El PR que termina algo lo agrega acá.
 
 | Cuándo | Qué | PR |
 | --- | --- | --- |
+| 2026-10 | Plantilla de detalle (`DetailPage`): Proyecto y Contenedor | #74 |
 | 2026-10 | Plantilla de lista (`ListPage`): Recetas y Proyectos | #73 |
 | 2026-10 | Ajustes en dos paneles y apariencia rápida desde el avatar | #72 |
 | 2026-10 | El celular de un chico entra sin email ni contraseña | #67 |
