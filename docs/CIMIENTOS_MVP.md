@@ -224,3 +224,20 @@ Resend no equivale a entrega. Un build correcto no equivale a prueba en un telé
   Proveedor AOSP verificado contra objeto Git y firma del APK; versión, hashes y
   ajustes del emulador en ANDROID.md. Falta concurrencia Android/web, vencimiento
   de sesión en Android, acceso social/passkeys y teléfonos reales. F04 sigue abierto.
+- F03/F04, teléfono real: Galaxy A55 (`SM-A556E`, Android 16, WebView 153), versión 3
+  instalada desde Play sobre datos de prueba borrados con autorización. Aprobados
+  modo avión con cierre forzado y arranque en frío, respaldo nativo sin red y
+  restauración exacta en la web. Con dos cuentas distintas, la sincronización funcionó
+  en ambos sentidos. Un consumo con Android sin red y otro en la web convergieron a 6
+  sin duplicados y se conservaron tras recargar y reabrir. Detalle en ANDROID.md.
+  No cubre migración desde la versión 1 (`https://localhost`), fotos ni anotaciones,
+  dos clientes sin red a la vez ni instalación vacía que baja una casa cloud.
+  Tampoco cubre acceso social, passkeys ni cámara. F03 y F04 siguen abiertos.
+- Correcciones del ensayo A55. Ajustes ya no pide instalar la app dentro de Android:
+  el WebView responde que no a la persistencia del navegador y ese consejo no aplica.
+  El aviso de cifrado incompatible pide actualizar Android System WebView. Familia
+  vuelve a consultar los pedidos de ingreso cada 10 s mientras está a la vista, al
+  volver a la app y al recuperar la red; antes solo al abrirse.
+  El E2E de dos administradores ya no recarga Familia: sin la consulta periódica
+  falló (el pedido no apareció en 20 s); con ella aprobó contra el backend local.
+  `npm run check`: tipos y lint correctos, 245 pruebas aprobadas. Falta repetir en el A55.

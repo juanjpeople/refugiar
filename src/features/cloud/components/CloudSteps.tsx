@@ -8,6 +8,7 @@ import { IconTile } from "@/components/ui";
 import { useT } from "@/i18n";
 import { checkCryptoSupport, type CryptoRequirement } from "@/lib/crypto";
 import { getErrorMessage } from "@/lib/errors";
+import { isAndroidApp } from "@/lib/platform";
 import { usePwaStore } from "@/store/usePwaStore";
 import { checkLicense } from "../service";
 
@@ -28,15 +29,17 @@ export function CryptoSupportGate({ children }: { children: ReactNode }) {
   }, []);
 
   if (missing === null || missing.length === 0) return children;
+  // En la app de Android el cifrado lo pone el WebView del sistema: actualizar Chrome solo no alcanza.
+  const android = isAndroidApp();
   return (
     <Flex vertical gap={16}>
       <Flex align="center" gap={14}>
         <IconTile icon={TriangleAlert} color="gold" size={52} />
         <Typography.Title level={3} style={{ margin: 0 }}>
-          {t("cloud.support.title")}
+          {t(android ? "cloud.support.androidTitle" : "cloud.support.title")}
         </Typography.Title>
       </Flex>
-      <Typography.Text type="secondary">{missing.includes("secure-context") ? t("cloud.support.insecure") : t("cloud.support.text")}</Typography.Text>
+      <Typography.Text type="secondary">{missing.includes("secure-context") ? t("cloud.support.insecure") : android ? t("cloud.support.android") : t("cloud.support.text")}</Typography.Text>
       <Link href="/empezar">
         <Button size="large" block icon={<HardDrive />}>
           {t("cloud.support.local")}
