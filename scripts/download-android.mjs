@@ -19,11 +19,13 @@ try {
   try { gh("auth", "status", "--hostname", "github.com"); }
   catch { throw new Error("Necesitás GitHub CLI (gh) y acceso al repositorio. Instalá gh y ejecutá: gh auth login"); }
 
-  const [run] = JSON.parse(gh("run", "list", "--repo", repo, "--workflow", "android-release.yml", "--status", "success", "--limit", "1", "--json", "databaseId,headSha,headBranch,url"));
-  if (!run) throw new Error("Todavía no hay una compilación firmada exitosa. Ejecutá Android release en GitHub con subir_a_play=false.");
+  // La última ejecución terminada, aunque haya fallado: si falla la subida a Play, el AAB firmado ya quedó guardado.
+  const [run] = JSON.parse(gh("run", "list", "--repo", repo, "--workflow", "android-release.yml", "--status", "completed", "--limit", "1", "--json", "databaseId,headSha,headBranch,url"));
+  if (!run) throw new Error("Todavía no hay una compilación firmada. Ejecutá Android release en GitHub con subir_a_play=false.");
   const { artifacts } = JSON.parse(gh("api", `repos/${repo}/actions/runs/${run.databaseId}/artifacts?per_page=100`));
-  const packages = artifacts.filter((artifact) => /^refugiar-\d+-aab$/.test(artifact.name));
-  if (packages.length !== 1 || packages[0].expired) throw new Error(`El AAB de la última compilación no está disponible o venció. Generá otro desde ${run.url}. No se descargó una versión anterior.`);
+  const packages = artifacts.filter((artifact) => /^refugiar-\d+-aab$/.test(artifact.name) && !artifact.expired);
+  if (packages.length === 0) throw new Error(`La última compilación no dejó un AAB o ya venció. Generá otro desde ${run.url}. No se descargó una versión anterior.`);
+  if (packages.length > 1) throw new Error(`La última compilación tiene ${packages.length} AAB porque se reintentó. Bajá el más nuevo desde ${run.url} (Artifacts) o generá otro.`);
 
   const destination = args.length ? path.resolve(args[1]) : path.join(root, "android", "downloads");
   mkdirSync(destination, { recursive: true });
