@@ -1,13 +1,12 @@
 "use client";
 
-import { Button, Card, Dropdown, theme } from "antd";
-import { ArrowLeft, Boxes, Camera, EllipsisVertical, MapPinOff, Pencil, Plus, Printer, Trash2 } from "lucide-react";
+import { Button, Dropdown, theme } from "antd";
+import { Boxes, Camera, EllipsisVertical, MapPinOff, Pencil, Plus, Printer, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
 import { RequirePermission } from "@/components/auth/RequirePermission";
-import { Reveal } from "@/components/motion";
-import { EmptyState, IconTile, PageHeader, PathCrumbs, SectionHeader, ViewSwitcher, LoadingSkeleton } from "@/components/ui";
+import { DetailMissing, DetailPage, IconTile, PathCrumbs, ViewSwitcher } from "@/components/ui";
 import { useTrackVisit } from "@/components/layout/useShell";
 import { usePreferences, useSetPreference } from "@/hooks/usePreferences";
 import { useT } from "@/i18n";
@@ -37,18 +36,8 @@ export function SpacePage() {
   useTrackVisit(space ? spaceHref(space.id) : null);
   usePageCrumbs(space ? [{ label: space.name }] : null);
 
-  if (spaces === undefined) return <LoadingSkeleton />;
-
   if (!space) {
-    return (
-      <Card>
-        <EmptyState
-          icon={MapPinOff}
-          title={t("errors.notFound.space")}
-          action={<Link href="/inventario"><Button icon={<ArrowLeft />}>{t("qr.back")}</Button></Link>}
-        />
-      </Card>
-    );
+    return <DetailMissing loading={spaces === undefined} icon={MapPinOff} title={t("errors.notFound.space")} backHref="/inventario" backLabel={t("qr.back")} />;
   }
 
   const { color, Icon } = spaceAppearance(space);
@@ -61,62 +50,69 @@ export function SpacePage() {
 
   return (
     <RequirePermission perform="inventory.view">
-      <PageHeader
-        crumbs={<PathCrumbs items={[{ label: t("storage.title"), href: "/inventario", icon: Boxes }, { label: space.name }]} />}
-        leading={<IconTile icon={Icon} color={color} size={token.controlHeightLG + token.padding} solid />}
-        title={space.name}
-        description={[
-          // El tipo, solo si el nombre no lo dice ya ("Taller" no necesita "Taller").
-          space.name.toLocaleLowerCase().includes(t(`storage.spaceKinds.${space.kind}`).toLocaleLowerCase()) ? null : t(`storage.spaceKinds.${space.kind}`),
-          t("storage.containerCount", { count: totals.containers }),
-          t("storage.itemCount", { count: totals.items }),
-        ].filter(Boolean).join(" · ")}
-        extra={
-          <>
-            <Link href={cameraHref({ space: space.id })}><Button icon={<Camera />}>{t("camera.openMode")}</Button></Link>
-            {actions.onAddContainer && (
-              <Button type="primary" icon={<Plus />} onClick={() => actions.onAddContainer?.(space.id)}>
-                {t("storage.addContainer")}
-              </Button>
-            )}
-            {(all.length > 0 || menu.length > 0) && (
-              <Dropdown
-                trigger={["click"]}
-                menu={{
-                  items: [
-                    ...(all.length > 0 ? [{ key: "labels", icon: <Printer />, label: t("storage.printAllLabels"), onClick: () => actions.onLabels?.(all.map((entry) => labelOf(entry.container, entryPath(entry)))) }] : []),
-                    ...menu,
-                  ],
-                }}
-              >
-                <Button icon={<EllipsisVertical />} aria-label={t("common.moreActions")} />
-              </Dropdown>
-            )}
-          </>
-        }
-      />
-
-      <StorageHighlights spaces={[space]} spaceId={space.id} />
-
-      <Reveal delay={0.1}>
-        <SectionHeader
-          title={t("storage.inThisSpace")}
-          description={t("storage.containerCount", { count: totals.containers })}
-          extra={<>
-            <ViewSwitcher label={t("storage.views.label")} value={spaceView} options={options.space} onChange={(view) => setPreference("spaceView", view)} />
-            <InventoryDisplayMenu />
-          </>}
-        />
-      </Reveal>
-      <div style={{ marginTop: token.marginSM }}>
-        <ViewStage view={spaceView}>
-          {spaceView === "plan" && <PlanView spaces={[space]} actions={actions} single />}
-          {spaceView === "list" && <ListView spaces={[space]} single />}
-          {spaceView === "cards" && <CardsView spaces={[space]} actions={actions} single />}
-        </ViewStage>
-      </div>
-
-      <StorageDialogs dialog={dialog} onClose={() => setDialog(null)} />
+      <DetailPage
+        header={{
+          crumbs: <PathCrumbs items={[{ label: t("storage.title"), href: "/inventario", icon: Boxes }, { label: space.name }]} />,
+          leading: <IconTile icon={Icon} color={color} size={token.controlHeightLG + token.padding} solid />,
+          title: space.name,
+          description: [
+            // El tipo, solo si el nombre no lo dice ya ("Taller" no necesita "Taller").
+            space.name.toLocaleLowerCase().includes(t(`storage.spaceKinds.${space.kind}`).toLocaleLowerCase()) ? null : t(`storage.spaceKinds.${space.kind}`),
+            t("storage.containerCount", { count: totals.containers }),
+            t("storage.itemCount", { count: totals.items }),
+          ].filter(Boolean).join(" · "),
+          extra: (
+            <>
+              <Link href={cameraHref({ space: space.id })}><Button icon={<Camera />}>{t("camera.openMode")}</Button></Link>
+              {actions.onAddContainer && (
+                <Button type="primary" icon={<Plus />} onClick={() => actions.onAddContainer?.(space.id)}>
+                  {t("storage.addContainer")}
+                </Button>
+              )}
+              {(all.length > 0 || menu.length > 0) && (
+                <Dropdown
+                  trigger={["click"]}
+                  menu={{
+                    items: [
+                      ...(all.length > 0 ? [{ key: "labels", icon: <Printer />, label: t("storage.printAllLabels"), onClick: () => actions.onLabels?.(all.map((entry) => labelOf(entry.container, entryPath(entry)))) }] : []),
+                      ...menu,
+                    ],
+                  }}
+                >
+                  <Button icon={<EllipsisVertical />} aria-label={t("common.moreActions")} />
+                </Dropdown>
+              )}
+            </>
+          ),
+        }}
+        summary={<StorageHighlights spaces={[space]} spaceId={space.id} />}
+        sections={[
+          {
+            id: "contenido",
+            header: {
+              title: t("storage.inThisSpace"),
+              description: t("storage.containerCount", { count: totals.containers }),
+              extra: (
+                <>
+                  <ViewSwitcher label={t("storage.views.label")} value={spaceView} options={options.space} onChange={(view) => setPreference("spaceView", view)} />
+                  <InventoryDisplayMenu />
+                </>
+              ),
+            },
+            content: (
+              <div style={{ marginTop: token.marginSM }}>
+                <ViewStage view={spaceView}>
+                  {spaceView === "plan" && <PlanView spaces={[space]} actions={actions} single />}
+                  {spaceView === "list" && <ListView spaces={[space]} single />}
+                  {spaceView === "cards" && <CardsView spaces={[space]} actions={actions} single />}
+                </ViewStage>
+              </div>
+            ),
+          },
+        ]}
+      >
+        <StorageDialogs dialog={dialog} onClose={() => setDialog(null)} />
+      </DetailPage>
     </RequirePermission>
   );
 }
