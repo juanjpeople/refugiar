@@ -66,3 +66,6 @@ next-env.d.ts
 /android-dist/
 /family-dist/
 /.family-lab/
+/home-dist/
+/.refugiar-casa/
+/.refugiar-esp/

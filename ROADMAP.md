@@ -7,7 +7,7 @@ El detalle de cada funcionalidad está en [docs/features](docs/features/).
 
 ## 🔨 Ahora
 
-- **Android autónomo**: recursos dentro del APK, datos propios, arranque y desbloqueo sin internet; conservar sincronización web. Publicar después de demostrarlo.
+- **Android autónomo**: recursos dentro del APK, datos propios, arranque y desbloqueo sin internet; conservar sincronización web. Ya pasó en emulador; falta probarlo en un teléfono real antes de publicar.
 - **Resiliencia**: conservar pendientes y reintentos sin duplicar cambios al reconectar.
 - **Familia en cuatro ventanas**: cerrar el laboratorio local existente con dos admins y dos chicos.
 - **Cierre para integración**: revisar el conjunto, comprobar compilación, registrar evidencia y preparar PR; sin publicación en Play.
@@ -17,13 +17,14 @@ Orden, dependencias, estados y criterios de aceptación: [Cimientos del MVP](doc
 ## ⏭️ Después
 
 - **Cifrado local y recuperación**: dos adultos administradores con recuperación independiente.
-- **Base ESP32 local**: medir viabilidad con hardware real antes de cerrar el protocolo; nube opcional de apoyo.
+- **Base ESP32 local**: el prototipo está en [firmware/esp32-relay](firmware/esp32-relay/README.md); medirlo en la placa real y, con esos números, conectarlo desde la app de Android.
 - **Validación familiar completa**: variante cloud, alacena/compras y sincronización Android/web en teléfonos reales.
 - **Correos verificables**: entrega real, plantillas y límites gratuitos.
 - **Votaciones** ("¿qué comemos?"). → [especificación](PLAN.md#4-votaciones)
 - **Tutoriales reproducibles y release**: dos recorridos reales, clips por capítulo y gates de autonomía/sincronización. → [Cimientos del MVP](docs/CIMIENTOS_MVP.md)
 - **Más skins** con vista previa en Ajustes. → [ajustes](docs/features/ajustes.md)
 - **Google y GitHub reales**: configurar y probar las apps OAuth. → [acceso social](docs/ACCESO_SOCIAL.md)
+- **Sistema de diseño** (`/design`): componentes superpuestos (breadcrumb sobre el menú interno) y menús internos no responsivos.
 - **Nombres internos de la nube** (Worker, D1, bucket) a Refugiar. Prioridad baja.
 
 ## 💡 Ideas
@@ -36,7 +37,9 @@ Anotadas para no perderlas. Pasan a ⏭️ cuando se decide hacerlas.
 - Préstamo de herramientas e inventarios temporales.
 - Bóveda de documentos: garantías, pólizas, manuales.
 - Chat interno con avisos de la casa.
-- Distribución adicional para Raspberry/NAS y sensores, después de validar la base local ESP32. → [plataformas](docs/PLATAFORMAS.md)
+- Eventos recurrentes para chicos y adultos (extracurriculares, deportes, idiomas, gimnasio, turnos médicos) con recordatorios por evento; aviso al salir de casa solo opt-in y en el teléfono, sin enviar ubicación.
+- Sensores conectados a la base ESP32, después de validarla. → [plataformas](docs/PLATAFORMAS.md)
+- Servidor de casa usable desde la app de Android (hoy solo desde el navegador). → [servidor de casa](docs/SERVIDOR_CASA.md)
 - Multimedia en la NAS (Jellyfin, Plex) y modo party.
 - Suscripciones por casa para la nube. → [plan de producción](docs/PLAN_PRODUCCION.md#etapa-6-suscripciones-automáticas)
 
@@ -46,6 +49,7 @@ Lo último arriba. El PR que termina algo lo agrega acá.
 
 | Cuándo | Qué | PR |
 | --- | --- | --- |
+| 2026-10 | Servidor de casa en una PC o Raspberry, sin servicios externos (`npm run casa`); prototipo de base ESP32; política de privacidad al día con Android | #81 |
 | 2026-10 | Escuela de cada chico: ficha, cómo llega, horario y materias | #80 |
 | 2026-10 | Recinto con `DetailPage`; cierre de plantillas de página | #78 |
 | 2026-10 | Registro de funcionalidades: cada una suma su búsqueda sin tocar el shell | #76 |

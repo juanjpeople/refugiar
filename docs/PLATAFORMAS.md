@@ -10,9 +10,9 @@ Raspberry o NAS **no convierte ese equipo en una base de datos compartida**.
 | --- | --- | --- |
 | Android | Migración a APK autónomo con interfaz incluida; PWA sigue disponible | Almacenamiento propio y nube opcional. Autenticación completa y migración aún en validación. Ver [ANDROID.md](ANDROID.md). |
 | Windows, macOS, Linux | Web/PWA | Navegador con IndexedDB y Web Crypto; HTTPS o localhost. No hace falta un ejecutable nativo. |
-| Raspberry Pi, NAS, servidor | Alojamiento del paquete estático | Servidor HTTP compatible con el sistema/arquitectura, por ejemplo Caddy. Compilar en PC o CI y copiar el paquete. Sin Node ni Next en el equipo que sirve los archivos. |
+| Raspberry Pi, NAS, servidor | Servidor de casa completo (`npm run casa`) o solo el paquete estático | Servidor de casa: app, cuentas, casa compartida y fotos en el equipo, con Node.js 24 y sin servicios externos. Ver [SERVIDOR_CASA.md](SERVIDOR_CASA.md). Paquete estático: cualquier servidor HTTP, por ejemplo Caddy; no comparte datos entre dispositivos. |
 | Cloudflare Workers | Interfaz y API opcional | Configuración de Worker, D1, Durable Objects, secretos y almacenamiento de fotos. Consultar README. |
-| ESP32 | Integración futura | Firmware para sensores/dispositivos. Este repositorio no contiene una implementación de firmware ni una distribución de la app para ESP. |
+| ESP32 | Prototipo | Relevo de cambios cifrados dentro de la casa, para medir la placa. La app todavía no lo usa. Ver [firmware/esp32-relay](../firmware/esp32-relay/README.md). |
 
 No hay mínimos de RAM o CPU medidos todavía: no confundir la capacidad de servir
 archivos estáticos con los recursos necesarios para compilar Next.js. El almacenamiento
@@ -127,8 +127,7 @@ La migración Android empaqueta esa misma interfaz y reutiliza su lógica, con d
 propios de la instalación y sincronización opcional. Un deploy web no actualiza el APK.
 Todavía se están validando autenticación y traslado desde la TWA anterior: conservar
 los datos de Chrome. Consultá [Android](ANDROID.md) y [Cimientos del MVP](CIMIENTOS_MVP.md).
-El backend doméstico y el ESP aún están pendientes; no confundirlos con servir el
-paquete estático desde una NAS.
+El servidor de casa se usa desde el navegador; la app de Android sigue usando refugi.ar.
 
 ## Compartir información y proyectos
 
@@ -146,10 +145,9 @@ fusión entre casas: revisá la confirmación de reemplazo y guardá un respaldo
 El archivo exportado contiene información privada; transportalo de forma segura.
 Un QR identifica un contenedor, pero no concede acceso ni transfiere fotos por sí mismo.
 
-El backend actual usa servicios de Cloudflare; alojar todos sus servicios en una
-Raspberry requeriría una adaptación adicional. La integración ESP necesita un protocolo
-y autenticación de dispositivos; [ESP-IDF incluye un servidor HTTP](https://docs.espressif.com/projects/esp-idf/en/stable/esp32/api-reference/protocols/esp_http_server.html),
-pero eso no implica que este MVP ya tenga firmware o emparejamiento implementados.
+El [servidor de casa](SERVIDOR_CASA.md) corre la misma API en una PC o Raspberry, sin
+Cloudflare ni Supabase. El [prototipo ESP32](../firmware/esp32-relay/README.md) ya tiene
+emparejamiento y pedidos firmados, pero la app todavía no lo usa.
 
 ## Administración y publicación
 
