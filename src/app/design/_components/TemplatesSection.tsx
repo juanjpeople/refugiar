@@ -1,11 +1,11 @@
 "use client";
 
-import { Button, Card, Flex, Segmented, Typography, theme } from "antd";
-import { Hammer, Package, Plus, Sprout, Wrench } from "lucide-react";
+import { Button, Card, Col, Flex, Row, Segmented, Switch, Typography, theme } from "antd";
+import { Ellipsis, Hammer, ListChecks, NotebookPen, Package, Pencil, Plus, SearchX, Sprout, Wrench } from "lucide-react";
 import { useState } from "react";
-import { IconTile, ListPage } from "@/components/ui";
+import { DetailMissing, DetailPage, IconTile, ListGrid, ListPage, StatTile } from "@/components/ui";
 import type { AppearanceColor } from "@/lib/appearance";
-import { DemoBlock, DemoLabel } from "./DemoBlock";
+import { DemoBlock, DemoLabel, NoNavigate } from "./DemoBlock";
 
 type State = "content" | "loading" | "empty";
 type Layout = "grid" | "list";
@@ -92,6 +92,100 @@ export function TemplatesSection() {
           search={{ value: query, onChange: setQuery, placeholder: "Buscar proyectos" }}
           filters={<Segmented value={show} onChange={setShow} options={[{ value: "active", label: "En curso" }, { value: "done", label: "Terminados" }]} />}
         />
+      </Card>
+    </DemoBlock>
+  );
+}
+
+type DetailState = "content" | "loading" | "missing";
+
+export function DetailTemplateSection() {
+  const { token } = theme.useToken();
+  const [state, setState] = useState<DetailState>("content");
+  const [aside, setAside] = useState(true);
+  const lists = ITEMS.slice(0, 2);
+
+  return (
+    <DemoBlock
+      id="componentes-plantillas-detalle"
+      title="Plantillas: DetailPage"
+      description="La página de una cosa: PageHeader con su identidad (leading) y como mucho dos acciones visibles, un resumen opcional con el dato principal, secciones con SectionHeader que entran en cascada y un panel lateral opcional. Cada sección es un ancla (/ruta#listas) y frena debajo de la cabecera fija (DETAIL_ANCHOR_OFFSET, que también usan las secciones que traen su propio encabezado). Una sección sin header trae el suyo (Anotaciones y Fotos del contenedor). DetailMissing cubre la carga y el 'ya no existe', con un botón para volver a la lista. La usan Proyectos y los contenedores de Almacenamiento."
+      code={`if (!project) return <DetailMissing loading={project === undefined} icon={SearchX}
+  title={t("errors.notFound.project")} backHref="/proyectos" backLabel={t("projects.back")} />;
+
+<DetailPage
+  header={{ leading: <IconTile … />, title, description, extra: acciones }}
+  summary={<Card>{/* presupuesto */}</Card>}
+  sections={[
+    { id: "listas", header: { icon, title, description, extra }, content: <ListGrid … /> },
+    hasNotes && { id: "anotaciones", content: <NotesSection id="anotaciones" /> },
+  ]}
+  aside={<Card title="Actividad">…</Card>}
+>
+  {/* modales y cajones */}
+</DetailPage>`}
+    >
+      <Flex gap={token.marginSM} wrap align="flex-end" style={{ marginBottom: token.marginLG }}>
+        <div>
+          <DemoLabel>Estado</DemoLabel>
+          <Segmented<DetailState> value={state} onChange={setState} options={[{ value: "content", label: "Con datos" }, { value: "loading", label: "Cargando" }, { value: "missing", label: "No existe" }]} />
+        </div>
+        <Flex align="center" gap={token.marginXS} style={{ paddingBottom: token.paddingXXS }}>
+          <Switch checked={aside} onChange={setAside} aria-label="Panel lateral" />
+          <Typography.Text>Panel lateral</Typography.Text>
+        </Flex>
+      </Flex>
+      <Card styles={{ body: { background: token.colorBgLayout } }}>
+        <NoNavigate>
+          {state !== "content" ? (
+            <DetailMissing loading={state === "loading"} icon={SearchX} title="No encontramos ese proyecto" description="Puede que lo hayan borrado desde otro dispositivo." backHref="/proyectos" backLabel="Ver todos los proyectos" />
+          ) : (
+            <DetailPage
+              header={{
+                leading: <IconTile icon={Wrench} color="blue" size={44} />,
+                title: "Renovación del baño",
+                description: "Cambiar sanitarios y cerámicos antes de fin de año.",
+                dense: true,
+                extra: (
+                  <>
+                    <Button icon={<Pencil />} aria-label="Editar proyecto" />
+                    <Button icon={<Ellipsis />} aria-label="Más acciones" />
+                  </>
+                ),
+              }}
+              summary={
+                <Row gutter={[token.marginSM, token.marginSM]} style={{ marginBottom: token.marginLG }}>
+                  <Col xs={12}><StatTile label="Gastado" value={184} tone="success" /></Col>
+                  <Col xs={12}><StatTile label="Por comprar" value={12} tone="warning" /></Col>
+                </Row>
+              }
+              sections={[
+                {
+                  id: "demo-listas",
+                  header: { icon: ListChecks, color: "blue", title: "Listas del proyecto", description: "2 listas", extra: <Button icon={<Plus />}>Nueva lista</Button> },
+                  content: (
+                    <ListGrid items={lists} getKey={(item) => item.id} minItemWidth={200} renderItem={(item) => (
+                      <Card hoverable size="small" style={{ height: "100%" }}>
+                        <Typography.Text strong>{item.name}</Typography.Text>
+                        <Typography.Text type="secondary" style={{ display: "block", fontSize: token.fontSizeSM }}>{item.detail}</Typography.Text>
+                      </Card>
+                    )} />
+                  ),
+                },
+                {
+                  id: "demo-notas",
+                  header: { icon: NotebookPen, title: "Notas", description: "Medidas y contactos" },
+                  content: <Card size="small"><Typography.Text>Bacha de 60 cm. El plomero viene los martes.</Typography.Text></Card>,
+                },
+              ]}
+              aside={aside && (
+                <Card size="small" title="Actividad">
+                  <Typography.Text type="secondary" style={{ fontSize: token.fontSizeSM }}>Ana marcó 3 cosas como compradas.</Typography.Text>
+                </Card>
+              )}
+            />
+          )}
+        </NoNavigate>
       </Card>
     </DemoBlock>
   );

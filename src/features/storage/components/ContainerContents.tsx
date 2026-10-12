@@ -4,7 +4,7 @@ import { Button, Card, Flex, Form, Input, Modal, Popconfirm, Typography, theme }
 import { Camera, ClipboardList, NotebookPen, Pencil, Plus, Trash2 } from "lucide-react";
 import { useLayoutEffect, useRef, useState, type CSSProperties } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { EmptyState, ListRow, SectionHeader } from "@/components/ui";
+import { DETAIL_ANCHOR_OFFSET, EmptyState, ListRow, SectionHeader } from "@/components/ui";
 import { PhotoGallery } from "@/features/media/components/PhotoGallery";
 import { useT } from "@/i18n";
 import { usePermission } from "@/lib/auth/hooks";
@@ -12,9 +12,7 @@ import { DURATION, EASE_OUT } from "@/lib/motion";
 import { CONTENT_LIMITS, type ContainerContent } from "../domain";
 import { useContainerContents, useStorageActions } from "../hooks";
 
-/** Alto del encabezado fijo: las secciones frenan debajo de él al saltar desde el resumen. */
-export const ANCHOR_OFFSET = 96;
-const anchor: CSSProperties = { scrollMarginTop: ANCHOR_OFFSET };
+const anchor: CSSProperties = { scrollMarginTop: DETAIL_ANCHOR_OFFSET };
 
 /**
  * Qué hay acá: anotaciones libres (cables, recuerdos, piezas sin identificar) sin stock ni
