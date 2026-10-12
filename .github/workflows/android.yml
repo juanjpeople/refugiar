@@ -1,20 +1,31 @@
 name: Android
 
-# La app de Android abre refugi.ar en Chrome (Trusted Web Activity): no lleva pantallas propias,
-# así que lo que se ve lo prueba Playwright en el CI de la web. Acá solo se compila y se revisa.
+# Android incluye el export web. Compilarlo antes de Gradle es obligatorio.
 on:
   pull_request:
     paths:
       - 'android/**'
-      - 'public/.well-known/**'
+      - 'public/**'
+      - 'next.config.ts'
+      - 'tsconfig.json'
       - 'scripts/build-android.mjs'
+      - 'scripts/build.mjs'
+      - 'capacitor.config.ts'
+      - 'package*.json'
+      - 'src/**'
       - '.github/workflows/android.yml'
   push:
     branches: [main]
     paths:
       - 'android/**'
-      - 'public/.well-known/**'
+      - 'public/**'
+      - 'next.config.ts'
+      - 'tsconfig.json'
       - 'scripts/build-android.mjs'
+      - 'scripts/build.mjs'
+      - 'capacitor.config.ts'
+      - 'package*.json'
+      - 'src/**'
       - '.github/workflows/android.yml'
   workflow_dispatch:
 
@@ -32,13 +43,19 @@ jobs:
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npm run android:sync
       - uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: '21'
       - name: Compilar y revisar
         working-directory: android
-        run: bash gradlew --no-daemon :app:assembleDebug :app:lintDebug
+        run: bash gradlew --no-daemon :app:assembleDebug :app:assembleDebugAndroidTest :app:lintDebug
       - uses: actions/upload-artifact@v7
         with:
           name: android-debug-no-production

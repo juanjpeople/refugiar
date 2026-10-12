@@ -1,13 +1,6 @@
 apply plugin: 'com.android.application'
 
-// La app de Android es la web: abre https://refugi.ar en Chrome, a pantalla completa (Trusted Web
-// Activity). Cuentas, nube, invitaciones y llaves de acceso funcionan igual que en el navegador, y
-// cada deploy de la web la actualiza. Cambiar el origen exige publicar assetlinks.json en el nuevo.
 def appHost = 'refugi.ar'
-def appOrigin = "https://${appHost}"
-// La mitad de la app en la verificación con public/.well-known/assetlinks.json (comillas escapadas
-// para el XML de recursos, como lo arma Bubblewrap).
-def assetStatements = '[{\\"relation\\": [\\"delegate_permission/common.handle_all_urls\\"], \\"target\\": {\\"namespace\\": \\"web\\", \\"site\\": \\"' + appOrigin + '\\"}}]'
 
 def buildVersionCode = providers.gradleProperty('appVersionCode').getOrElse('1').toInteger()
 if (buildVersionCode < 1 || buildVersionCode > 2100000000) {
@@ -23,29 +16,30 @@ def releaseStoreFile = signingValue('storeFile', 'ANDROID_KEYSTORE_FILE')
 
 // Nombre visible: el mismo de la web (NEXT_PUBLIC_APP_NAME). El applicationId es fijo (ver docs/ANDROID.md).
 def brandName = (System.getenv('NEXT_PUBLIC_APP_NAME') ?: '').trim() ?: 'Refugiar'
-// La versión visible sale de package.json, la misma que muestra la web.
-def appVersion = new groovy.json.JsonSlurper().parse(rootProject.file('../package.json')).version
 
 android {
     namespace = "ar.refugi.app"
-    compileSdk = 36
+    compileSdk = rootProject.ext.compileSdkVersion
     buildFeatures {
         resValues = true
+        buildConfig = true
     }
     defaultConfig {
         applicationId "ar.refugi.app"
-        minSdk 24
-        targetSdk 36
+        minSdkVersion rootProject.ext.minSdkVersion
+        targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode buildVersionCode
-        versionName appVersion
+        versionName new groovy.json.JsonSlurper().parse(rootProject.file('../package.json')).version
         resValue "string", "app_name", brandName
-        resValue "string", "asset_statements", assetStatements
-        manifestPlaceholders = [appHost: appHost, launchUrl: "${appOrigin}/"]
-    }
-    // La app no lleva archivos web: los sirve refugi.ar. Así un build viejo de Capacitor que haya
-    // quedado en assets/ no se empaqueta.
-    sourceSets {
-        main.assets.srcDirs = []
+        resValue "string", "title_activity_main", brandName
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+        buildConfigField "String", "APP_ORIGIN", '"https://refugi.ar"'
+        manifestPlaceholders = [appLinksHost: 'refugi.ar']
+        aaptOptions {
+             // Files and dirs to omit from the packaged assets dir, modified to accommodate modern web apps.
+             // Default: https://android.googlesource.com/platform/frameworks/base/+/282e181b58cf72b6ca770dc7ca5f91f135444502/tools/aapt/AaptAssets.cpp#61
+            ignoreAssetsPattern = '!.svn:!.git:!.ds_store:!*.scc:.*:!CVS:!thumbs.db:!picasa.ini:!*~'
+        }
     }
     signingConfigs {
         if (releaseStoreFile) {
@@ -58,13 +52,61 @@ android {
         }
     }
     buildTypes {
+        lab {
+            initWith debug
+            applicationIdSuffix '.lab'
+            matchingFallbacks = ['debug']
+            resValue "string", "app_name", "Refugiar Lab"
+            resValue "string", "title_activity_main", "Refugiar Lab"
+            buildConfigField "String", "APP_ORIGIN", '"http://localhost:4195"'
+            manifestPlaceholders = [appLinksHost: 'localhost']
+        }
         release {
             if (releaseStoreFile) signingConfig signingConfigs.release
             minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
+    }
+    testBuildType = providers.gradleProperty('testBuildType').getOrElse('debug')
+}
+
+repositories {
+    flatDir{
+        dirs '../capacitor-cordova-android-plugins/src/main/libs', 'libs'
     }
 }
 
 dependencies {
-    implementation 'com.google.androidbrowserhelper:androidbrowserhelper:2.7.4'
+    implementation fileTree(include: ['*.jar'], dir: 'libs')
+    implementation "androidx.appcompat:appcompat:$androidxAppCompatVersion"
+    implementation "androidx.coordinatorlayout:coordinatorlayout:$androidxCoordinatorLayoutVersion"
+    implementation "androidx.core:core-splashscreen:$coreSplashScreenVersion"
+    implementation "androidx.biometric:biometric:1.1.0"
+    implementation project(':capacitor-android')
+    testImplementation "junit:junit:$junitVersion"
+    androidTestImplementation "androidx.test.ext:junit:$androidxJunitVersion"
+    androidTestImplementation "androidx.test.espresso:espresso-core:$androidxEspressoCoreVersion"
+    androidTestImplementation "androidx.test.espresso:espresso-intents:$androidxEspressoCoreVersion"
+    implementation project(':capacitor-cordova-android-plugins')
+}
+
+apply from: 'capacitor.build.gradle'
+
+tasks.register('verifyPackagedApp') {
+    doLast {
+        def metadata = file('src/main/assets/public/build-info.json')
+        if (!metadata.exists() || !file('src/main/assets/public/index.html').exists()) {
+            throw new GradleException('Faltan recursos locales. Ejecutar npm run android:sync.')
+        }
+        def info = new groovy.json.JsonSlurper().parse(metadata)
+        if (info.native != true || info.localOnly != false || info.demo != false) {
+            throw new GradleException('Android requiere un build autónomo con nube opcional, no una demo o build local-only.')
+        }
+    }
+}
+tasks.named('preBuild').configure { dependsOn 'verifyPackagedApp' }
+gradle.taskGraph.whenReady { graph ->
+    if (graph.allTasks.any { it.name in ['assembleRelease', 'bundleRelease'] } && !releaseStoreFile) {
+        throw new GradleException('La entrega release requiere firma configurada. Ver docs/PLAY_STORE.md.')
+    }
 }

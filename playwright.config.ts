@@ -21,7 +21,7 @@ const MAIN_ONLY = ["school-calendar.spec.ts", "project-stats.spec.ts", "feedback
 
 export default defineConfig({
   testDir: "e2e",
-  testIgnore: ["local-build.spec.ts", "demo.spec.ts", "visual-tour.spec.ts", "visual-comparison.spec.ts", ...(FULL ? [] : MAIN_ONLY)],
+  testIgnore: ["family-*.spec.ts", "local-build.spec.ts", "demo.spec.ts", "visual-tour.spec.ts", "visual-comparison.spec.ts", ...(FULL ? [] : MAIN_ONLY)],
   fullyParallel: true,
   // Dos navegadores en el mismo runner: no suma minutos de CI, los reduce a la mitad.
   // Más satura el runner gratuito y vuelve inestables las animaciones.
