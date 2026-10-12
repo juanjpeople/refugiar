@@ -1195,6 +1195,8 @@ export const en: Messages = {
     notesPlaceholder: "Measurements, ideas, contacts…",
     emptyTitle: "No projects yet",
     emptyText: "A project groups lists (\u201cFixtures\u201d, \u201cTiles\u201d, \u201cTools\u201d) and adds up their budget.",
+    noActiveTitle: "No projects in progress",
+    noActiveText: "Finished ones are in the other tab. Reopen one and it comes back here.",
     filter: {
       active: "In progress ({count})",
       done: "Done ({count})",

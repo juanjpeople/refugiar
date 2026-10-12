@@ -11,7 +11,7 @@ import { Reveal } from "@/components/motion/Reveal";
  */
 export const HeaderDensityContext = createContext<"comfortable" | "compact">("comfortable");
 
-interface PageHeaderProps {
+export interface PageHeaderProps {
   title: ReactNode;
   description?: ReactNode;
   /** Texto chico arriba del título (sección, fecha, contexto). */
