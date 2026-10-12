@@ -14,6 +14,7 @@
     "build": "node scripts/build.mjs",
     "build:local": "node scripts/build.mjs --local",
     "android:build": "node scripts/build-android.mjs",
+    "android:download": "node scripts/download-android.mjs",
     "android:sync": "node scripts/build.mjs --android && cap sync android",
     "package:local": "node scripts/package-local.mjs",
     "dist:local": "npm run build:local && npm run package:local",

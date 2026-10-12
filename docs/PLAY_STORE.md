@@ -185,17 +185,38 @@ Open source (AGPL-3.0): github.com/juanjpeople/refugiar
 
 ## 4. Cada actualización
 
+### Descargar para subir manualmente
+
+Ejecutar `npm run android:download` descarga el AAB del último workflow
+**Android release** exitoso, incluso si se compiló desde una rama de prueba.
+Requiere GitHub CLI (`gh`) instalado y `gh auth login`. No requiere acceso a la API
+de Google ni una cuenta de servicio. No genera una compilación nueva.
+
+El archivo queda en una carpeta única bajo `android/downloads/`, ignorada por Git,
+junto con `build.json` (commit, rama, versionCode y SHA-256). No pisa descargas anteriores.
+Para elegir destino: `npm run android:download -- --dir "C:\Users\juanparedez\Downloads"`.
+Si el artefacto venció (retención: 7 días), pide ejecutar de nuevo **Android release**
+con `subir_a_play=false`; no descarga silenciosamente un paquete más viejo.
+
+Subir `app-release.aab` desde Play Console a la pista de prueba elegida. Verificar
+que su versionCode supere el último aceptado por Play y revisar los límites de la
+versión antes de distribuirla. Descargar o compilar no publica la versión.
+
+### Compilar y distribuir
+
 Los cambios de interfaz Android necesitan un paquete nuevo: su código está dentro
 del APK/AAB. Publicar la web no actualiza la interfaz instalada. Los datos sí se
 sincronizan sin reinstalar. Para cada entrega verificada:
 
 1. Mergear a `main`.
 2. Correr *Android release* (el `versionCode` sube solo).
-3. Con la cuenta de servicio (abajo), el workflow sube el `.aab` a **Prueba interna** por su cuenta.
-   Sin ella, descargar el artefacto y subirlo a mano. Pasar de interna a cerrada o producción
+3. Solo si se activa `subir_a_play` y hay cuenta de servicio (abajo), el workflow sube
+   el `.aab` a **Prueba interna**. Si no, ejecutar `npm run android:download` y subirlo
+   a mano. Pasar de interna a cerrada o producción
    se hace desde Play Console.
 
-Solo corre con el botón, nunca en cada merge: cada ejecución crea una versión nueva en Play.
+Solo corre con el botón, nunca en cada merge. Compilar con la subida desactivada
+genera el artefacto; no crea una versión en Play.
 
 ### Subida automática a Prueba interna (opcional, una sola vez)
 
