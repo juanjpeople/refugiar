@@ -19,7 +19,9 @@ npm run build      # sitio estático en out/
 npm run e2e        # pruebas de punta a punta sobre out/ (usa el Chrome instalado)
 ```
 
-El CI corre lo mismo en cada PR.
+En cada PR el CI corre tipos, lint, tests unitarios, build y el recorrido de la API (menos de 2 minutos).
+Las pruebas de punta a punta y la compilación de Android corren al mergear a main; antes de pedir el merge,
+corré `npm run e2e` en local si tocaste la interfaz.
 
 ## Cómo está organizado el código
 
