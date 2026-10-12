@@ -478,7 +478,7 @@ Para que una función nueva no rehaga su página de lista ni su página de detal
     de una grilla vacía.
   - El mosaico usa `minmax(min(Npx, 100%), 1fr)`: a 320 px las tarjetas no desbordan.
 - [ ] Compras e Inventario: tienen listas dentro de otras secciones; migrarlas con cuidado.
-- [x] **`DetailPage`** (#74): `PageHeader` con identidad, resumen opcional, secciones con
+- [x] **`DetailPage`** (#75): `PageHeader` con identidad, resumen opcional, secciones con
   `SectionHeader` que entran en cascada y son anclas (`DETAIL_ANCHOR_OFFSET`), y panel lateral
   opcional (fijo en escritorio, debajo en celular). `DetailMissing` cubre la carga y el "ya no
   existe" con un botón para volver. Documentada en `/design` → Plantillas → Detalle.
