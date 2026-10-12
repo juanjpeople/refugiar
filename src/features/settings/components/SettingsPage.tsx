@@ -3,14 +3,15 @@ import { SKIN_IDS, type SkinId } from "@/skins/types";
 import { SKINS } from "@/skins/skins";
 import { DemoLauncher } from "@/features/demo/DemoLauncher";
 
-import { Anchor, Button, Card, Col, ColorPicker, Flex, Grid, Row, Segmented, Slider, Typography, theme } from "antd";
+import { Button, Col, ColorPicker, Flex, Grid, Row, Segmented, Slider, Typography, theme } from "antd";
 import { motion } from "framer-motion";
-import { Check, Database, Fingerprint, Info, Keyboard, Languages, MonitorDown, Paintbrush, PanelLeft, Sparkles, UserRound, type LucideIcon } from "lucide-react";
+import { Check, Database, Fingerprint, Info, Keyboard, Languages, MonitorDown, Paintbrush, PanelLeft, Sparkles, UserRound } from "lucide-react";
 import Link from "next/link";
 import { useState, type ReactNode } from "react";
-import { Stagger, StaggerItem } from "@/components/motion";
+import { Reveal } from "@/components/motion";
 import { FONT_SIZES } from "@/components/providers/ThemeProvider";
-import { ChoiceCards, PageHeader } from "@/components/ui";
+import { ChoiceCards, PageHeader, SectionPanes } from "@/components/ui";
+import { useHashSection } from "@/hooks/useHashSection";
 import { AccountSettings } from "@/features/cloud/components/AccountSettings";
 import { ProfileSecuritySettings } from "@/features/members/components/SecurityDrawer";
 import { usePreferences, useSetPreference } from "@/hooks/usePreferences";
@@ -29,6 +30,7 @@ import {
   type ThemeMode,
 } from "@/store/usePreferencesStore";
 import { APP_VERSION } from "../service";
+import { useApplySkin } from "../useApplySkin";
 import { DataSettings } from "./DataSettings";
 import { SidebarPreview, SkinLivePreview, SkinPreview, ThemePreview } from "./Previews";
 import { SettingRow } from "@/components/ui";
@@ -49,10 +51,12 @@ type SectionKey = (typeof SECTIONS)[number]["key"];
 
 /** La cuenta de la nube solo aparece con la nube habilitada. */
 const VISIBLE_SECTIONS = SECTIONS.filter((section) => section.key !== "account" || CLOUD_ENABLED);
+const SECTION_IDS = VISIBLE_SECTIONS.map((section) => section.id);
 
 export function SettingsPage() {
   const { t } = useI18n();
   const user = useCurrentUser();
+  const { active, select, back } = useHashSection(SECTION_IDS);
 
   const content: Record<SectionKey, ReactNode> = {
     appearance: <AppearanceSettings />,
@@ -64,53 +68,24 @@ export function SettingsPage() {
     data: <><DemoLauncher /><DataSettings /></>,
     about: <AboutSettings />,
   };
+  const sections = VISIBLE_SECTIONS.map(({ id, key, icon }) => ({
+    id,
+    icon,
+    title: t(`settings.sections.${key}`),
+    summary: t(`settings.summaries.${key}`),
+    intro: t(`settings.intros.${key}`),
+  }));
+  const shown = VISIBLE_SECTIONS.find((section) => section.id === active) ?? VISIBLE_SECTIONS[0];
 
   return (
     <>
       <PageHeader eyebrow={t("settings.eyebrow", { name: user?.name ?? "" })} title={t("settings.title")} description={t("settings.description")} />
-      <Row gutter={32}>
-        <Col xs={0} lg={5}>
-          <Anchor
-            offsetTop={88}
-            items={VISIBLE_SECTIONS.map(({ id, key }) => ({ key: id, href: `#${id}`, title: t(`settings.sections.${key}`) }))}
-          />
-        </Col>
-        <Col xs={24} lg={19}>
-          <Stagger delay={0.1}>
-            <Flex vertical gap={24}>
-              {VISIBLE_SECTIONS.map(({ id, key, icon }) => (
-                <StaggerItem key={id}>
-                  <SettingsCard id={id} icon={icon} title={t(`settings.sections.${key}`)}>
-                    {content[key]}
-                  </SettingsCard>
-                </StaggerItem>
-              ))}
-            </Flex>
-          </Stagger>
-        </Col>
-      </Row>
+      <Reveal delay={0.1}>
+        <SectionPanes sections={sections} active={active} onSelect={select} onBack={back} backLabel={t("settings.title")} aria-label={t("settings.sectionsLabel")}>
+          {content[shown.key]}
+        </SectionPanes>
+      </Reveal>
     </>
-  );
-}
-
-function SettingsCard({ id, icon: Icon, title, children }: { id: string; icon: LucideIcon; title: string; children: ReactNode }) {
-  const { token } = theme.useToken();
-  return (
-    <Card
-      id={id}
-      style={{ scrollMarginTop: 88 }}
-      title={
-        <Flex align="center" gap={10}>
-          <span style={{ display: "inline-flex", color: token.colorPrimary }}>
-            <Icon />
-          </span>
-          {title}
-        </Flex>
-      }
-      styles={{ body: { paddingBlock: 4 } }}
-    >
-      {children}
-    </Card>
   );
 }
 
@@ -120,6 +95,7 @@ function AppearanceSettings() {
   const screens = Grid.useBreakpoint();
   const preferences = usePreferences();
   const setPreference = useSetPreference();
+  const applySkin = useApplySkin();
   // El estilo bajo el mouse o con el foco se muestra en la vista previa; si no hay ninguno, el elegido.
   const [previewing, setPreviewing] = useState<SkinId | null>(null);
   const shown = previewing ?? preferences.skin;
@@ -128,18 +104,13 @@ function AppearanceSettings() {
     <>
       <SettingRow label={t("settings.appearance.skin")} description={t("settings.appearance.skinHint")} stacked>
         <Row gutter={[token.marginLG, token.marginLG]}>
-          <Col xs={24} lg={14}>
+          <Col xs={24} xl={14}>
             <ChoiceCards<SkinId>
               aria-label={t("settings.appearance.skin")}
               value={preferences.skin}
               compact
               onPreview={setPreviewing}
-              onChange={(value) => {
-                // Elegir un estilo aplica su color y su redondeo; después se pueden ajustar a mano.
-                setPreference("skin", value);
-                setPreference("brandColor", SKINS[value].brandColor);
-                setPreference("borderRadius", SKINS[value].borderRadius);
-              }}
+              onChange={applySkin}
               options={SKIN_IDS.map((value) => ({
                 value,
                 title: t(`settings.appearance.skins.${value}.title`),
@@ -148,8 +119,8 @@ function AppearanceSettings() {
               }))}
             />
           </Col>
-          <Col xs={24} lg={10}>
-            <div style={screens.lg ? { position: "sticky", top: token.controlHeight * 3 } : undefined}>
+          <Col xs={24} xl={10}>
+            <div style={screens.xl ? { position: "sticky", top: token.controlHeight * 3 } : undefined}>
               <Typography.Text strong aria-live="polite" style={{ display: "block", marginBottom: token.marginXS }}>
                 {t("settings.appearance.livePreview.label", { name: t(`settings.appearance.skins.${shown}.title`) })}
               </Typography.Text>
@@ -175,7 +146,7 @@ function AppearanceSettings() {
         />
       </SettingRow>
 
-      <SettingRow label={t("settings.appearance.brandColor")}>
+      <SettingRow label={t("settings.appearance.brandColor")} description={t("settings.appearance.brandColorHint")}>
         <Flex gap={8} align="center" wrap>
           {BRAND_PRESETS.map((color) => {
             const selected = preferences.brandColor.toLowerCase() === color;
@@ -240,7 +211,7 @@ function AppearanceSettings() {
         />
       </SettingRow>
 
-      <SettingRow label={t("settings.appearance.density")}>
+      <SettingRow label={t("settings.appearance.density")} description={t("settings.appearance.densityHint")}>
         <Segmented<Density>
           vertical={!screens.sm}
           block={!screens.sm}
@@ -250,7 +221,7 @@ function AppearanceSettings() {
         />
       </SettingRow>
 
-      <SettingRow label={t("settings.appearance.headerDensity")}>
+      <SettingRow label={t("settings.appearance.headerDensity")} description={t("settings.appearance.headerDensityHint")}>
         <Segmented<Density>
           vertical={!screens.sm}
           block={!screens.sm}
@@ -260,7 +231,7 @@ function AppearanceSettings() {
         />
       </SettingRow>
 
-      <SettingRow label={t("settings.appearance.motion")} last>
+      <SettingRow label={t("settings.appearance.motion")} description={t("settings.appearance.motionHint")} last>
         <Segmented<MotionPreference>
           vertical={!screens.sm}
           block={!screens.sm}

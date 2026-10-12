@@ -175,7 +175,7 @@ public class NativeFlowTest {
             screenshot("container-with-photo");
             // Native document picker: export writes the whole house, photos included.
             intending(hasAction(Intent.ACTION_CREATE_DOCUMENT)).respondWith(new ActivityResult(Activity.RESULT_OK, new Intent().setData(backupUri)));
-            onActivity(scenario, activity -> activity.getBridge().getWebView().loadUrl("https://refugi.ar/ajustes?" + SAMPLE));
+            onActivity(scenario, activity -> activity.getBridge().getWebView().loadUrl("https://refugi.ar/ajustes?" + SAMPLE + "#datos"));
             await(scenario, "[...document.querySelectorAll('button')].some(b => /^(Exportar|Export)$/.test(b.textContent.trim()) && !b.disabled)");
             tap(scenario, "[...document.querySelectorAll('button')].find(b => /^(Exportar|Export)$/.test(b.textContent.trim()))");
             await(scenario, "/Exportación lista|Export ready/.test(document.body.innerText)");

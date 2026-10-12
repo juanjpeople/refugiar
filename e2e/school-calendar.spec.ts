@@ -95,7 +95,7 @@ test("elige país, agenda materias y tareas por hijo y respeta días sin clases"
 test("escuela en inglés: validación, guardado único y ancho de 320 px", async ({ home: page }, testInfo) => {
   await page.setViewportSize({ width: 320, height: 800 });
   await page.emulateMedia({ colorScheme: "dark", reducedMotion: "reduce" });
-  await page.goto("/ajustes");
+  await page.goto("/ajustes#idioma");
   await page.getByText("English", { exact: true }).click();
   await page.goto("/calendario");
   await page.getByText("Configure holidays and school", { exact: true }).click();

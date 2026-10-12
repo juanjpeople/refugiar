@@ -24,6 +24,7 @@ export { TrustNote } from "./TrustNote";
 export { FilterChips } from "./FilterChips";
 
 export { SettingRow } from "./SettingRow";
+export { SectionPanes, type PaneSection } from "./SectionPanes";
 export { ProviderButton } from "./ProviderButton";
 export { ContextBadge } from "./ContextBadge";
 export { SectionTitle } from "./SectionTitle";

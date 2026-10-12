@@ -17,7 +17,7 @@ for (const theme of ["light", "dark"] as const) {
   test(`privacidad: contraste violeta, navegación y permisos · ${theme}`, async ({ home: page }, testInfo) => {
     await page.emulateMedia({ colorScheme: theme, reducedMotion: "reduce" });
     if (testInfo.project.name === "celular") await page.setViewportSize({ width: 320, height: 800 });
-    await page.goto("/ajustes");
+    await page.goto("/ajustes#apariencia");
     await page.getByRole("button", { name: "#722ed1", exact: true }).click();
     await page.getByTitle("Muy grande", { exact: true }).click();
     await page.getByText("Reducidas", { exact: true }).click();
