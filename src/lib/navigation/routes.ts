@@ -23,7 +23,8 @@ export interface AppRoute {
 /**
  * Registro único de rutas: de acá salen el menú, las migas de pan, la búsqueda (Ctrl+K),
  * los recientes y el título de la pestaña. Para sumar una página: agregarla acá
- * (y proteger la página con `RequirePermission` si lleva permiso).
+ * (y proteger la página con `RequirePermission` si lleva permiso). Lo que una funcionalidad
+ * aporta a la búsqueda va en `src/features/registry.ts`.
  */
 export const APP_ROUTES: AppRoute[] = [
   { id: "home", href: "/", labelKey: "nav.routes.home", icon: House, section: "main" },
