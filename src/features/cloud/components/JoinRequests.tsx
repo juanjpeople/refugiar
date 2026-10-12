@@ -3,12 +3,17 @@
 import { App, Avatar, Button, Flex, Typography, theme } from "antd";
 import { Check, Smartphone, UserCheck, X } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
+import { Reveal } from "@/components/motion";
 import { Callout } from "@/components/ui";
 import { useI18n } from "@/i18n";
 import { getErrorMessage } from "@/lib/errors";
+import { refreshWhileVisible } from "@/lib/refresh";
 import type { JoinRequest } from "../domain";
 import * as service from "../service";
 import { useAdminHousehold } from "./InviteModal";
+
+/** Quien pide entrar suele estar esperando al lado, con su pantalla preguntando cada 5 segundos. */
+const REFRESH_MS = 10_000;
 
 /**
  * Quienes abrieron una invitación y esperan entrar. Nadie entra a la casa sin que un admin lo
@@ -35,6 +40,13 @@ export function JoinRequests() {
       cancelled = true;
     };
   }, [household, version]);
+
+  // El pedido llega mientras Familia ya está abierta: se vuelve a preguntar mientras se la ve.
+  const householdId = household?.id;
+  useEffect(() => {
+    if (!householdId) return;
+    return refreshWhileVisible(load, REFRESH_MS);
+  }, [householdId, load]);
 
   if (!household || requests.length === 0) return null;
 
@@ -65,8 +77,9 @@ export function JoinRequests() {
     });
   }
 
+  // Puede aparecer con Familia ya abierta: entra con movimiento, no de golpe.
   return (
-    <div style={{ marginBottom: token.marginLG }}>
+    <Reveal style={{ marginBottom: token.marginLG }}>
       <Callout tone="primary" icon={UserCheck} title={t("cloud.memberAccess.requests", { count: requests.length })}>
         {t("cloud.memberAccess.requestsText")}
         <Flex vertical gap={token.marginXS} style={{ marginTop: token.marginSM }}>
@@ -92,6 +105,6 @@ export function JoinRequests() {
           ))}
         </Flex>
       </Callout>
-    </div>
+    </Reveal>
   );
 }

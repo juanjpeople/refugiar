@@ -46,7 +46,8 @@ test("dos administradores y dos dispositivos infantiles ingresan con aprobación
     // El servidor oculta la existencia de casas a quien todavía no es miembro.
     expect(denied.status()).toBe(404);
     expect(await denied.json()).toEqual({ error: "not-found" });
-    await page.reload();
+    // Sin recargar: Familia ya estaba abierta y el pedido tiene que aparecer solo.
+    await expect(page.getByText(adultName, { exact: true })).toBeVisible({ timeout: 20_000 });
     const adultApproval = page.waitForResponse((response) => response.url().includes("/join-requests/") && response.url().endsWith("/approve") && response.request().method() === "POST");
     await page.getByText(adultName, { exact: true }).locator("xpath=ancestor::div[.//button[normalize-space()='Aprobar']][1]").getByRole("button", { name: "Aprobar", exact: true }).click();
     expect((await adultApproval).ok()).toBe(true);

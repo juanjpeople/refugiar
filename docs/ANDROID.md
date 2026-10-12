@@ -165,7 +165,10 @@ web, descargó su kit de recuperación y pidió entrar mediante la invitación Q
 generada por A, con rol Administrador. A aprobó el pedido desde Familia en Android;
 B descargó la casa y quedó con su propio perfil Administrador. No se enviaron correos
 ni mensajes. La aprobación tardó en aparecer; apareció tras reabrir y esperar.
-No se certificó actualización instantánea de pedidos.
+No se certificó actualización instantánea de pedidos. Causa: Familia consultaba los
+pedidos una sola vez, al abrirse. Corregido después del ensayo: vuelve a consultar
+cada 10 s mientras está a la vista, al volver a la app y al recuperar la red.
+Falta repetirlo en el A55.
 
 - Preparación: A llevó Rice de 1 a 10 paquetes usando `+`; la web recibió 10 y
   mostró la actividad de A. Ambos usaron el mismo producto de Kitchen cupboard.
@@ -201,7 +204,11 @@ una casa cloud en una instalación Android vacía. Tampoco acredita recuperació
 cuentas, correo entregado, fotos cloud, OAuth, passkeys ni migración entre orígenes.
 El A55 muestra en Ajustes un aviso de navegador que recomienda instalar la app aun
 estando en la app nativa. Es un texto contextual incorrecto, no evidencia de pérdida
-de datos; se registra sin ampliar esta entrega con cambios de UI.
+de datos. Causa: el WebView responde que no a `navigator.storage.persisted()`.
+Corregido después del ensayo: la app de Android ya no hace esa consulta y el
+diagnóstico informa «no aplica (app Android)». Con un WebView sin el cifrado necesario,
+el aviso pide actualizar Android System WebView y Chrome, no solo Chrome.
+Falta verificarlo en el A55.
 
 Preparación previa (instalaciones/alta de cuentas no están incluidas en los 15 minutos):
 
