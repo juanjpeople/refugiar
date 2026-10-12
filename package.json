@@ -10,6 +10,8 @@
   "scripts": {
     "dev": "next dev",
     "local:family": "node scripts/family.mjs",
+    "casa": "node scripts/casa.mjs",
+    "esp": "node scripts/esp-relay.mjs",
     "cloud:family": "node scripts/family.mjs --cloud",
     "build": "node scripts/build.mjs",
     "build:local": "node scripts/build.mjs --local",
