@@ -46,7 +46,7 @@ Lo último arriba. El PR que termina algo lo agrega acá.
 
 | Cuándo | Qué | PR |
 | --- | --- | --- |
-| 2026-10 | Escuela de cada chico: ficha, cómo llega, horario y materias | #PR |
+| 2026-10 | Escuela de cada chico: ficha, cómo llega, horario y materias | #80 |
 | 2026-10 | Recinto con `DetailPage`; cierre de plantillas de página | #78 |
 | 2026-10 | Registro de funcionalidades: cada una suma su búsqueda sin tocar el shell | #76 |
 | 2026-10 | Plantilla de detalle (`DetailPage`): Proyecto y Contenedor | #75 |
