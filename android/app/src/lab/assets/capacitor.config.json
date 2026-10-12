@@ -1,0 +1,8 @@
+{
+  "appId": "ar.refugi.app.lab",
+  "appName": "Refugiar Lab",
+  "webDir": "android-dist",
+  "loggingBehavior": "none",
+  "server": { "hostname": "localhost:4195", "androidScheme": "http", "cleartext": false },
+  "android": { "allowMixedContent": false, "webContentsDebuggingEnabled": false }
+}
