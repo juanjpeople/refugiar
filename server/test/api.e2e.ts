@@ -90,7 +90,7 @@ const anaEmail = `admin+${unique}@casa.test`;
 
 let adminSession = "";
 function adminToken() { return "ab".repeat(32); }
-async function adminCall(method: "GET" | "POST" | "PATCH" | "DELETE", path: string, body?: unknown, token = adminToken()) {
+async function adminCall(method: "GET" | "POST" | "PATCH" | "PUT" | "DELETE", path: string, body?: unknown, token = adminToken()) {
   if (!adminSession && token === adminToken()) {
     const login = await fetch(API + "/api/admin/auth/login", { method: "POST", headers: { Origin: API, "Content-Type": "application/json", "X-Refugiar-Operator": "browser" }, body: JSON.stringify({ key: token, code: await operatorTotp("GEZDGNBVGY3TQOJQGEZDGNBVGY3TQOJQ", Math.floor(Date.now() / 30000)) }) });
     assert.equal(login.status, 200);
@@ -531,6 +531,31 @@ test("cuenta, casa, invitación y unión, de punta a punta y cifrado", async (t)
   assert.equal((await bytes(kid.client, "DELETE", photoPath)).status, 403);
   assert.equal((await bytes(anaAgain, "DELETE", photoPath)).status, 200);
   assert.equal((await bytes(anaAgain, "GET", `${photoPath}/thumb`)).status, 404);
+
+  // --- Lista de espera: sin cuenta; el operador habilita y el código abre la cuenta y la casa ---
+  const waitEmail = `espera-${unique}@casa.test`;
+  const waitClient = new Client("198.51.100.60");
+  assert.equal((await waitClient.call("POST", "/api/waitlist", { name: "Espera", email: waitEmail })).status, 201);
+  assert.equal((await waitClient.call("POST", "/api/waitlist", { name: "Otra", email: waitEmail.toUpperCase() })).status, 201);
+  assert.equal((await anaAgain.call("GET", "/api/admin/platform/waitlist")).status, 404);
+  const waiting = (await adminCall("GET", "/platform/waitlist")).body.waitlist as { id: string; email: string; status: string }[];
+  assert.deepEqual(waiting.filter((row) => row.email === waitEmail).map((row) => row.status), ["waiting"]);
+  const enabledNow = await adminCall("POST", "/platform/waitlist/enable", { ids: [waiting.find((row) => row.email === waitEmail)!.id] });
+  assert.equal(enabledNow.status, 200, JSON.stringify(enabledNow.body));
+  assert.equal(enabledNow.body.enabled[0].emailed, false); // En esta prueba el correo está apagado.
+  const waiter = await signUp("Espera", waitEmail, "una frase larga de la lista de espera", "198.51.100.61", { code: enabledNow.body.enabled[0].code });
+  const waiterHome = await createHome(waiter, enabledNow.body.enabled[0].code);
+  assert.ok(!((await adminCall("GET", "/platform/waitlist")).body.waitlist as { email: string }[]).some((row) => row.email === waitEmail));
+  // Tope propio de esa casa, desde el panel: la segunda foto ya no entra y queda anotado en Capacidad.
+  const waiterPhotos = `/api/households/${waiterHome.householdId}/photos`;
+  assert.equal((await adminCall("PUT", `/platform/households/${waiterHome.householdId}/quotas`, { opsPerDay: null, logBytes: null, photoBytes: 1024 * 1024 })).status, 200);
+  assert.equal((await bytes(waiter.client, "PUT", `${waiterPhotos}/${crypto.randomUUID()}/full`, new Uint8Array(700_000))).status, 200);
+  assert.equal((await bytes(waiter.client, "PUT", `${waiterPhotos}/${crypto.randomUUID()}/full`, new Uint8Array(700_000))).status, 507);
+  const usage = await adminCall("GET", `/platform/households/${waiterHome.householdId}/usage`);
+  assert.deepEqual([usage.body.usage.photoBytes, usage.body.limits.photoBytes], [700_000, 1024 * 1024]);
+  const capacity = (await adminCall("GET", "/platform/capacity")).body;
+  assert.ok(capacity.hits.some((hit: { householdId: string; kind: string }) => hit.householdId === waiterHome.householdId && hit.kind === "photos"));
+  assert.equal((await adminCall("PUT", `/platform/households/${waiterHome.householdId}/quotas`, { opsPerDay: null, logBytes: null, photoBytes: null })).status, 200);
 
   // --- Administración global: sesión normal + correo permitido, nunca el token maestro en el navegador ---
   const publicFeedback = await new Client().call("POST", "/api/feedback", {

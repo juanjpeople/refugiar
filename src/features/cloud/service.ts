@@ -265,6 +265,11 @@ export async function refreshHouseholds(session: CloudSession): Promise<CloudHou
 }
 
 /** ¿Sirve este código de licencia? Se pregunta antes de crear la cuenta (no la consume). */
+/** Lista de espera de la nube: el operador habilita y manda el código por email. */
+export async function joinWaitlist(input: { name: string; email: string }) {
+  await api("POST", "/waitlist", { name: input.name.trim(), email: input.email.trim() });
+}
+
 export async function checkLicense(code: string): Promise<boolean> {
   return (await api<{ valid: boolean }>("POST", "/licenses/check", { code: code.trim() })).valid;
 }

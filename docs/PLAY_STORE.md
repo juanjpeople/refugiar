@@ -75,7 +75,9 @@ Esto asocia invitaciones y QR de la web con la instalación Android.
    ([ayuda de Play](https://support.google.com/googleplay/android-developer/answer/14151465)).
    Los testers se cargan como lista de emails o un Grupo de Google.
    La nube es cerrada: cada tester necesita una invitación (si entra a una casa que ya existe) o un
-   código de acceso (si crea su propia casa). Los códigos salen de `/admin` o de
+   código de acceso (si crea su propia casa). Lo más simple: que se anoten en la lista de espera
+   (Crear cuenta → ¿No tenés código?) y habilitarlos desde `/admin` → Lista de espera. El código les
+   llega por correo y además lo ves ahí. También salen de `/admin` → Licencias o de
    `npm run admin -- licencia nueva --cantidad 12 --nota "Prueba cerrada"`. Cada uno crea una casa.
    Mandalos por privado: quien tiene un código puede crear cuentas hasta que lo use.
 
@@ -105,8 +107,8 @@ los datos de la casa ni las fotos: se cifran en el dispositivo y no tenemos las 
 
 | Dato | Tipo en Play | Para qué | ¿Opcional? |
 | --- | --- | --- | --- |
-| Nombre | Información personal → Nombre | Funcionalidad de la app, administración de la cuenta | Sí: solo con cuenta |
-| Email | Información personal → Dirección de correo electrónico | Administración de la cuenta, comunicaciones del desarrollador (avisos de seguridad y de la casa) | Sí: solo con cuenta |
+| Nombre | Información personal → Nombre | Funcionalidad de la app, administración de la cuenta | Sí: solo con cuenta o en la lista de espera |
+| Email | Información personal → Dirección de correo electrónico | Administración de la cuenta, comunicaciones del desarrollador (avisos de seguridad y de la casa, código de acceso de la lista de espera) | Sí: solo con cuenta o en la lista de espera |
 | Id de la cuenta | Información personal → IDs de usuario | Funcionalidad de la app, administración de la cuenta | Sí: solo con cuenta |
 | Foto de perfil de Google o GitHub | Fotos y videos → Fotos | Administración de la cuenta | Sí: solo si entra con ellos |
 | Comentarios desde la app | Actividad en la app → Otro contenido generado por el usuario | Comunicaciones del desarrollador | Sí |
