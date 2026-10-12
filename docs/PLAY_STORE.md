@@ -74,6 +74,10 @@ Esto asocia invitaciones y QR de la web con la instalación Android.
    **14 días seguidos** antes de poder pedir acceso a producción
    ([ayuda de Play](https://support.google.com/googleplay/android-developer/answer/14151465)).
    Los testers se cargan como lista de emails o un Grupo de Google.
+   La nube es cerrada: cada tester necesita una invitación (si entra a una casa que ya existe) o un
+   código de acceso (si crea su propia casa). Los códigos salen de `/admin` o de
+   `npm run admin -- licencia nueva --cantidad 12 --nota "Prueba cerrada"`. Cada uno crea una casa.
+   Mandalos por privado: quien tiene un código puede crear cuentas hasta que lo use.
 
 ### Contenido de la app (Política → Contenido de la app)
 

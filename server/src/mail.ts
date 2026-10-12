@@ -19,13 +19,19 @@ export function mailConfigState(env: Pick<Env, "EMAIL_ENABLED" | "EMAIL_FROM" | 
   return isEmailAddress(env.EMAIL_FROM) && /^re_[A-Za-z0-9_-]+$/.test(env.RESEND_API_KEY ?? "") ? "configured" : "incomplete";
 }
 
+/**
+ * El celular de un chico (`device-…@device.invalid`) y una cuenta borrada (`deleted-…@deleted.invalid`)
+ * no tienen buzón: escribirles solo deja rebotes, que dañan la reputación del remitente.
+ */
+const deliverable = (email: string) => !email.endsWith(".invalid");
+
 function sender(env: Env) {
   if (mailConfigState(env) !== "configured") throw new Error("Email is enabled but its configuration is incomplete");
   return `Refugiar <${env.EMAIL_FROM}>`;
 }
 
 export function securityEmailStatements(env: Env, user: { id: string; email: string }, event: SecurityEmail): D1PreparedStatement[] {
-  if (env.EMAIL_ENABLED !== "1") return [];
+  if (env.EMAIL_ENABLED !== "1" || !deliverable(user.email)) return [];
   const now = Date.now();
   return [env.DB.prepare(
     `insert into email_outbox (id, user_id, recipient, sender, subject, body, created_at, next_attempt_at)
@@ -68,7 +74,7 @@ async function queueInactivityEmails(env: Env, now: number) {
          from inactivity_notices n join households h on h.id = n.household_id
          join household_plans p on p.household_id = h.id
          join memberships m on m.household_id = h.id join "user" u on u.id = m.user_id
-        where n.status = 'pending' and n.days_before_pause = ? and p.status = 'active'
+        where n.status = 'pending' and n.days_before_pause = ? and p.status = 'active' and u.email not like '%.invalid'
           and n.due_at = coalesce(h.last_activity_at, h.created_at) + ?
           and coalesce(h.last_activity_at, h.created_at) <= ? and coalesce(h.last_activity_at, h.created_at) > ?`,
     ).bind(from, t("inactivitySubject"), body, now, now, days, window.dueAtOffset, window.activeBefore, window.activeAfter);

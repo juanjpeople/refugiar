@@ -354,6 +354,7 @@ export const en: Messages = {
       membersChanged: "The home changed in the meantime (someone joined or changed role). Try again.",
       badKit: "That code doesn't look like an {app} kit. It starts with ODK1 and has 13 groups of 4.",
       licenseInvalid: "That access code doesn't work: it may be mistyped, already used or expired.",
+      accessRequired: "Creating an account needs an access code or a valid invitation. If you were invited, open the link they sent you.",
       planPaused: "This home's cloud is paused: your copy keeps working and nothing is lost.",
       deviceSignIn: "This phone is no longer linked. Ask an adult for a new code.",
       deviceAccount: "This is a kid's phone: its role can't change.",
@@ -1404,8 +1405,6 @@ export const en: Messages = {
       signInTab: "I have an account",
       createTitle: "Create your account",
       createSubtitle: "One per person. It works on all your devices.",
-      invitedHint: "Were you invited? Open the link they sent you: you sign up and join their home in one step.",
-      invitedLink: "Open an invitation",
       signInTitle: "Sign in to your home",
       signInSubtitle: "With your email and password.",
       name: "Your name",
@@ -1617,6 +1616,7 @@ export const en: Messages = {
         "stale-key": "The home's keys were renewed (someone left). Updating…",
         removed: "You're no longer part of this home. What's on this device stays as it was; you can leave the cloud.",
         paused: "This home's cloud is paused: you still see what others do and your copy works the same, but your changes are kept here until it's back.",
+        quota: "This home reached the free cloud's limit. You still see what others do. Your changes and photos are kept here and upload when there's room.",
       },
     },
     leave: {
@@ -1745,7 +1745,7 @@ export const en: Messages = {
     },
     access: {
       title: "Access code",
-      subtitle: "The cloud is in invite-only beta: you need a code to create a home.",
+      subtitle: "The cloud is in invite-only beta. You need a code to create your account.",
       code: "Access code",
       codeRequired: "Enter the code",
       continue: "Continue",

@@ -359,6 +359,7 @@ export const es = {
       membersChanged: "La casa cambió mientras tanto (alguien entró o cambió de rol). Probá de nuevo.",
       badKit: "Ese código no parece un kit de {app}. Empieza con ODK1 y tiene 13 grupos de 4.",
       licenseInvalid: "Ese código de acceso no sirve: puede estar mal escrito, ya usado o vencido.",
+      accessRequired: "Para crear una cuenta hace falta un código de acceso o una invitación vigente. Si te invitaron, abrí el link que te mandaron.",
       planPaused: "La nube de esta casa está en pausa: tu copia sigue funcionando y no se pierde nada.",
       deviceSignIn: "Este celular ya no está vinculado. Pedile a un adulto un código nuevo.",
       deviceAccount: "Es el celular de un chico: su rol no se cambia.",
@@ -1409,8 +1410,6 @@ export const es = {
       signInTab: "Ya tengo cuenta",
       createTitle: "Creá tu cuenta",
       createSubtitle: "Una por persona. Te sirve en todos tus dispositivos.",
-      invitedHint: "¿Te invitaron? Abrí el link que te mandaron: ahí creás tu cuenta y entrás a su casa en un solo paso.",
-      invitedLink: "Abrir una invitación",
       signInTitle: "Entrá a tu casa",
       signInSubtitle: "Con tu email y tu contraseña.",
       name: "Tu nombre",
@@ -1622,6 +1621,7 @@ export const es = {
         "stale-key": "Las claves de la casa se renovaron (alguien salió). Actualizando…",
         removed: "Ya no sos parte de esta casa. Lo que hay en este dispositivo quedó como estaba; podés salir de la nube.",
         paused: "La nube de esta casa está en pausa: seguís viendo lo que hacen los demás y tu copia funciona igual, pero tus cambios se guardan acá hasta que vuelva.",
+        quota: "Esta casa llegó al límite de la nube gratuita. Seguís viendo lo que hacen los demás. Tus cambios y fotos quedan guardados acá y se suben cuando haya lugar.",
       },
     },
     leave: {
@@ -1750,7 +1750,7 @@ export const es = {
     },
     access: {
       title: "Código de acceso",
-      subtitle: "La nube está en beta por invitación: para crear una casa necesitás un código.",
+      subtitle: "La nube está en beta por invitación. Para crear tu cuenta necesitás un código.",
       code: "Código de acceso",
       codeRequired: "Escribí el código",
       continue: "Continuar",
