@@ -46,6 +46,7 @@ Lo último arriba. El PR que termina algo lo agrega acá.
 
 | Cuándo | Qué | PR |
 | --- | --- | --- |
+| 2026-10 | Escuela de cada chico: ficha, cómo llega, horario y materias | #80 |
 | 2026-10 | Recinto con `DetailPage`; cierre de plantillas de página | #78 |
 | 2026-10 | Registro de funcionalidades: cada una suma su búsqueda sin tocar el shell | #76 |
 | 2026-10 | Plantilla de detalle (`DetailPage`): Proyecto y Contenedor | #75 |
@@ -83,6 +84,7 @@ Cada página dice qué hace hoy, cómo se usa y qué límites tiene. No describe
 | Compras, listas, proyectos y precios | [compras](docs/features/compras.md) |
 | Recetas | [recetas](docs/features/recetas.md) |
 | Calendario | [calendario](docs/features/calendario.md) |
+| Escuela de cada chico | [escuela](docs/features/escuela.md) |
 | Familia, perfiles y acceso | [familia](docs/features/familia.md) |
 | Nube cifrada y privacidad | [nube](docs/features/nube.md) |
 | Apariencia, ajustes y datos | [ajustes](docs/features/ajustes.md) |

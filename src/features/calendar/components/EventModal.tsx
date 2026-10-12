@@ -25,6 +25,7 @@ interface FormValues {
   repeatUntil?: Dayjs;
   eventKind: EventKind;
   homeworkDone?: boolean;
+  teacher?: string;
   participantIds: string[];
   color: AppearanceColor;
   icon?: AppearanceIcon;
@@ -72,6 +73,7 @@ export function EventModal({ open, event, day, onClose }: EventModalProps) {
         repeatUntil: event.repeatUntil === undefined ? undefined : dayjs(event.repeatUntil),
         eventKind: event.eventKind ?? "event",
         homeworkDone: event.homeworkDone ?? false,
+        teacher: event.teacher,
         participantIds: event.participantIds,
         color: event.color,
         icon: event.icon,
@@ -90,6 +92,7 @@ export function EventModal({ open, event, day, onClose }: EventModalProps) {
         repeatUntil: undefined,
         eventKind: "event",
         homeworkDone: false,
+        teacher: undefined,
         participantIds: [],
         color: "blue",
         icon: undefined,
@@ -117,6 +120,7 @@ export function EventModal({ open, event, day, onClose }: EventModalProps) {
         repeatUntil: values.repeat !== "none" ? values.repeatUntil?.endOf("day").valueOf() : undefined,
         eventKind: values.eventKind,
         homeworkDone: values.eventKind === "homework" ? values.homeworkDone : undefined,
+        teacher: values.eventKind === "class" ? values.teacher : undefined,
         participantIds: values.participantIds,
         color: values.color,
         icon: values.icon,
@@ -276,6 +280,7 @@ export function EventModal({ open, event, day, onClose }: EventModalProps) {
         {repeat !== "none" && <Form.Item name="repeatUntil" label={t("school.repeatUntil")} extra={eventKind === "class" ? (t("school.classHelp")) : undefined} rules={eventKind === "class" ? [{ required: true, message: t("school.termRequired") }] : []}>
           <DatePicker style={{ width: "100%" }} format="DD/MM/YYYY" />
         </Form.Item>}
+        {eventKind === "class" && <Form.Item name="teacher" label={t("schoolPage.subjectForm.teacher")}><Input maxLength={EVENT_LIMITS.teacherMaxLength} /></Form.Item>}
         {eventKind === "homework" && <Form.Item name="homeworkDone" label={t("school.homeworkChecked")} valuePropName="checked"><Switch /></Form.Item>}
         <Form.Item name="color" label={t("appearance.color")}>
           <ColorSwatches fallback="blue" />

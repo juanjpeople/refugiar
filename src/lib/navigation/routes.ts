@@ -1,4 +1,4 @@
-import { Boxes, CalendarDays, ChefHat, HardHat, House, MapPin, MessageSquare, Palette, ScanLine, Settings, ShieldCheck, ShoppingCart, Sparkles, Users, type LucideIcon } from "lucide-react";
+import { Boxes, CalendarDays, ChefHat, GraduationCap, HardHat, House, MapPin, MessageSquare, Palette, ScanLine, Settings, ShieldCheck, ShoppingCart, Sparkles, Users, type LucideIcon } from "lucide-react";
 import type { MessageKey } from "@/i18n/translate";
 import type { Permission } from "@/lib/auth/permissions";
 
@@ -34,6 +34,7 @@ export const APP_ROUTES: AppRoute[] = [
   { id: "scan", href: "/inventario/escanear", labelKey: "nav.routes.scan", icon: ScanLine, permission: "inventory.view", section: "main", parent: "inventory", hidden: true },
   { id: "camera", href: "/inventario/camara", labelKey: "camera.title", icon: ScanLine, permission: "inventory.view", section: "main", parent: "inventory", hidden: true },
   { id: "calendar", href: "/calendario", labelKey: "nav.routes.calendar", icon: CalendarDays, permission: "calendar.view", section: "main" },
+  { id: "school", href: "/escuela", labelKey: "nav.routes.school", icon: GraduationCap, permission: "calendar.view", section: "main" },
   { id: "compras", href: "/compras", labelKey: "nav.routes.compras", icon: ShoppingCart, permission: "shopping.view", section: "main" },
   { id: "recipes", href: "/recetas", labelKey: "nav.routes.recipes", icon: ChefHat, permission: "recipes.view", section: "main" },
   { id: "projects", href: "/proyectos", labelKey: "nav.routes.projects", icon: HardHat, permission: "projects.view", section: "main" },
@@ -72,6 +73,7 @@ export const cameraHref = (scope: string | { id?: string; space?: string } = {})
   return `/inventario/camara${search ? `?${search}` : ""}`;
 };
 export const recipeHref = (id: string) => `/recetas/ver?id=${encodeURIComponent(id)}`;
+export const schoolHref = (memberId: string) => `/escuela#${encodeURIComponent(memberId)}`;
 export const projectHref = (id: string) => `/proyectos/ver?id=${encodeURIComponent(id)}`;
 /** Destino de un QR leído en la app. (Las etiquetas impresas usan `/c/<código>`: ver `not-found.tsx`.) */
 export const qrHref = (code: string) => `/c?code=${encodeURIComponent(code)}`;

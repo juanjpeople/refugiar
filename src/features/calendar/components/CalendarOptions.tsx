@@ -6,12 +6,11 @@ import { useLiveQuery } from "dexie-react-hooks";
 import { Callout } from "@/components/ui";
 import { Reveal } from "@/components/motion";
 import { useI18n } from "@/i18n";
-import { db } from "@/lib/db";
 import { useCurrentUser } from "@/lib/auth/session";
 import { usePermission } from "@/lib/auth/hooks";
 import { getErrorMessage } from "@/lib/errors";
 import { holidayCatalog, HOLIDAY_DATA_VERSION } from "../holidays";
-import { DEFAULT_CALENDAR, type CalendarPreferences } from "../settings";
+import { DEFAULT_CALENDAR, readCalendarSettings, type CalendarPreferences } from "../settings";
 import { saveCalendarPreferences } from "../service";
 
 export function CalendarOptions({ value, onChange, disabled }: { value: CalendarPreferences; onChange: (value: CalendarPreferences) => void; disabled?: boolean }) {
@@ -48,7 +47,7 @@ export function CalendarOptions({ value, onChange, disabled }: { value: Calendar
 }
 
 export function CalendarSettingsPanel() {
-  const saved = useLiveQuery(() => db.houseSettings.get("calendar"));
+  const saved = useLiveQuery(readCalendarSettings);
   const [draft, setDraft] = useState<CalendarPreferences | null>(null);
   const [busy, setBusy] = useState(false);
   const pending = useRef(false);

@@ -9,7 +9,7 @@ Una sola agenda para la casa.
 - Participantes, color e ícono por evento.
 - **Cumpleaños** automáticos desde los perfiles de Familia.
 - **Feriados** del país y la región elegidos, sin pedir nada a internet.
-- Modo **escolar**: clases semanales, tareas y recesos.
+- Modo **escolar**: clases semanales, tareas y recesos. La escuela y las materias de cada chico se cargan en [Escuela](escuela.md).
 
 ## Cómo se usa
 
