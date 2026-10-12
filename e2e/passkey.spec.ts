@@ -78,7 +78,7 @@ async function createAccount(page: Page) {
 async function addPasskey(page: Page) {
   await page.goto("/ajustes");
   await page.getByText("Administrador", { exact: true }).first().click();
-  await page.goto("/ajustes");
+  await page.goto("/ajustes#cuenta");
   const passkeys = page.getByRole("group", { name: "Llaves de acceso", exact: true });
   await expect(passkeys.getByText("Todavía no sumaste ninguna.")).toBeVisible();
   await passkeys.getByRole("button", { name: "Sumar una llave", exact: true }).click();
@@ -105,7 +105,7 @@ test("una llave de acceso con PRF entra sin contraseña y abre los datos cifrado
   await page.reload();
   await page.getByRole("button", { name: "Entrar con huella o llave de acceso", exact: true }).click();
   await expect(page).toHaveURL(/\/familia/);
-  await page.goto("/ajustes");
+  await page.goto("/ajustes#cuenta");
   await expect(page.getByRole("group", { name: user.name, exact: true }).getByText(user.email)).toBeVisible();
 
   // El secreto de la llave nunca viaja: ni al sumarla ni al entrar.
