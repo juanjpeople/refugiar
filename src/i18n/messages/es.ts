@@ -1200,6 +1200,8 @@ export const es = {
     notesPlaceholder: "Medidas, ideas, contactos…",
     emptyTitle: "Todavía no hay proyectos",
     emptyText: "Un proyecto agrupa listas (\u201cSanitarios\u201d, \u201cCerámicos\u201d, \u201cHerramientas\u201d) y suma su presupuesto.",
+    noActiveTitle: "No hay proyectos en curso",
+    noActiveText: "Los terminados están en la otra pestaña. Si reabrís uno, vuelve acá.",
     filter: {
       active: "En curso ({count})",
       done: "Terminados ({count})",
