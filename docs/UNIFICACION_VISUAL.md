@@ -486,8 +486,17 @@ Para que una función nueva no rehaga su página de lista ni su página de detal
   - Las listas de un proyecto usan `ListGrid`: ahora suben en hover y ceden al apretar como
     el resto de las tarjetas.
   - Recetas queda con su héroe propio: es la referencia de calidad y no gana nada con el cambio.
-- [ ] **Registro de funcionalidades**: ruta, ícono, permisos, sección de Ajustes y comandos
-  en un solo lugar por función.
+- [x] **Registro de funcionalidades** (#76): el shell (menú, migas, búsqueda, recientes) ya no
+  importa ninguna funcionalidad. Las rutas siguen en `APP_ROUTES` (ruta, ícono, permiso,
+  sección); lo que cada una aporta a Ctrl+K (resultados, acciones y el nombre de un reciente
+  con `?id=`) vive en `features/<nombre>/palette.ts` y se suma en `src/features/registry.ts`.
+  Para sumar una funcionalidad:
+  1. sus páginas en `APP_ROUTES`;
+  2. si tiene cosas que buscar, su `use<Nombre>Search` en el registro;
+  3. sus pantallas con `ListPage` y `DetailPage`.
+
+  Ajustes por funcionalidad todavía no hacen falta (ninguna tiene); cuando aparezca la primera,
+  su sección entra por el mismo registro.
 
 ## Cómo verificar cada fase
 1. Corre `npm run check` (typecheck + lint + tests, incluye `design-lint`).
