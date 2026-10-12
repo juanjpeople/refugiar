@@ -26,8 +26,10 @@ export interface Env extends SocialAuthEnv, OperatorConfig {
   SUPABASE_PHOTOS_BUCKET: string;
   /** Secreto de servidor de Supabase (`wrangler secret put SUPABASE_SERVICE_ROLE_KEY`). */
   SUPABASE_SERVICE_ROLE_KEY: string;
-  /** `memory` solo para pruebas locales explícitas; producción usa `supabase`. */
+  /** `memory` o `local-r2` solo para pruebas locales; producción usa `supabase`. */
   PHOTO_STORAGE?: string;
+  /** Bucket emulado y persistido por Wrangler; no se configura en producción. */
+  LOCAL_PHOTOS?: R2Bucket;
   /**
    * Quién puede crear una casa en la nube: `codes` (con una licencia; producción) u `open` (sin
    * licencia; solo para desarrollo). Cualquier otro valor, o ninguno, cuenta como `codes`.

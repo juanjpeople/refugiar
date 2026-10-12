@@ -1,7 +1,7 @@
 name: Android release
 
 # Paquete firmado para Play Store (.aab). Solo a pedido: no corre en PR ni en main.
-# La app abre refugi.ar: el paquete no lleva la web, así que no hace falta compilarla.
+# La interfaz va dentro del paquete; construirla con la nube opcional habilitada.
 # Firma con la clave de subida guardada en los secretos del repo (ver docs/PLAY_STORE.md).
 # Play App Signing vuelve a firmar con la clave de la app, que guarda Google.
 on:
@@ -14,7 +14,7 @@ on:
       subir_a_play:
         description: 'Subir a Prueba interna de Play (necesita el secreto PLAY_SERVICE_ACCOUNT_JSON; la primera versión va a mano)'
         type: boolean
-        default: true
+        default: false
 
 permissions:
   contents: read
@@ -32,10 +32,14 @@ jobs:
       HAS_PLAY_ACCOUNT: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON != '' }}
     steps:
       - uses: actions/checkout@v7
-      # Node solo para subir a Play (scripts/play-upload.mjs, sin dependencias).
+      # Next/Capacitor construyen el contenido del APK/AAB antes de firmarlo.
       - uses: actions/setup-node@v7
         with:
           node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npm run check
+      - run: npm run android:sync
       - uses: actions/setup-java@v5
         with:
           distribution: temurin

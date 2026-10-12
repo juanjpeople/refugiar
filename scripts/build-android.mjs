@@ -1,5 +1,5 @@
-// Compila la app de Android (una Trusted Web Activity que abre refugi.ar). No lleva la web adentro:
-// no hace falta compilar Next antes. `--release` arma el .aab firmado para Play (ver docs/PLAY_STORE.md).
+// Compila recursos locales con sincronización opcional y los incluye en Android.
+// `--release` arma el .aab firmado; nunca utiliza un export viejo o de demo.
 import { existsSync } from "node:fs";
 import { execFileSync } from "node:child_process";
 import { join } from "node:path";
@@ -14,6 +14,8 @@ if (!sdk || !existsSync(join(sdk, "platforms", "android-36", "android.jar"))) {
 }
 
 try {
+  execFileSync(process.execPath, [join(root, "scripts", "build.mjs"), "--android"], { cwd: root, stdio: "inherit" });
+  execFileSync(process.execPath, [join(root, "node_modules", "@capacitor", "cli", "bin", "capacitor"), "sync", "android"], { cwd: root, stdio: "inherit" });
   // The command and arguments are fixed; no user input is interpolated into the Windows shell.
   const command = process.platform === "win32" ? "cmd.exe" : "bash";
   const task = release ? "bundleRelease" : "assembleDebug";

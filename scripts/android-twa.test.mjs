@@ -1,5 +1,5 @@
-// La app de Android abre la web a pantalla completa solo si las dos mitades coinciden: lo que
-// declara la app (android/app/build.gradle) y lo que publica la web (assetlinks.json).
+// Asociación de links conservada al pasar de TWA a app empaquetada.
+// No demuestra funcionamiento offline: eso requiere los tests instrumentados Android.
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
@@ -22,8 +22,13 @@ test("assetlinks.json habilita esta app para abrir links", () => {
   }
 });
 
-test("la app abre el mismo origen donde se publica la web", () => {
+test("el origen local de Android coincide con la API propia y nunca carga server.url", () => {
   const host = gradle.match(/def appHost = '([^']+)'/)?.[1];
   const origin = wrangler.match(/"APP_ORIGIN": "([^"]+)"/)?.[1];
   assert.equal(`https://${host}`, origin);
+  const config = read("capacitor.config.ts");
+  assert.match(config, /hostname: "refugi\.ar"/);
+  assert.match(config, /webDir: "android-dist"/);
+  const configCode = config.replace(/^\s*\/\/.*$/gm, "");
+  assert.doesNotMatch(configCode, /\burl\s*:/);
 });

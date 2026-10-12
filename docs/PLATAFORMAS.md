@@ -8,7 +8,7 @@ Raspberry o NAS **no convierte ese equipo en una base de datos compartida**.
 
 | Plataforma | Disponible | Requisitos y límites |
 | --- | --- | --- |
-| Android | App de Play (abre la web en Chrome) o PWA instalada desde Chrome | Chrome actualizado. Es la misma app que la web, con cuenta y nube incluidas. Ver [ANDROID.md](ANDROID.md). |
+| Android | Migración a APK autónomo con interfaz incluida; PWA sigue disponible | Almacenamiento propio y nube opcional. Autenticación completa y migración aún en validación. Ver [ANDROID.md](ANDROID.md). |
 | Windows, macOS, Linux | Web/PWA | Navegador con IndexedDB y Web Crypto; HTTPS o localhost. No hace falta un ejecutable nativo. |
 | Raspberry Pi, NAS, servidor | Alojamiento del paquete estático | Servidor HTTP compatible con el sistema/arquitectura, por ejemplo Caddy. Compilar en PC o CI y copiar el paquete. Sin Node ni Next en el equipo que sirve los archivos. |
 | Cloudflare Workers | Interfaz y API opcional | Configuración de Worker, D1, Durable Objects, secretos y almacenamiento de fotos. Consultar README. |
@@ -123,11 +123,12 @@ Hoy se puede abrir la dirección HTTPS de la aplicación en Chrome e instalarla 
 el menú del navegador. Reutiliza interfaz, lógica y almacenamiento local. Probá cámara,
 QR, uso offline, exportación y actualización en el teléfono que vas a usar.
 
-La app de Play es una Trusted Web Activity: abre `https://refugi.ar` en Chrome, a pantalla
-completa, y usa el mismo almacenamiento que ese sitio en Chrome. No duplica pantallas ni lógica:
-cada deploy de la web la actualiza. Consultá [cómo se une con el dominio y cómo se compila](ANDROID.md).
-Un servidor propio (Raspberry, NAS) no la reemplaza: la app de Play abre siempre `refugi.ar`. Para
-otra dirección, instalá la PWA desde Chrome en esa dirección.
+La migración Android empaqueta esa misma interfaz y reutiliza su lógica, con datos
+propios de la instalación y sincronización opcional. Un deploy web no actualiza el APK.
+Todavía se están validando autenticación y traslado desde la TWA anterior: conservar
+los datos de Chrome. Consultá [Android](ANDROID.md) y [Cimientos del MVP](CIMIENTOS_MVP.md).
+El backend doméstico y el ESP aún están pendientes; no confundirlos con servir el
+paquete estático desde una NAS.
 
 ## Compartir información y proyectos
 
