@@ -11,14 +11,18 @@ import { useMembers } from "@/features/members/hooks";
 import { usePermission } from "@/lib/auth/hooks";
 import { useCurrentUser } from "@/lib/auth/session";
 import { db } from "@/lib/db";
+import { readCalendarSettings } from "../settings";
 import { getErrorMessage } from "@/lib/errors";
 import { canSee } from "@/lib/sync/scope";
+import type { Member } from "@/features/members/domain";
+import type { Commute } from "@/features/school/domain";
+import { useSchoolProfiles } from "@/features/school/hooks";
 import { useOccurrences } from "../hooks";
 import { updateEvent } from "../service";
 import type { CalendarEvent } from "../domain";
 
 export function SchoolToday() {
-  const settings = useLiveQuery(() => db.houseSettings.get("calendar"));
+  const settings = useLiveQuery(readCalendarSettings);
   return settings?.schoolEnabled ? <SchoolAgenda /> : null;
 }
 
@@ -37,7 +41,18 @@ function SchoolAgenda() {
   const { message } = App.useApp();
   const [busy, setBusy] = useState<string | null>(null);
   const homework = useLiveQuery(() => db.events.where("start").below(to).filter((event) => event.eventKind === "homework" && !event.homeworkDone && canSee(actor, event)).toArray(), [to, actor?.id, actor?.role]) ?? [];
-  const pupils = members.filter((member) => canManage || member.id === actor?.id);
+  const profiles = useSchoolProfiles();
+  // Quien no va a la escuela queda afuera de la agenda escolar.
+  const pupils = members.filter((member) => (canManage || member.id === actor?.id) && profiles?.get(member.id)?.attends !== false);
+  function commute(member: Member) {
+    const profile = profiles?.get(member.id);
+    if (!profile?.attends || !profile.days.includes(today.day())) return null;
+    const off = occurrences.some((entry) => entry.event?.eventKind === "break" && (!entry.participantIds.length || entry.participantIds.includes(member.id)));
+    if (off) return t("schoolPage.today.noClasses");
+    const leg = (key: "schoolPage.today.entry" | "schoolPage.today.exit", time?: string, mode?: Commute, who?: string) =>
+      time || mode || who ? [time ? t(key, { time }) : t(key === "schoolPage.today.entry" ? "schoolPage.fields.toSchool" : "schoolPage.fields.fromSchool"), mode && t(`schoolPage.commute.${mode}`), who].filter(Boolean).join(" · ") : null;
+    return [leg("schoolPage.today.entry", profile.entry, profile.toSchool, profile.dropOff), leg("schoolPage.today.exit", profile.exit, profile.fromSchool, profile.pickUp)].filter(Boolean).join(" — ") || null;
+  }
   async function complete(event: CalendarEvent) {
     if (pending.current) return;
     pending.current = true;
@@ -46,15 +61,17 @@ function SchoolAgenda() {
     catch (error) { message.error(getErrorMessage(error, t)); }
     finally { pending.current = false; setBusy(null); }
   }
-  return <Card title={t("school.today")} style={{ marginBottom: token.marginLG }} extra={<Link href="/calendario">{t("school.calendar")}</Link>}>
+  return <Card title={t("school.today")} style={{ marginBottom: token.marginLG }} extra={<Flex gap={token.marginSM}><Link href="/escuela">{t("nav.routes.school")}</Link><Link href="/calendario">{t("school.calendar")}</Link></Flex>}>
     <Flex vertical gap={token.margin}>
       {occurrences.filter((entry) => entry.holiday || entry.event?.eventKind === "holiday").map((entry) => <Typography.Text key={entry.key} type="warning">{entry.title} · {t("school.confirmClasses")}</Typography.Text>)}
       {pupils.map((member) => {
         const classes = occurrences.filter((entry) => entry.event?.eventKind === "class" && entry.participantIds.includes(member.id)).sort((a, b) => a.start - b.start);
         const tasks = homework.filter((event) => !event.participantIds.length || event.participantIds.includes(member.id));
-        if (!classes.length && !tasks.length) return null;
+        const trip = commute(member);
+        if (!classes.length && !tasks.length && !trip) return null;
         return <section key={member.id}>
           <Typography.Title level={5} style={{ marginTop: 0 }}>{member.name}</Typography.Title>
+          {trip && <Typography.Paragraph type="secondary" style={{ marginBottom: token.marginXS }}>{trip}</Typography.Paragraph>}
           {classes.map((entry) => <div key={entry.key} style={{ marginBottom: token.marginXS }}>
             <Typography.Text strong>{format.date(entry.start, { hour: "2-digit", minute: "2-digit" })} · {entry.title}</Typography.Text>
             {entry.event?.notes && <Typography.Paragraph style={{ whiteSpace: "pre-wrap", marginBottom: token.marginXS }}>{entry.event.notes}</Typography.Paragraph>}

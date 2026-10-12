@@ -8,6 +8,7 @@ import type { InventoryItem } from "@/features/inventory/domain";
 import type { Photo } from "@/features/media/domain";
 import { DEFAULT_MEMBERS, type Member } from "@/features/members/domain";
 import type { PriceRecord } from "@/features/prices/domain";
+import type { SchoolProfile } from "@/features/school/domain";
 import type { Recipe } from "@/features/recipes/domain";
 import type { Project } from "@/features/projects/domain";
 import { HOME_LIST_ID, type ShoppingCandidate, type ShoppingList, type ShoppingListItem } from "@/features/shopping/domain";
@@ -40,7 +41,8 @@ export const db = new Dexie(HOUSE_DB) as Dexie & {
   prices: EntityTable<PriceRecord, "id">;
   members: EntityTable<Member, "id">;
   events: EntityTable<CalendarEvent, "id">;
-  houseSettings: EntityTable<CalendarSettings, "id">;
+  /** Calendario (`calendar`) y la escuela de cada chico (`school:<miembro>`). */
+  houseSettings: EntityTable<CalendarSettings | SchoolProfile, "id">;
   recipes: EntityTable<Recipe, "id">;
   photos: EntityTable<Photo, "id">;
   comments: EntityTable<Comment, "id">;
@@ -216,6 +218,12 @@ export function declareSchema(target: Dexie, upTo = Infinity) {
     if (!["RefugiarDemoDB", "RefugiarTestDB"].includes(target.name)) return;
     const { backfillDemoTools } = await Dexie.waitFor(import("@/features/demo/seed"));
     await backfillDemoTools(tx);
+  });
+  // Escuela de ejemplo para las casas demo que ya existían (solo suma lo que falta).
+  if (upTo >= 15) target.version(15).stores({}).upgrade(async (tx) => {
+    if (!["RefugiarDemoDB", "RefugiarTestDB"].includes(target.name)) return;
+    const { addDemoSchool } = await Dexie.waitFor(import("@/features/demo/seed"));
+    await addDemoSchool(tx);
   });
 }
 

@@ -2,7 +2,8 @@
 
 import { App, Button, Card, Col, Flex, Row, Tag, Typography, theme } from "antd";
 import { motion } from "framer-motion";
-import { Cake, Cloud, FingerprintPattern as Fingerprint, KeyRound, Pencil, ShieldAlert, ShieldCheck, Trash2, UserPlus } from "lucide-react";
+import { Cake, Cloud, FingerprintPattern as Fingerprint, GraduationCap, KeyRound, Pencil, ShieldAlert, ShieldCheck, Trash2, UserPlus } from "lucide-react";
+import Link from "next/link";
 import { useState } from "react";
 import { Can } from "@/components/auth/Can";
 import { Stagger, StaggerItem } from "@/components/motion";
@@ -14,6 +15,7 @@ import { usePermission } from "@/lib/auth/hooks";
 import { useCurrentUser } from "@/lib/auth/session";
 import { CLOUD_ENABLED } from "@/lib/cloud/api";
 import { HOVER_LIFT, SPRING } from "@/lib/motion";
+import { schoolHref } from "@/lib/navigation/routes";
 import { isSecured, type Member } from "../domain";
 import { useMemberActions, useMembers } from "../hooks";
 import { CloudHouseholdPanel } from "@/features/cloud/components/CloudHouseholdPanel";
@@ -77,6 +79,7 @@ function MemberCard({ member, onEdit, onSecurity }: { member: Member; onEdit: ()
   const { remove } = useMemberActions();
   const canManage = usePermission("members.manage");
   const isMe = user?.id === member.id;
+  const canSchool = usePermission("calendar.manage") || isMe;
   const palette = tint(token, member.color);
   const birthday = member.birthday?.match(/-(\d{2})-(\d{2})$/);
 
@@ -133,6 +136,9 @@ function MemberCard({ member, onEdit, onSecurity }: { member: Member; onEdit: ()
             <Button icon={<ShieldCheck />} onClick={onSecurity}>
               {t("members.security")}
             </Button>
+          )}
+          {member.role === "kid" && canSchool && (
+            <Link href={schoolHref(member.id)}><Button icon={<GraduationCap />}>{t("members.school")}</Button></Link>
           )}
           {canManage && <Button icon={<Pencil />} aria-label={t("members.edit")} onClick={onEdit} />}
           {canManage && !isMe && (

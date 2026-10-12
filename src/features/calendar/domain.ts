@@ -25,6 +25,8 @@ export interface CalendarEvent {
   repeatUntil?: number;
   eventKind?: EventKind;
   homeworkDone?: boolean;
+  /** Materias: quién la dicta. */
+  teacher?: string;
   /** Miembros que participan (vacío = toda la casa). */
   participantIds: string[];
   color: AppearanceColor;
@@ -35,9 +37,9 @@ export interface CalendarEvent {
   updatedAt: number;
 }
 
-export type EventInput = Pick<CalendarEvent, "title" | "start" | "end" | "allDay" | "repeat" | "repeatUntil" | "eventKind" | "homeworkDone" | "participantIds" | "color" | "icon" | "notes"> & { privacy?: Privacy };
+export type EventInput = Pick<CalendarEvent, "title" | "start" | "end" | "allDay" | "repeat" | "repeatUntil" | "eventKind" | "homeworkDone" | "teacher" | "participantIds" | "color" | "icon" | "notes"> & { privacy?: Privacy };
 
-export const EVENT_LIMITS = { titleMaxLength: 80, notesMaxLength: 1000 } as const;
+export const EVENT_LIMITS = { titleMaxLength: 80, notesMaxLength: 1000, teacherMaxLength: 80 } as const;
 
 export function parseEvent(input: EventInput): EventInput & { privacy: Privacy } {
   const title = input.title?.trim() ?? "";
@@ -54,6 +56,8 @@ export function parseEvent(input: EventInput): EventInput & { privacy: Privacy }
     throw new ValidationError("errors.validation.appearanceInvalid");
   }
   const notes = input.notes?.trim() || undefined;
+  const teacher = input.eventKind === "class" ? input.teacher?.trim() || undefined : undefined;
+  if (teacher && teacher.length > EVENT_LIMITS.teacherMaxLength) throw new ValidationError("errors.validation.nameTooLong", { max: EVENT_LIMITS.teacherMaxLength });
   if (notes && notes.length > EVENT_LIMITS.notesMaxLength) throw new ValidationError("errors.validation.nameTooLong", { max: EVENT_LIMITS.notesMaxLength });
   return {
     title,
@@ -65,6 +69,7 @@ export function parseEvent(input: EventInput): EventInput & { privacy: Privacy }
     ...(input.repeatUntil !== undefined ? { repeatUntil: input.repeatUntil } : {}),
     ...(input.eventKind !== undefined ? { eventKind: input.eventKind } : {}),
     ...(input.homeworkDone !== undefined ? { homeworkDone: !!input.homeworkDone } : {}),
+    ...(teacher ? { teacher } : {}),
     participantIds: [...new Set(input.participantIds ?? [])],
     color: input.color,
     icon: input.icon,
