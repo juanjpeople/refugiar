@@ -1,16 +1,17 @@
 "use client";
 
 import { Alert, Button, Flex, Form, Input, Typography, theme } from "antd";
-import { HardDrive, KeyRound, MonitorDown, Smartphone, TriangleAlert } from "lucide-react";
+import { CircleCheck, HardDrive, KeyRound, MonitorDown, Smartphone, TriangleAlert } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState, type ReactNode } from "react";
-import { IconTile } from "@/components/ui";
+import { Reveal } from "@/components/motion";
+import { Callout, IconTile } from "@/components/ui";
 import { useT } from "@/i18n";
 import { checkCryptoSupport, type CryptoRequirement } from "@/lib/crypto";
 import { getErrorMessage } from "@/lib/errors";
 import { isAndroidApp } from "@/lib/platform";
 import { usePwaStore } from "@/store/usePwaStore";
-import { checkLicense } from "../service";
+import { checkLicense, joinWaitlist } from "../service";
 
 /**
  * Antes de crear una cuenta o unirse: si el navegador no puede con el cifrado (uno viejo), se
@@ -46,6 +47,70 @@ export function CryptoSupportGate({ children }: { children: ReactNode }) {
         </Button>
       </Link>
     </Flex>
+  );
+}
+
+/**
+ * Lista de espera de la nube: quien no tiene código deja su nombre y su email, y el operador lo
+ * habilita cuando hay lugar. Mientras, usa la app en este dispositivo y no pierde nada.
+ */
+function Waitlist() {
+  const t = useT();
+  const { token } = theme.useToken();
+  const [open, setOpen] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [joined, setJoined] = useState<string | null>(null);
+
+  async function onFinish(values: { name: string; email: string }) {
+    setBusy(true);
+    setError(null);
+    try {
+      await joinWaitlist(values);
+      setJoined(values.email.trim());
+    } catch (failure) {
+      setError(getErrorMessage(failure, t));
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  if (joined) {
+    return (
+      <Reveal>
+        <Callout tone="primary" icon={CircleCheck} title={t("cloud.access.waitlistDoneTitle")}>
+          {t("cloud.access.waitlistDone", { email: joined })}
+        </Callout>
+      </Reveal>
+    );
+  }
+  if (!open) {
+    return (
+      <Button type="primary" ghost onClick={() => setOpen(true)} style={{ alignSelf: "flex-start", marginTop: 4 }}>
+        {t("cloud.access.waitlist")}
+      </Button>
+    );
+  }
+  return (
+    <Reveal>
+      <Form layout="vertical" requiredMark={false} onFinish={onFinish} disabled={busy} style={{ marginTop: 4 }}>
+        <Form.Item name="name" label={t("cloud.access.waitlistName")} rules={[{ required: true, whitespace: true, message: t("errors.validation.nameRequired") }, { max: 60 }]}>
+          <Input autoComplete="name" maxLength={60} />
+        </Form.Item>
+        <Form.Item name="email" label={t("cloud.auth.email")} rules={[{ required: true, type: "email", message: t("cloud.auth.emailInvalid") }]}>
+          <Input type="email" autoComplete="email" inputMode="email" placeholder="tu@email.com" />
+        </Form.Item>
+        {error && <Alert type="error" showIcon title={error} style={{ marginBottom: token.marginSM }} />}
+        <Flex vertical gap={token.marginXS}>
+          <Button type="primary" htmlType="submit" loading={busy} block>
+            {t("cloud.access.waitlistSubmit")}
+          </Button>
+          <Typography.Text type="secondary" style={{ fontSize: token.fontSizeSM }}>
+            {t("cloud.access.waitlistPrivacy")}
+          </Typography.Text>
+        </Flex>
+      </Form>
+    </Reveal>
   );
 }
 
@@ -106,6 +171,7 @@ export function AccessCodeStep({ onValid }: { onValid: (code: string) => void })
         <Typography.Text type="secondary" style={{ fontSize: token.fontSizeSM }}>
           {t("cloud.access.noCodeText")}
         </Typography.Text>
+        <Waitlist />
         <Flex gap={8} wrap style={{ marginTop: 4 }}>
           <Link href="/unirme">
             <Button size="small">{t("cloud.access.haveInvite")}</Button>

@@ -14,7 +14,7 @@ import { SYNC_LIMITS, type PullResponse, type PushResponse, type StoredOp, type 
 import type { Env } from "./env";
 import { authorizedLiveSessions, LIVE_LIMITS, liveIdentity } from "./live-access";
 import { DAY } from "./inactivity";
-import { HOUSEHOLD_QUOTAS, QUOTA_EXCEEDED, quotasOn } from "./quotas";
+import { quotaError, type Quotas } from "./quotas";
 
 /** Se reintentó una operación con un id que ya usó otra persona (el error cruza la llamada RPC por su mensaje). */
 export const OP_CONFLICT = "op-conflict";
@@ -46,19 +46,27 @@ export class HouseholdLog extends DurableObject<Env> {
     return this.sql.exec<{ head: number | null }>("select max(seq) as head from ops").one().head ?? 0;
   }
 
+  /** Operaciones nuevas de un día. */
+  private opsOn(day: number): number {
+    return this.sql.exec<{ ops: number }>("select ops from usage where day = ?", day).toArray()[0]?.ops ?? 0;
+  }
+
+  /** Para /admin: cuánto lleva hoy y cuánto ocupa el registro. */
+  stats() {
+    return { opsToday: this.opsOn(Math.floor(Date.now() / DAY)), logBytes: this.sql.databaseSize };
+  }
+
   /**
    * Agrega operaciones, todas o ninguna. Reintentar una que ya entró devuelve el mismo número
-   * (idempotente), siempre que sea del mismo autor.
+   * (idempotente), siempre que sea del mismo autor. `limits`: los topes de la casa (los decide el
+   * Worker; sin topes en el servidor de casa).
    */
-  async push(author: string, ops: WireOp[]): Promise<PushResponse> {
+  async push(author: string, ops: WireOp[], limits: Pick<Quotas, "opsPerDay" | "logBytes"> | null): Promise<PushResponse> {
     const now = Date.now();
-    const quotas = quotasOn(this.env);
     const day = Math.floor(now / DAY);
-    if (quotas) {
-      // Ya en el tope: se corta antes de escribir nada.
-      const today = this.sql.exec<{ ops: number }>("select ops from usage where day = ?", day).toArray()[0]?.ops ?? 0;
-      if (today >= HOUSEHOLD_QUOTAS.opsPerDay || this.sql.databaseSize > HOUSEHOLD_QUOTAS.logBytes) throw new Error(QUOTA_EXCEEDED);
-    }
+    // Ya en el tope: se corta antes de escribir nada.
+    if (limits && this.sql.databaseSize > limits.logBytes) throw quotaError("log");
+    if (limits && this.opsOn(day) >= limits.opsPerDay) throw quotaError("ops");
     const acks = this.ctx.storage.transactionSync(() => {
       let added = 0;
       const acks = ops.map((op) => {
@@ -83,10 +91,10 @@ export class HouseholdLog extends DurableObject<Env> {
         return { id: op.id, seq };
       });
       // Un reintento de lo que ya entró no cuenta. Pasarse deshace el lote entero.
-      if (quotas && added > 0) {
+      if (limits && added > 0) {
         this.sql.exec("delete from usage where day < ?", day);
         const today = this.sql.exec<{ ops: number }>("insert into usage (day, ops) values (?, ?) on conflict (day) do update set ops = ops + excluded.ops returning ops", day, added).one();
-        if (today.ops > HOUSEHOLD_QUOTAS.opsPerDay) throw new Error(QUOTA_EXCEEDED);
+        if (today.ops > limits.opsPerDay) throw quotaError("ops");
       }
       return acks;
     });

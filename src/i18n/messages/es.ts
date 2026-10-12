@@ -19,6 +19,8 @@ export const es = {
     inactivity: "Tu casa en la nube se pausará por inactividad en {days} días. Abrí la app y sincronizá para mantenerla activa. La pausa no borra los datos.",
     testSubject: "Refugiar: prueba de correo",
     test: "Este es un correo de prueba enviado desde el panel de administración.",
+    accessSubject: "Refugiar: ya podés usar la nube",
+    access: "Hola, {name}. Ya tenés lugar en la nube de Refugiar.\n\nTu código de acceso es {code}\n\nEntrá a {url} y escribilo cuando te lo pida. Lo que ya cargaste en este dispositivo se sube a la nube, cifrado.\n\nEl código sirve para una casa. No lo compartas.",
   },
   school: {
     enable: "Usar la agenda escolar",
@@ -1755,9 +1757,15 @@ export const es = {
       codeRequired: "Escribí el código",
       continue: "Continuar",
       noCodeTitle: "¿No tenés código?",
-      noCodeText: "Si alguien de tu casa te invitó, no lo necesitás: abrí su link. Y {app} es gratis en este dispositivo, sin cuenta.",
+      noCodeText: "Anotate en la lista de espera y te mandamos un código cuando haya lugar. Mientras, usá {app} gratis en este dispositivo: lo que cargues se sube cuando entres. Si alguien de tu casa te invitó, no necesitás código: abrí su link.",
       haveInvite: "Tengo una invitación",
       useLocal: "Usarla en este dispositivo",
+      waitlist: "Anotarme en la lista de espera",
+      waitlistName: "Tu nombre",
+      waitlistSubmit: "Anotarme",
+      waitlistPrivacy: "Usamos tu email solo para mandarte el código. Lo borramos cuando creás tu casa.",
+      waitlistDoneTitle: "Te anotamos",
+      waitlistDone: "Cuando haya lugar, te mandamos el código a {email}. Mientras, usá {app} en este dispositivo.",
     },
     support: {
       title: "Este navegador no puede abrir la nube cifrada",
@@ -2062,7 +2070,7 @@ export const es = {
         },
         cloud: {
           title: "Con cuenta (opcional)",
-          body: "En la web o en la app de Android podés crear una cuenta para compartir la casa entre varios dispositivos. Para eso guardamos tu nombre, tu email y tu contraseña protegida con un hash. Si entrás con Google o GitHub, recibimos tu nombre, tu email y tu foto de perfil.\nSi encendés la verificación en dos pasos, guardamos su secreto y tus códigos de respaldo cifrados, y la clave pública de cada llave de acceso.\nLos datos de tu casa y tus fotos se cifran en tu dispositivo antes de subir. Nosotros no tenemos las claves y no podemos leerlos.\nPor seguridad, cada sesión guarda la dirección IP y el navegador desde donde entraste. Una sesión dura hasta 30 días.\nSi nos mandás un comentario, guardamos el mensaje y el email que dejes.",
+          body: "En la web o en la app de Android podés crear una cuenta para compartir la casa entre varios dispositivos. Para eso guardamos tu nombre, tu email y tu contraseña protegida con un hash. Si entrás con Google o GitHub, recibimos tu nombre, tu email y tu foto de perfil.\nSi encendés la verificación en dos pasos, guardamos su secreto y tus códigos de respaldo cifrados, y la clave pública de cada llave de acceso.\nLos datos de tu casa y tus fotos se cifran en tu dispositivo antes de subir. Nosotros no tenemos las claves y no podemos leerlos.\nPor seguridad, cada sesión guarda la dirección IP y el navegador desde donde entraste. Una sesión dura hasta 30 días.\nSi nos mandás un comentario, guardamos el mensaje y el email que dejes.\nSi te anotás en la lista de espera de la nube, guardamos tu nombre y tu email para mandarte tu código de acceso cuando haya lugar.",
         },
         homeServer: {
           title: "Con tu propio servidor (opcional)",
@@ -2074,7 +2082,7 @@ export const es = {
         },
         retention: {
           title: "Cuánto tiempo guardamos los datos",
-          body: "Lo que está en tu dispositivo se queda ahí hasta que lo borrás o borrás los datos del navegador.\nUna casa en la nube sin actividad durante 90 días se pausa, con avisos antes.\nPodés borrar tu cuenta cuando quieras, desde Ajustes → Cuenta. Los pasos y qué se borra están en {domain}/borrar-cuenta.\nSi no podés entrar, escribinos a {email} desde el email de tu cuenta y la borramos dentro de los 30 días.",
+          body: "Lo que está en tu dispositivo se queda ahí hasta que lo borrás o borrás los datos del navegador.\nUna casa en la nube sin actividad durante 90 días se pausa, con avisos antes.\nTu nombre y tu email de la lista de espera se borran cuando creás tu casa en la nube, o antes si nos lo pedís.\nPodés borrar tu cuenta cuando quieras, desde Ajustes → Cuenta. Los pasos y qué se borra están en {domain}/borrar-cuenta.\nSi no podés entrar, escribinos a {email} desde el email de tu cuenta y la borramos dentro de los 30 días.",
         },
         children: {
           title: "Chicos",

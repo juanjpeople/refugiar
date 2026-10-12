@@ -14,6 +14,8 @@ export const en: Messages = {
     inactivity: "Your cloud home will be paused for inactivity in {days} days. Open the app and sync to keep it active. Pausing does not delete data.",
     testSubject: "Refugiar: email test",
     test: "This is a test email sent from the administration panel.",
+    accessSubject: "Refugiar: the cloud is ready for you",
+    access: "Hi, {name}. There's room for you in the Refugiar cloud.\n\nYour access code is {code}\n\nGo to {url} and type it when asked. What you already have on this device goes up to the cloud, encrypted.\n\nThe code is good for one home. Don't share it.",
   },
   school: {
     enable: "Use the school planner",
@@ -1750,8 +1752,14 @@ export const en: Messages = {
       codeRequired: "Enter the code",
       continue: "Continue",
       noCodeTitle: "No code?",
-      noCodeText: "If someone in your home invited you, you don't need one: open their link. And {app} is free on this device, no account needed.",
+      noCodeText: "Join the waiting list and we'll send you a code when there's room. Meanwhile, use {app} for free on this device: what you add goes up when you sign in. If someone in your home invited you, you don't need a code: open their link.",
       haveInvite: "I have an invite",
+      waitlist: "Join the waiting list",
+      waitlistName: "Your name",
+      waitlistSubmit: "Join",
+      waitlistPrivacy: "We use your email only to send you the code. We delete it when you create your home.",
+      waitlistDoneTitle: "You're on the list",
+      waitlistDone: "When there's room, we'll send the code to {email}. Meanwhile, use {app} on this device.",
       useLocal: "Use it on this device",
     },
     support: {
@@ -2057,7 +2065,7 @@ export const en: Messages = {
         },
         cloud: {
           title: "With an account (optional)",
-          body: "On the website or in the Android app you can create an account to share your home across devices. For that we store your name, your email and your password protected with a hash. If you sign in with Google or GitHub, we receive your name, email and profile picture.\nIf you turn on two-step verification, we store its secret and your backup codes encrypted, plus the public key of each passkey.\nYour home data and photos are encrypted on your device before upload. We do not have the keys and cannot read them.\nFor security, each session stores the IP address and browser you signed in from. A session lasts up to 30 days.\nIf you send us feedback, we store the message and any email you leave.",
+          body: "On the website or in the Android app you can create an account to share your home across devices. For that we store your name, your email and your password protected with a hash. If you sign in with Google or GitHub, we receive your name, email and profile picture.\nIf you turn on two-step verification, we store its secret and your backup codes encrypted, plus the public key of each passkey.\nYour home data and photos are encrypted on your device before upload. We do not have the keys and cannot read them.\nFor security, each session stores the IP address and browser you signed in from. A session lasts up to 30 days.\nIf you send us feedback, we store the message and any email you leave.\nIf you join the cloud waiting list, we store your name and email to send you your access code when there is room.",
         },
         homeServer: {
           title: "With your own server (optional)",
@@ -2069,7 +2077,7 @@ export const en: Messages = {
         },
         retention: {
           title: "How long we keep data",
-          body: "What is on your device stays there until you delete it or clear the browser data.\nA cloud home with no activity for 90 days is paused, with notices first.\nYou can delete your account at any time from Settings → Account. The steps and what gets deleted are at {domain}/borrar-cuenta.\nIf you cannot sign in, write to {email} from your account email and we delete it within 30 days.",
+          body: "What is on your device stays there until you delete it or clear the browser data.\nA cloud home with no activity for 90 days is paused, with notices first.\nYour name and email on the waiting list are deleted when you create your cloud home, or sooner if you ask us.\nYou can delete your account at any time from Settings → Account. The steps and what gets deleted are at {domain}/borrar-cuenta.\nIf you cannot sign in, write to {email} from your account email and we delete it within 30 days.",
         },
         children: {
           title: "Children",

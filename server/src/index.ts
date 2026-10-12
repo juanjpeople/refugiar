@@ -18,9 +18,9 @@ import { DAY, INACTIVITY_NOTICE_DAYS, inactivityNoticeWindow, inactiveBefore } f
 import { PhotoStorageError, photoStorage } from "./photo-storage";
 import { operatorAuth, operatorConfigured, operatorRequestAllowed, operatorSession } from "./operator-auth";
 import { operatorPage } from "./operator-page";
-import { mailConfigState, mailOverview, processEmails, queueTestEmail, securityEmailStatements } from "./mail";
+import { accessEmailStatement, mailConfigState, mailOverview, processEmails, queueTestEmail, securityEmailStatements } from "./mail";
 import { OP_CONFLICT } from "./sync";
-import { HOUSEHOLD_QUOTAS, QUOTA_EXCEEDED, quotasOn } from "./quotas";
+import { defaultQuotas, HOUSEHOLD_QUOTAS, householdQuotas, PHOTO_FREE_BYTES, QUOTA_EXCEEDED, quotaKind, quotasOn, recordQuotaHit } from "./quotas";
 import { DEVICE_LINK_MINUTES } from "../../src/lib/cloud/device-protocol";
 import {
   acceptInviteInput,
@@ -35,12 +35,14 @@ import {
   envelopeInput,
   feedbackInput,
   feedbackStatusInput,
+  householdQuotaInput,
   inactivityNoticeStatusInput,
   inviteTokenInput,
   licenseCheckInput,
   passkeyUnlockInput,
   pullQuery,
   pushInput,
+  quotaDefaultsInput,
   recoveryCompleteInput,
   recoveryKitInput,
   recoveryStartInput,
@@ -49,6 +51,8 @@ import {
   userId,
   userKeysInput,
   uuid,
+  waitlistEnableInput,
+  waitlistInput,
   type Role,
   type Scope,
 } from "./validation";
@@ -137,6 +141,7 @@ app.use("*", async (c, next) => {
 
 app.use("/auth/*", bodyLimit({ maxSize: 16 * 1024, onError: (c) => c.json({ error: "too-large" }, 413) }));
 app.use("/feedback", bodyLimit({ maxSize: 8 * 1024, onError: (c) => c.json({ error: "too-large" }, 413) }));
+app.use("/waitlist", bodyLimit({ maxSize: 4 * 1024, onError: (c) => c.json({ error: "too-large" }, 413) }));
 /**
  * Sumar una llave de acceso pide la contraseña: con una sesión robada no se puede agregar una
  * llave propia y saltear después el segundo paso. El resto lo valida Better Auth.
@@ -620,6 +625,8 @@ app.post("/households", async (c) => {
         "insert into key_envelopes (household_id, scope, version, recipient_user_id, envelope, created_by, created_at) select ?, ?, ?, ?, ?, ?, ? where exists (select 1 from households where id = ?)",
       ).bind(input.id, entry.scope, entry.version, user.id, entry.envelope, user.id, now, input.id),
     ),
+    // Quien venía de la lista de espera ya tiene su casa: su email no se guarda más.
+    c.env.DB.prepare("delete from cloud_waitlist where license_id in (select id from cloud_licenses where code_hash = ?) and exists (select 1 from households where id = ?)").bind(codeHash, input.id),
     c.env.DB.prepare(
       `insert into household_plans (household_id, license_id, plan, status, updated_at)
          select ?, l.id, coalesce(l.plan, 'beta'), 'active', ?
@@ -1082,13 +1089,14 @@ app.post("/households/:id/ops", async (c) => {
   const input = await parse(c, pushInput);
   if (!input) return c.json({ error: "invalid" }, 400);
 
-  const [household, keys] = await Promise.all([
+  const [household, keys, quotas] = await Promise.all([
     c.env.DB.prepare(
       "select h.family_key_version as family, h.adults_key_version as adults, coalesce(p.status, 'active') as planStatus from households h left join household_plans p on p.household_id = h.id where h.id = ?",
     )
       .bind(householdId)
       .first<{ family: number; adults: number; planStatus: string }>(),
     c.env.DB.prepare("select sign_public_key as signPublicKey from user_keys where user_id = ?").bind(user.id).first<{ signPublicKey: string }>(),
+    quotasOn(c.env) ? householdQuotas(c.env.DB, householdId) : null,
   ]);
   if (!household || !keys) return c.json({ error: "not-found" }, 404);
   // Casa en pausa (plan vencido o pausado): se puede bajar todo, pero no subir.
@@ -1103,12 +1111,16 @@ app.post("/households/:id/ops", async (c) => {
   if (signed.some((ok) => !ok)) return c.json({ error: "bad-signature" }, 400);
 
   try {
-    return c.json(await householdLog(c.env, householdId).push(user.id, input.ops));
+    return c.json(await householdLog(c.env, householdId).push(user.id, input.ops, quotas && { opsPerDay: quotas.opsPerDay, logBytes: quotas.logBytes }));
   } catch (error) {
     if (error instanceof Error && error.message === OP_CONFLICT) return c.json({ error: "conflict" }, 409);
     // Tope de la casa: el lote no entró y el dispositivo lo guarda para más tarde. 507 como las
     // fotos: un 429 lo toma la app como "demasiados intentos" y no vería el motivo.
-    if (error instanceof Error && error.message === QUOTA_EXCEEDED) return c.json({ error: QUOTA_EXCEEDED }, 507);
+    const kind = quotaKind(error);
+    if (kind) {
+      await recordQuotaHit(c.env.DB, householdId, kind);
+      return c.json({ error: QUOTA_EXCEEDED }, 507);
+    }
     throw error;
   }
 });
@@ -1163,10 +1175,16 @@ app.put("/households/:id/photos/:photoId/:variant", async (c) => {
   if (body.byteLength < 29) return c.json({ error: "invalid" }, 400);
   if (quotasOn(c.env)) {
     // Lo que ya ocupa la casa, sin contar la versión anterior de esta misma foto (se reemplaza).
-    const used = await c.env.DB.prepare("select coalesce(sum(bytes), 0) as bytes from photo_objects where household_id = ? and not (photo_id = ? and variant = ?)")
-      .bind(householdId, photoId, variant)
-      .first<{ bytes: number }>();
-    if ((used?.bytes ?? 0) + body.byteLength > HOUSEHOLD_QUOTAS.photoBytes) return c.json({ error: "storage-quota" }, 507);
+    const [used, quotas] = await Promise.all([
+      c.env.DB.prepare("select coalesce(sum(bytes), 0) as bytes from photo_objects where household_id = ? and not (photo_id = ? and variant = ?)")
+        .bind(householdId, photoId, variant)
+        .first<{ bytes: number }>(),
+      householdQuotas(c.env.DB, householdId),
+    ]);
+    if ((used?.bytes ?? 0) + body.byteLength > quotas.photoBytes) {
+      await recordQuotaHit(c.env.DB, householdId, "photos");
+      return c.json({ error: "storage-quota" }, 507);
+    }
   }
   const key = photoKey(householdId, photoId, variant);
   try {
@@ -1303,12 +1321,26 @@ app.post("/feedback", async (c) => {
   return c.json({ ok: true }, 201);
 });
 
+/**
+ * Lista de espera de la nube, sin cuenta: nombre y email. La respuesta es la misma si el email ya
+ * estaba, así no se puede averiguar quién se anotó. El operador habilita desde /admin.
+ */
+app.post("/waitlist", async (c) => {
+  const input = await parse(c, waitlistInput);
+  if (!input) return c.json({ error: "invalid" }, 400);
+  if (await tooMany(c.env, `waitlist:ip:${clientIp(c)}`, 5, DAY)) return c.json({ error: "rate-limited" }, 429);
+  await c.env.DB.prepare("insert into cloud_waitlist (id, name, email, created_at) values (?, ?, ?, ?) on conflict (email) do nothing")
+    .bind(crypto.randomUUID(), input.name, input.email, Date.now())
+    .run();
+  return c.json({ ok: true }, 201);
+});
+
 const platformAdmin = new Hono<AppEnv>();
 
 platformAdmin.get("/overview", async (c) => {
   await processInactivity(c.env);
   const nowIso = new Date().toISOString();
-  const [users, households, sessions, licenses, feedback, notices, rateSignals, sessionSignals, auditRows] = await Promise.all([
+  const [users, households, sessions, licenses, feedback, notices, waiting, rateSignals, sessionSignals, auditRows] = await Promise.all([
     c.env.DB.prepare(`select count(*) as count from "user"`).first<{ count: number }>(),
     c.env.DB.prepare(
       `select count(*) as total,
@@ -1324,12 +1356,14 @@ platformAdmin.get("/overview", async (c) => {
     ).bind(Date.now()).first<{ total: number; available: number }>(),
     c.env.DB.prepare("select count(*) as count from feedback where status = 'open'").first<{ count: number }>(),
     c.env.DB.prepare("select count(*) as count from inactivity_notices where status = 'pending'").first<{ count: number }>(),
+    c.env.DB.prepare("select count(*) as count from cloud_waitlist where status = 'waiting'").first<{ count: number }>(),
     c.env.DB.prepare(
       `select case
                 when key like 'recovery:ip:%' then 'recovery-ip'
                 when key like 'recovery:email:%' then 'recovery-email'
                 when key like 'license-check:%' then 'license-check'
                 when key like 'feedback:ip:%' then 'feedback'
+                when key like 'waitlist:ip:%' then 'waitlist'
                 when key like 'password:%' then 'password'
                 else 'other'
               end as type,
@@ -1358,6 +1392,7 @@ platformAdmin.get("/overview", async (c) => {
       availableLicenses: licenses?.available ?? 0,
       openFeedback: feedback?.count ?? 0,
       pendingNotices: notices?.count ?? 0,
+      waiting: waiting?.count ?? 0,
     },
     risks: [...rateSignals.results, ...sessionSignals.results.map((signal) => ({ type: "many-sessions", ...signal }))],
     credentials: {
@@ -1587,6 +1622,137 @@ platformAdmin.patch("/notices/:householdId/:days", async (c) => {
     .run();
   if (!result.meta.changes) return c.json({ error: "not-found" }, 404);
   await audit(c, "notice.status", "household", householdId, { days, status: input.status });
+  return c.json({ ok: true });
+});
+
+// --- Lista de espera y capacidad: el operador decide cuándo entra cada casa a la nube ------------
+
+platformAdmin.get("/waitlist", async (c) => {
+  const rows = await c.env.DB.prepare(
+    `select w.id, w.name, w.email, w.status, w.created_at as createdAt, w.enabled_at as enabledAt, coalesce(l.used, 0) > 0 as used
+       from cloud_waitlist w left join cloud_licenses l on l.id = w.license_id
+      order by w.status = 'enabled', w.created_at`,
+  ).all();
+  return c.json({ waitlist: rows.results });
+});
+
+/**
+ * Habilitar de la lista de espera, de a tandas: un código para cada uno (sirve para una casa). Si ya
+ * tenía uno sin usar, se revoca y va otro. Sale por correo si está configurado, y el código se ve una
+ * sola vez acá para mandarlo por otro lado. Quien ya creó su casa no recibe otro.
+ */
+platformAdmin.post("/waitlist/enable", async (c) => {
+  const input = await parse(c, waitlistEnableInput);
+  if (!input) return c.json({ error: "invalid" }, 400);
+  const rows = await c.env.DB.prepare(
+    `select w.id, w.name, w.email, w.license_id as licenseId from cloud_waitlist w left join cloud_licenses l on l.id = w.license_id
+      where w.id in (select value from json_each(?)) and coalesce(l.used, 0) = 0`,
+  )
+    .bind(JSON.stringify(input.ids))
+    .all<{ id: string; name: string; email: string; licenseId: string | null }>();
+  const now = Date.now();
+  const enabled = await Promise.all(
+    rows.results.map(async (row) => {
+      const license = { id: crypto.randomUUID(), code: newLicenseCode() };
+      const email = accessEmailStatement(c.env, { id: `access/${row.id}/${license.id}`, name: row.name, email: row.email, code: license.code });
+      const statements = [
+        c.env.DB.prepare(
+          "insert into cloud_licenses (id, code_hash, plan, max_households, expires_at, source, external_id, note, created_at) values (?, ?, 'beta', 1, null, 'waitlist', null, ?, ?)",
+        ).bind(license.id, await sha256(normalizeLicenseCode(license.code)), `Lista de espera: ${row.name}`.slice(0, 120), now),
+        c.env.DB.prepare("update cloud_waitlist set status = 'enabled', license_id = ?, enabled_at = ? where id = ?").bind(license.id, now, row.id),
+        // El código anterior (si lo había) deja de servir, y su correo pendiente no sale.
+        c.env.DB.prepare("update cloud_licenses set status = 'revoked' where id = ? and used = 0").bind(row.licenseId),
+        c.env.DB.prepare("update email_outbox set status = 'cancelled', body = '' where id like ? and status in ('pending', 'failed')").bind(`access/${row.id}/%`),
+        ...(email ? [email] : []),
+      ];
+      return { row, license, statements, emailed: Boolean(email) };
+    }),
+  );
+  if (enabled.length) await c.env.DB.batch(enabled.flatMap((entry) => entry.statements));
+  await audit(c, "waitlist.enable", "waitlist", enabled.map((entry) => entry.row.id).join(","), { count: enabled.length });
+  // Los correos salen ahora, sin esperar la próxima vuelta programada.
+  if (enabled.some((entry) => entry.emailed)) c.executionCtx.waitUntil(processEmails(c.env).catch((error) => console.error("[mail] failed", error)));
+  return c.json({ enabled: enabled.map(({ row, license, emailed }) => ({ id: row.id, name: row.name, email: row.email, code: license.code, emailed })) });
+});
+
+/** Borrar de la lista de espera (también a pedido de la persona). Un código ya entregado sigue en Licencias. */
+platformAdmin.delete("/waitlist/:id", async (c) => {
+  const id = c.req.param("id");
+  const result = await c.env.DB.prepare("delete from cloud_waitlist where id = ?").bind(id).run();
+  if (!result.meta.changes) return c.json({ error: "not-found" }, 404);
+  await audit(c, "waitlist.delete", "waitlist", id);
+  return c.json({ ok: true });
+});
+
+/** Para decidir si habilitar más casas o contratar: casas, lista de espera, fotos y quién llegó a su tope. */
+platformAdmin.get("/capacity", async (c) => {
+  const [households, waiting, photos, defaults, hits, overrides] = await Promise.all([
+    c.env.DB.prepare(
+      `select count(*) as total, coalesce(sum(case when coalesce(p.status, 'active') = 'active' then 1 else 0 end), 0) as active
+         from households h left join household_plans p on p.household_id = h.id`,
+    ).first<{ total: number; active: number }>(),
+    c.env.DB.prepare("select count(*) as count from cloud_waitlist where status = 'waiting'").first<{ count: number }>(),
+    c.env.DB.prepare("select coalesce(sum(bytes), 0) as bytes from photo_objects").first<{ bytes: number }>(),
+    defaultQuotas(c.env.DB),
+    c.env.DB.prepare("select household_id as householdId, kind, at from quota_hits where at > ? order by at desc limit 100").bind(Date.now() - 14 * DAY).all(),
+    c.env.DB.prepare("select household_id as householdId, ops_per_day as opsPerDay, log_bytes as logBytes, photo_bytes as photoBytes from household_quotas").all(),
+  ]);
+  return c.json({
+    enforced: quotasOn(c.env),
+    households: { total: households?.total ?? 0, active: households?.active ?? 0 },
+    waiting: waiting?.count ?? 0,
+    photos: { bytes: photos?.bytes ?? 0, freeBytes: PHOTO_FREE_BYTES },
+    defaults,
+    codeDefaults: HOUSEHOLD_QUOTAS,
+    hits: hits.results,
+    overrides: overrides.results,
+  });
+});
+
+/** Los topes de todas las casas. Subirlos puede pasar la capa gratuita: es una decisión del operador. */
+platformAdmin.put("/quotas", async (c) => {
+  const input = await parse(c, quotaDefaultsInput);
+  if (!input) return c.json({ error: "invalid" }, 400);
+  await c.env.DB.prepare(
+    `insert into quota_defaults (id, ops_per_day, log_bytes, photo_bytes, updated_at) values (1, ?, ?, ?, ?)
+     on conflict (id) do update set ops_per_day = excluded.ops_per_day, log_bytes = excluded.log_bytes, photo_bytes = excluded.photo_bytes, updated_at = excluded.updated_at`,
+  )
+    .bind(input.opsPerDay, input.logBytes, input.photoBytes, Date.now())
+    .run();
+  await audit(c, "quotas.defaults", "quotas", "defaults", input);
+  return c.json({ ok: true });
+});
+
+/** Cuánto usa una casa y qué topes tiene. No ve contenido: cuenta operaciones y bytes cifrados. */
+platformAdmin.get("/households/:id/usage", async (c) => {
+  const id = c.req.param("id");
+  if (!(await c.env.DB.prepare("select 1 from households where id = ?").bind(id).first())) return c.json({ error: "not-found" }, 404);
+  const [log, photos, limits, override] = await Promise.all([
+    householdLog(c.env, id).stats(),
+    c.env.DB.prepare("select coalesce(sum(bytes), 0) as bytes from photo_objects where household_id = ?").bind(id).first<{ bytes: number }>(),
+    householdQuotas(c.env.DB, id),
+    c.env.DB.prepare("select ops_per_day as opsPerDay, log_bytes as logBytes, photo_bytes as photoBytes from household_quotas where household_id = ?").bind(id).first(),
+  ]);
+  return c.json({ usage: { opsToday: log.opsToday, logBytes: log.logBytes, photoBytes: photos?.bytes ?? 0 }, limits, override: override ?? null });
+});
+
+/** El tope propio de una casa (cada valor en `null` vuelve al de todas). */
+platformAdmin.put("/households/:id/quotas", async (c) => {
+  const id = c.req.param("id");
+  const input = await parse(c, householdQuotaInput);
+  if (!input) return c.json({ error: "invalid" }, 400);
+  if (!(await c.env.DB.prepare("select 1 from households where id = ?").bind(id).first())) return c.json({ error: "not-found" }, 404);
+  if (input.opsPerDay === null && input.logBytes === null && input.photoBytes === null) {
+    await c.env.DB.prepare("delete from household_quotas where household_id = ?").bind(id).run();
+  } else {
+    await c.env.DB.prepare(
+      `insert into household_quotas (household_id, ops_per_day, log_bytes, photo_bytes, updated_at) values (?, ?, ?, ?, ?)
+       on conflict (household_id) do update set ops_per_day = excluded.ops_per_day, log_bytes = excluded.log_bytes, photo_bytes = excluded.photo_bytes, updated_at = excluded.updated_at`,
+    )
+      .bind(id, input.opsPerDay, input.logBytes, input.photoBytes, Date.now())
+      .run();
+  }
+  await audit(c, "household.quotas", "household", id, input);
   return c.json({ ok: true });
 });
 

@@ -48,6 +48,7 @@ test("panel privado: rechazo, datos, licencia y revocación de identidad", async
       if (key === "licenses") return c.json({ licenses: [{ id: "license-synthetic", note: "Licencia de prueba", used: 0, maxHouseholds: 1, status: "active", expiresAt: null }] });
       if (key === "feedback") return c.json({ feedback: [{ id: "feedback-synthetic", email: null, category: "question", status: "open", message: "Mensaje de ejemplo", createdAt: 0 }] });
       if (key === "notices") return c.json({ notices: [{ householdId: "house-synthetic", daysBeforePause: 7, dueAt: 0, status: "pending", memberEmails: "notice@example.com" }] });
+      if (key === "capacity") return c.json({ enforced: true, households: { total: 1, active: 1 }, waiting: 0, photos: { bytes: 0, freeBytes: 1073741824 }, defaults: { opsPerDay: 2000, logBytes: 104857600, photoBytes: 104857600 }, codeDefaults: { opsPerDay: 2000, logBytes: 104857600, photoBytes: 104857600 }, hits: [], overrides: [] });
       if (key === "mail") return c.json({ config: "disabled", counts: {}, usage: { daily: 0, monthly: 0 }, limits: { daily: 100, monthly: 3000 } });
       if (key === "users") return c.json({ users: [
         { id: "synthetic", name: "Persona de prueba", email: "synthetic@example.com", households: 1, activeSessions: 1, lastSessionAt: null, twoFactorEnabled: 1, passkeys: 2, deletable: 0 },
