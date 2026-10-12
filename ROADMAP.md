@@ -20,7 +20,6 @@ Orden, dependencias, estados y criterios de aceptación: [Cimientos del MVP](doc
 - **Base ESP32 local**: medir viabilidad con hardware real antes de cerrar el protocolo; nube opcional de apoyo.
 - **Validación familiar completa**: variante cloud, alacena/compras y sincronización Android/web en teléfonos reales.
 - **Correos verificables**: entrega real, plantillas y límites gratuitos.
-- **Plantillas de página**: `ListPage`, `DetailPage` y el registro de funcionalidades ya están. Falta migrar Compras e Inventario. → [unificación visual](docs/UNIFICACION_VISUAL.md#plantillas-de-página)
 - **Votaciones** ("¿qué comemos?"). → [especificación](PLAN.md#4-votaciones)
 - **Tutoriales reproducibles y release**: dos recorridos reales, clips por capítulo y gates de autonomía/sincronización. → [Cimientos del MVP](docs/CIMIENTOS_MVP.md)
 - **Más skins** con vista previa en Ajustes. → [ajustes](docs/features/ajustes.md)
@@ -47,6 +46,7 @@ Lo último arriba. El PR que termina algo lo agrega acá.
 
 | Cuándo | Qué | PR |
 | --- | --- | --- |
+| 2026-10 | Recinto con `DetailPage`; cierre de plantillas de página | #78 |
 | 2026-10 | Registro de funcionalidades: cada una suma su búsqueda sin tocar el shell | #76 |
 | 2026-10 | Plantilla de detalle (`DetailPage`): Proyecto y Contenedor | #75 |
 | 2026-10 | Plantilla de lista (`ListPage`): Recetas y Proyectos | #73 |
