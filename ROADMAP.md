@@ -20,7 +20,6 @@ Orden, dependencias, estados y criterios de aceptación: [Cimientos del MVP](doc
 - **Base ESP32 local**: medir viabilidad con hardware real antes de cerrar el protocolo; nube opcional de apoyo.
 - **Validación familiar completa**: variante cloud, alacena/compras y sincronización Android/web en teléfonos reales.
 - **Correos verificables**: entrega real, plantillas y límites gratuitos.
-- **Ajustes en dos paneles** y apariencia rápida desde el avatar.
 - **Plantillas de página** (`ListPage`, `DetailPage`) y registro de funcionalidades. → [unificación visual](docs/UNIFICACION_VISUAL.md)
 - **Votaciones** ("¿qué comemos?"). → [especificación](PLAN.md#4-votaciones)
 - **Tutoriales reproducibles y release**: dos recorridos reales, clips por capítulo y gates de autonomía/sincronización. → [Cimientos del MVP](docs/CIMIENTOS_MVP.md)
@@ -48,6 +47,7 @@ Lo último arriba. El PR que termina algo lo agrega acá.
 
 | Cuándo | Qué | PR |
 | --- | --- | --- |
+| 2026-10 | Ajustes en dos paneles y apariencia rápida desde el avatar | #72 |
 | 2026-10 | El celular de un chico entra sin email ni contraseña | #67 |
 | 2026-10 | Android igual a la web (Trusted Web Activity) y borrar la cuenta desde la app | #66 |
 | 2026-10 | El deploy aplica las migraciones de D1 | #54 |
