@@ -1,12 +1,14 @@
 "use client";
 
-import { Button, Dropdown, Flex, Grid, Segmented, Tooltip, Typography, theme } from "antd";
-import { Check, ChevronDown, Languages, Lock, LogOut, Monitor, Moon, Search, Settings, Sun } from "lucide-react";
+import { Button, Dropdown, Flex, Grid, Popover, Segmented, Tooltip, Typography, theme } from "antd";
+import { Check, ChevronDown, Languages, Lock, LogOut, Monitor, Moon, Paintbrush, Search, Settings, Sun } from "lucide-react";
+import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { usePreferences, useSetPreference } from "@/hooks/usePreferences";
 import { detectBrowserLocale, LOCALE_META, LOCALES, useI18n, useT, type Locale } from "@/i18n";
 import { MemberAvatar } from "@/components/ui/MemberAvatar";
 import { DemoNotice } from "@/features/demo/DemoNotice";
+import { QuickAppearance } from "@/features/settings/components/QuickAppearance";
 import { OfflineBadge } from "@/components/pwa/OfflineBadge";
 import { isSecured, pickableProfiles } from "@/features/members/domain";
 import { getSyncLink } from "@/lib/sync/middleware";
@@ -116,6 +118,35 @@ export function SearchTrigger() {
   );
 }
 
+const QUICK_CLASS = "od-quick-appearance";
+
+/**
+ * El popover de apariencia no tiene disparador propio (lo abre el menú): entra con el foco y se
+ * cierra con Escape o tocando afuera, como cualquier menú.
+ */
+function useQuickDismiss(open: boolean, close: () => void) {
+  useEffect(() => {
+    if (!open) return;
+    const returnTo = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    const frame = requestAnimationFrame(() => document.querySelector<HTMLElement>(`.${QUICK_CLASS} input, .${QUICK_CLASS} button`)?.focus());
+    const onPointer = (event: PointerEvent) => {
+      if (!(event.target instanceof Element) || !event.target.closest(`.${QUICK_CLASS}`)) close();
+    };
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key !== "Escape") return;
+      close();
+      returnTo?.focus();
+    };
+    document.addEventListener("pointerdown", onPointer);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      cancelAnimationFrame(frame);
+      document.removeEventListener("pointerdown", onPointer);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [open, close]);
+}
+
 export function UserMenu({ labeled = false, onSelect }: { labeled?: boolean; onSelect?: () => void }) {
   const t = useT();
   const { token } = theme.useToken();
@@ -127,6 +158,9 @@ export function UserMenu({ labeled = false, onSelect }: { labeled?: boolean; onS
   const members = useMembersStore((s) => s.members);
   const screens = Grid.useBreakpoint();
   const languageItems = useLanguageItems();
+  const [quickOpen, setQuickOpen] = useState(false);
+  const closeQuick = useCallback(() => setQuickOpen(false), []);
+  useQuickDismiss(quickOpen, closeQuick);
 
   if (!user) return null;
 
@@ -149,12 +183,23 @@ export function UserMenu({ labeled = false, onSelect }: { labeled?: boolean; onS
     ...(isSecured(user) ? [{ key: "lock", icon: <Lock />, label: t("shell.lockNow"), onClick: lock }] : []),
     // En pantallas chicas el selector del header no entra: el idioma va acá.
     ...(!screens.md ? [{ type: "group" as const, label: t("settings.sections.language"), children: languageItems }, { type: "divider" as const }] : []),
+    { key: "appearance", icon: <Paintbrush />, label: t("settings.quick.open"), onClick: () => setQuickOpen(true) },
     { key: "settings", icon: <Settings />, label: t("nav.routes.settings"), onClick: () => router.push("/ajustes") },
     { key: "sign-out", icon: <LogOut />, label: t("shell.signOut"), danger: true, onClick: signOut },
   ];
 
   return (
-    <Dropdown menu={{ items, onClick: onSelect }} trigger={["click"]} placement="bottomRight">
+    // La apariencia rápida se abre junto al avatar; el menú se cierra para dejarle lugar.
+    <Popover
+      open={quickOpen}
+      onOpenChange={setQuickOpen}
+      trigger={[]}
+      placement="bottomRight"
+      classNames={{ root: QUICK_CLASS }}
+      title={t("settings.quick.open")}
+      content={<QuickAppearance onDone={() => { setQuickOpen(false); onSelect?.(); }} />}
+    >
+    <Dropdown menu={{ items, onClick: ({ key }) => key !== "appearance" && onSelect?.() }} trigger={["click"]} placement="bottomRight">
       <Button
         type="text"
         aria-label={t("shell.switchProfile")}
@@ -177,6 +222,7 @@ export function UserMenu({ labeled = false, onSelect }: { labeled?: boolean; onS
         </Flex>
       </Button>
     </Dropdown>
+    </Popover>
   );
 }
 
