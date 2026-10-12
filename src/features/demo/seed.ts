@@ -1,6 +1,7 @@
 import type { Transaction } from "dexie";
 import type { InventoryItem } from "@/features/inventory/domain";
 import fixture from "./house.json" with { type: "json" };
+import { demoSchool } from "./school";
 
 /** Datos públicos y ficticios. No se consulta una cuenta ni se descarga contenido remoto. */
 export function demoData(now = Date.now()) {
@@ -36,7 +37,18 @@ export async function populateDemo(tx: Transaction) {
     const missing = decoded.filter(row => !existing.has(row.id));
     if (missing.length) await table.bulkAdd(missing);
   }
+  await addDemoSchool(tx);
+}
 
+/** Escuela de ejemplo (fichas, materias y la agenda de Inicio). Solo suma lo que falta. */
+export async function addDemoSchool(tx: Transaction) {
+  const { profiles, events, calendar } = demoSchool();
+  for (const [name, rows] of [["houseSettings", [calendar, ...profiles]], ["events", events]] as const) {
+    const table = tx.table(name);
+    const existing = new Set(await table.toCollection().primaryKeys());
+    const missing = rows.filter((row) => !existing.has(row.id));
+    if (missing.length) await table.bulkAdd(missing);
+  }
 }
 
 export async function backfillDemoTools(tx: Transaction) {
