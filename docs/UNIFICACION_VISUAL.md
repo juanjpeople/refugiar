@@ -465,6 +465,23 @@ del test de edición; ese test pasó en ambas pantallas después del ajuste. La 
 está en `.playwright-mcp/inventory-final/`. La validación física de cámara/AR en el A55
 sigue pendiente; las capturas y las cámaras simuladas no miden distancias de lectura.
 
+### Plantillas de página
+
+Para que una función nueva no rehaga su página de lista ni su página de detalle.
+
+- [x] **`ListPage`** (#73): `PageHeader`, buscador y filtros en `Reveal`, mosaico o lista
+  animada (`ListGrid`) y los estados de carga, vacío y sin resultados. La barra se oculta si
+  no hay nada cargado. La tarjeta solo pone su contenido: entrada, salida, hover y tap los pone
+  la plantilla. Documentada en `/design` → Componentes propios → Plantillas.
+  - Adoptada en Recetas y Proyectos, y en el flujo de recetas de `/design`.
+  - Proyectos ahora avisa "No hay proyectos en curso" cuando todos están terminados, en vez
+    de una grilla vacía.
+  - El mosaico usa `minmax(min(Npx, 100%), 1fr)`: a 320 px las tarjetas no desbordan.
+- [ ] Compras e Inventario: tienen listas dentro de otras secciones; migrarlas con cuidado.
+- [ ] **`DetailPage`**: encabezado con identidad, secciones y panel lateral.
+- [ ] **Registro de funcionalidades**: ruta, ícono, permisos, sección de Ajustes y comandos
+  en un solo lugar por función.
+
 ## Cómo verificar cada fase
 1. Corre `npm run check` (typecheck + lint + tests, incluye `design-lint`).
 2. Corren `npm run e2e` y `npm run e2e:demo`; para el operador, `playwright.operator.config.ts`.
