@@ -2,6 +2,7 @@ import { expect, test, type Page } from "@playwright/test";
 
 const user = { id: "passkey-user", name: "Llave", email: "llave@example.test", twoFactorEnabled: false };
 const PASSWORD = "Synthetic test password 123!";
+const ACCESS_CODE = "OD-TEST-TEST-TEST-TEST";
 const b64u = (bytes: Uint8Array) => Buffer.from(bytes).toString("base64url");
 const challenge = () => b64u(crypto.getRandomValues(new Uint8Array(32)));
 
@@ -25,7 +26,11 @@ function mockServer(page: Page) {
     const path = new URL(request.url()).pathname.slice(4);
     const body = request.method() === "GET" ? null : request.postDataJSON();
     let result: unknown = {};
-    if (path === "/auth/sign-up/email") state.signedIn = true;
+    if (path === "/auth/sign-up/email") {
+      // Nube cerrada: el alta lleva el código de acceso.
+      expect(body.access).toEqual({ code: ACCESS_CODE });
+      state.signedIn = true;
+    } else if (path === "/licenses/check") result = { valid: true };
     else if (path === "/keys") state.keys = body;
     else if (path === "/me") result = { user: state.signedIn ? user : null, keys: state.keys, households: [] };
     else if (path === "/social-providers") result = { providers: [] };
@@ -65,6 +70,8 @@ function mockServer(page: Page) {
 
 async function createAccount(page: Page) {
   await page.goto("/cuenta?modo=crear");
+  await page.getByPlaceholder("OD-XXXX-XXXX-XXXX-XXXX").fill(ACCESS_CODE);
+  await page.getByRole("button", { name: "Continuar", exact: true }).click();
   await page.getByLabel("Tu nombre", { exact: true }).fill(user.name);
   await page.getByLabel("Email", { exact: true }).fill(user.email);
   await page.getByLabel("Contraseña", { exact: true }).fill(PASSWORD);

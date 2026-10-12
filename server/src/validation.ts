@@ -86,6 +86,15 @@ export const createHouseholdInput = z.object({
 
 export const licenseCheckInput = z.object({ code: licenseCode });
 
+/**
+ * Nube cerrada: con qué se crea una cuenta. Una licencia vigente (no se consume: se consume al
+ * crear la casa) o una invitación para una cuenta, sin usar y sin vencer.
+ */
+export const signUpAccessInput = z.union([
+  z.object({ code: licenseCode }),
+  z.object({ invite: z.object({ id: uuid, authToken: b64(64) }) }),
+]);
+
 /** Administración: emitir licencias (a mano hoy; mañana, el webhook del cobro). */
 export const createLicensesInput = z.object({
   count: z.number().int().min(1).max(50).default(1),
@@ -96,6 +105,23 @@ export const createLicensesInput = z.object({
   externalId: z.string().max(128).optional(),
   note: z.string().trim().max(120).optional(),
 });
+
+/** Anotarse en la lista de espera de la nube (sin cuenta). */
+export const waitlistInput = z.object({ name: z.string().trim().min(1).max(60), email });
+
+/** Habilitar de la lista de espera, de a tandas. */
+export const waitlistEnableInput = z.object({ ids: z.array(uuid).min(1).max(50) });
+
+const MB = 1024 * 1024;
+const opsPerDay = z.number().int().min(10).max(1_000_000);
+const logBytes = z.number().int().min(MB).max(10 * 1024 * MB);
+const photoBytes = z.number().int().min(MB).max(100 * 1024 * MB);
+
+/** Los topes de todas las casas (ver server/src/quotas.ts). */
+export const quotaDefaultsInput = z.object({ opsPerDay, logBytes, photoBytes });
+
+/** El tope propio de una casa. `null` vuelve al de todas. */
+export const householdQuotaInput = z.object({ opsPerDay: opsPerDay.nullable(), logBytes: logBytes.nullable(), photoBytes: photoBytes.nullable() });
 
 export const feedbackInput = z.object({
   category: z.enum(["idea", "problem", "question", "other"]),

@@ -1,15 +1,14 @@
 import { expect, test } from "@playwright/test";
 
-test("cuenta accesible sin invitación desde bienvenida y empezar", async ({ page }, testInfo) => {
+test("crear cuenta pide un código de acceso desde bienvenida y empezar", async ({ page }, testInfo) => {
   for (const route of ["/bienvenida", "/empezar"]) {
     await page.goto(route);
     await expect(page.getByRole("link", { name: "Ya tengo cuenta", exact: true })).toHaveAttribute("href", "/cuenta?modo=entrar");
     await expect(page.getByRole("link", { name: "Tengo una invitación", exact: true })).toHaveAttribute("href", "/unirme");
     await page.getByRole("link", { name: "Crear cuenta", exact: true }).click();
-    await expect(page.getByRole("heading", { name: "Creá tu cuenta" })).toBeVisible();
-    // Quien fue invitado se registra desde el link, no acá.
-    await expect(page.getByRole("link", { name: "Abrir una invitación" })).toHaveAttribute("href", "/unirme");
-    await expect(page.getByRole("heading", { name: "Código de acceso" })).toHaveCount(0);
+    // Nube cerrada: sin código no se crea una cuenta. Quien fue invitado se registra desde su link.
+    await expect(page.getByRole("heading", { name: "Código de acceso" })).toBeVisible();
+    await expect(page.getByRole("main").getByRole("link", { name: "Tengo una invitación" })).toHaveAttribute("href", "/unirme");
     await page.goBack();
     await page.locator('a[href*="modo=recuperar"]').click();
     await expect(page.locator('textarea[placeholder="ODK1-XXXX-XXXX-…"]')).toBeVisible();

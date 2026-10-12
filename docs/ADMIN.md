@@ -100,6 +100,30 @@ TOTP con clave correcta. Los buckets limitan el tamaño de la tabla y pueden com
 cupo entre IPs distintas. La persistencia en D1 evita reiniciar los límites entre
 instancias; no reemplaza una protección completa contra denegación de servicio.
 
+## Lista de espera y capacidad
+
+La nube es cerrada: nadie crea una cuenta sin un código o una invitación. Quien no tiene código
+se anota desde la app (nombre y email) y aparece en **Lista de espera**. Mientras espera, usa la
+app en su dispositivo; cuando entra a la nube, sube lo que ya cargó.
+
+- **Habilitar** (de a uno, o varios seleccionados) crea un código por persona, que sirve para una
+  casa. Si el correo está configurado, sale por mail; igual se muestra una sola vez en el panel para
+  mandarlo por otro lado. Resend Free permite 100 por día: para tandas más grandes, habilitar en
+  varios días.
+- **Código nuevo** revoca el anterior (si no se usó) y cancela su correo pendiente.
+- **Eliminar** borra nombre y email. Al crear la casa con su código, la fila se borra sola.
+
+**Capacidad** sirve para decidir si habilitar más casas, hacerlas esperar o contratar un plan:
+
+- Casas en la nube, gente esperando y fotos guardadas sobre el 1 GB gratis de Supabase.
+- **Topes de todas las casas**: cambios por día, registro y fotos. Arrancan en 2.000, 100 MB y
+  100 MB (`server/src/quotas.ts`). Llegar a un tope frena la subida; nunca pasa a consumo pago ni
+  borra nada. Subirlos puede pasar la capa gratuita: hacerlo solo con un plan contratado.
+- **Casas para mirar**: las que llegaron a un tope en los últimos 14 días y las que tienen un tope
+  propio. **Uso y topes** (también en **Casas**) muestra su uso y deja ampliarle el tope a esa casa.
+
+El servidor de casa (`npm run casa`) no tiene topes (`HOUSEHOLD_QUOTAS=off`).
+
 ## Recuperar el acceso (Windows, PowerShell)
 
 Si la clave o el autenticador no funcionan, generá credenciales nuevas. Las anteriores

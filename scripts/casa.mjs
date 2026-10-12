@@ -63,8 +63,9 @@ await writeFile(configPath, JSON.stringify({
   durable_objects: { bindings: [{ name: "HOUSEHOLD", class_name: "HouseholdLog" }] },
   r2_buckets: [{ binding: "LOCAL_PHOTOS", bucket_name: "refugiar-casa-fotos", remote: false }],
   migrations: [{ tag: "v1", new_sqlite_classes: ["HouseholdLog"] }],
-  // Sin correo ni licencias: la casa es tuya. localhost sirve para abrirla desde este mismo equipo.
-  vars: { APP_ORIGIN: origin, DEV_ORIGINS: `https://localhost:${port}`, EMAIL_ENABLED: "0", HOUSEHOLD_ACCESS: "open", PHOTO_STORAGE: "home" },
+  // Sin correo, licencias ni topes de la nube gratuita: la casa y el disco son tuyos. localhost sirve
+  // para abrirla desde este mismo equipo.
+  vars: { APP_ORIGIN: origin, DEV_ORIGINS: `https://localhost:${port}`, EMAIL_ENABLED: "0", HOUSEHOLD_ACCESS: "open", HOUSEHOLD_QUOTAS: "off", PHOTO_STORAGE: "home" },
 }, null, 2));
 
 // Secreto de sesiones: se crea una sola vez y nunca se sobrescribe (cambiarlo cierra todas las sesiones).
