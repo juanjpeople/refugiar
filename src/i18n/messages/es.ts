@@ -1672,6 +1672,8 @@ export const es = {
       title: "Este navegador no puede abrir la nube cifrada",
       text: "Le falta algo del cifrado que usamos. Actualizá Chrome (o usá una versión reciente de Chrome, Firefox, Safari o Edge) y volvé a intentar.",
       insecure: "La nube cifrada solo funciona en una conexión segura (https).",
+      androidTitle: "Este celular no puede abrir la nube cifrada",
+      android: "Le falta una actualización del sistema. En Play Store, actualizá «Android System WebView» y Chrome. Después volvé a abrir {app}.",
       local: "Usar {app} en este dispositivo",
     },
     install: {
