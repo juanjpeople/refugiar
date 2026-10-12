@@ -1,6 +1,6 @@
 // Descarga el último AAB firmado por el workflow; no compila ni publica en Google.
 import { execFileSync } from "node:child_process";
-import { mkdirSync, mkdtempSync, readFileSync, statSync, writeFileSync } from "node:fs";
+import { mkdirSync, mkdtempSync, readFileSync, writeFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import path from "node:path";
 import { createHash } from "node:crypto";
@@ -30,8 +30,9 @@ try {
   const directory = mkdtempSync(path.join(destination, `refugiar-${run.databaseId}-`));
   gh("run", "download", String(run.databaseId), "--repo", repo, "--name", packages[0].name, "--dir", directory);
   const file = path.join(directory, "app-release.aab");
-  if (!statSync(file).isFile() || statSync(file).size === 0) throw new Error(`La descarga no contiene un AAB válido en ${directory}.`);
-  const sha256 = createHash("sha256").update(readFileSync(file)).digest("hex");
+  const bytes = readFileSync(file);
+  if (bytes.length === 0) throw new Error(`La descarga contiene un AAB vacío en ${directory}.`);
+  const sha256 = createHash("sha256").update(bytes).digest("hex");
   const versionCode = Number(packages[0].name.match(/^refugiar-(\d+)-aab$/)[1]);
   writeFileSync(path.join(directory, "build.json"), JSON.stringify({ repository: repo, runId: run.databaseId, commit: run.headSha, branch: run.headBranch, versionCode, url: run.url, sha256 }, null, 2) + "\n");
   console.log(`AAB descargado: ${file}\nVersionCode: ${versionCode}\nCommit: ${run.headSha}\nRama: ${run.headBranch}\nSHA-256: ${sha256}\nCompilación: ${run.url}\nNo se subió nada a Google Play.`);
