@@ -98,6 +98,17 @@ Resend no equivale a entrega. Un build correcto no equivale a prueba en un telé
 
 ## Bitácora
 
+- 2026-10-11, PR #69 (`6fa0401`): CI aprobó tipos/lint/tests, API local,
+  demo (2 casos), operador (2), E2E de escritorio (42), CodeQL y dependencias.
+  Android compiló APK y tests instrumentados, pasó lint y guardó el APK como
+  artefacto en la ejecución 38187110530. Esta ejecución no corrió un emulador.
+  La tanda local completa obtuvo 109 aprobados, 2 omitidos y un fallo de PIN.
+  El test avanzaba tras enviar el PIN sin esperar la confirmación del guardado
+  asíncrono; ahora exige ver «Cambiar PIN» antes de registrar biometría y recargar.
+  Repetición focalizada: ambos casos, escritorio y móvil, dos veces, 8/8 aprobados;
+  lint del archivo correcto. No se cambió el código de producto para ese ajuste.
+  No se afirma que la tanda original haya pasado íntegra. Resultados y límites
+  de la entrega se mantienen también en https://github.com/juanjpeople/refugiar/pull/69.
 - 2026-10-11, compilación de cierre: el export Android y `cap sync android`
   finalizaron correctamente. Gradle no llegó a compilar en esta nueva ejecución:
   Java falló en `sun.nio.ch.UnixDomainSockets.connect0` con `Invalid argument:
