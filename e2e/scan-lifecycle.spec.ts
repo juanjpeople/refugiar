@@ -222,7 +222,7 @@ test("cámara: un producto de un compartimento abre su contenedor desde la lista
 test("cámara: búsqueda manual y AR sin soporte en inglés", async ({ home: page }, testInfo) => {
   await page.setViewportSize({ width: 320, height: 780 });
   await page.emulateMedia({ colorScheme: "dark" });
-  await page.goto("/ajustes");
+  await page.goto("/ajustes#idioma");
   await page.getByText("English", { exact: true }).click();
   await page.addInitScript(() => Object.defineProperty(navigator, "xr", { value: undefined, configurable: true }));
   await page.goto("/inventario/camara");

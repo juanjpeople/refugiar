@@ -91,7 +91,7 @@ test("la precarga se elige antes del alta cloud y llega cifrada a un segundo dis
     await expect(other.getByRole("button", { name: "Ver detalle de Leche", exact: true })).toBeVisible();
     await expect(other.getByText("Taller de herramientas", { exact: true })).toHaveCount(0);
   } finally { await second.close(); }
-  await page.goto("/ajustes");
+  await page.goto("/ajustes#cuenta");
   const providers = page.getByRole("group", { name: "Acceso con proveedores", exact: true });
   await expect(providers.getByRole("button", { name: "GitHub vinculado", exact: true })).toBeDisabled();
   await providers.getByRole("button", { name: "Vincular Google", exact: true }).click();
