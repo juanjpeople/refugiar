@@ -1,106 +1,208 @@
-# Android
+# Android autónomo
 
-La app de Android es la web. Es una **Trusted Web Activity** (TWA): abre `https://refugi.ar` en
-Chrome, a pantalla completa, con el ícono y el nombre de Refugiar. No hay una segunda app que
-mantener: lo que se publica en la web llega a Android en el momento.
+Android empaqueta la interfaz de Next dentro del APK mediante Capacitor 8.4.3.
+No carga las pantallas desde un `server.url`. JavaScript, fuentes y estilos vienen
+incluidos. La nube sigue habilitada como opción: el build no usa `--local`.
 
-## Por qué así
+**Migración en curso, no entrega lista para Play.** Ver F03/F04 en
+[Cimientos del MVP](CIMIENTOS_MVP.md). Falta certificar autenticación cloud completa,
+migración de datos y teléfonos físicos. Un APK compilado no prueba todo esto.
 
-- **Las mismas posibilidades que la web.** Cuentas, entrar con Google o GitHub, llaves de acceso
-  (que además abren el cifrado), la casa en la nube, invitaciones y desbloqueo con huella dependen
-  del origen `refugi.ar` y de un navegador completo. Dentro de un WebView propio no funcionaban:
-  Google bloquea su login en WebViews y las llaves de acceso quedan atadas a otro dominio.
-- **Una sola versión.** La web y Android no se desfasan. Hace falta un paquete nuevo solo si
-  cambian el ícono, el nombre, los colores de las barras o el dominio.
-- **Antes era otra cosa.** Hasta octubre de 2026 era un proyecto Capacitor con la web empaquetada
-  y sin nube. Se reemplazó porque, sin cuentas, no era la misma app. Su historia queda en git.
+## Interfaz local y API remota
 
-## Cómo se une la app con refugi.ar
+- `npm run android:sync` genera `android-dist/` con `native: true` y copia los recursos.
+- El origen de la WebView es `https://refugi.ar`, pero las pantallas se sirven desde
+  el APK. No comparte cookies ni IndexedDB con Chrome.
+- `StaticWebViewClient` resuelve páginas estáticas y deja pasar solicitudes a `/api/*`
+  por HTTPS real. No permite navegar esa API como documento con acceso al puente nativo.
+- Android no registra service worker. Actualizar la interfaz requiere instalar otro
+  paquete firmado; sincronizar datos no requiere reinstalar.
+- La copia local debe seguir disponible sin red. No incluye datos de otros dispositivos
+  ni fotos que nunca se descargaron. La expiración de sesión remota no debe bloquear
+  el desbloqueo local; verificarlo en F04.
 
-Chrome saca la barra de dirección solo si las dos mitades coinciden:
+La base está en IndexedDB dentro del almacenamiento privado de Android. **Todavía
+no está cifrada en reposo.** PIN y biometría protegen la interfaz; F06 cubre cifrado
+de base y recuperación independiente. No equiparar sandbox con cifrado propio.
 
-- La app declara su sitio en `android/app/build.gradle` (`appHost` → `asset_statements`).
-- La web publica [`public/.well-known/assetlinks.json`](../public/.well-known/assetlinks.json)
-  con el paquete `ar.refugi.app` y la huella SHA-256 de cada firma que puede tener la app.
+## Integraciones y pendientes
 
-Si no coinciden, la app igual funciona, pero con una barra de dirección arriba. Las huellas:
+El 11/10/2026 se detectó un requisito adicional con el emulador API 35:
+Android System WebView `124.0.6367.219` no implementa X25519 ni Ed25519 en Web Crypto.
+El sondeo real de ambos algoritmos falla y la app muestra su aviso de cifrado no
+compatible. La autonomía de la casa local no demuestra acceso cloud en ese motor.
+No se desactiva el control ni se sustituye el cifrado para superar la prueba.
+El segundo ensayo, API 36 con WebView `133.0.6943.137`, admite X25519 pero falla en
+Ed25519. La imagen API 36.1 también trae un motor anterior (`134.0.6998.135`).
+X25519 se incorporó a Chromium 133 y Ed25519 a 137; comprobar siempre
+capacidades reales del WebView instalado, no solo la versión de Android.
+[Chromium 133](https://developer.chrome.com/release-notes/133?hl=en),
+[Chromium 137](https://developer.chrome.com/release-notes/137?hl=es-419).
 
-| Huella | Para qué | De dónde sale |
-| --- | --- | --- |
-| Firma de apps de Google Play | Lo que se instala desde Play | Play Console → Prueba y lanza → Configuración → Integridad de la app → Firma de apps → *Certificado de la clave de firma de apps* → SHA-256 |
-| Clave de subida | Un `.aab` o APK firmado e instalado a mano | `keytool -list -v -keystore refugiar-upload.jks -alias upload` |
+Se recuperan el selector nativo de respaldos y la biometría con Android Keystore.
+Cancelar o fallar un respaldo no se informa como guardado. La biometría local no es
+una passkey de cuenta.
 
-La huella de Play la crea Google con la primera subida y no cambia. `scripts/android-twa.test.mjs`
-(corre en `npm test`) verifica que el paquete y el dominio de las dos mitades coincidan.
+Google/GitHub requieren un retorno autenticado desde el navegador externo a la app;
+abrir ese navegador no completa el acceso. Las passkeys de cuenta requieren integración
+compatible con Android. Ambos pendientes bloquean considerar completa la migración.
+No desactivar las comprobaciones de origen ni permitir HTTP mixto para resolverlos.
 
-Para comprobar lo publicado:
+Invitaciones `/unirme` y QR `/c` se enrutan a pantallas empaquetadas. Verificar Digital
+Asset Links para la firma de Play antes de publicar. No se reclama `/admin` o `/api`.
 
-- La web: [statements:list de Digital Asset Links](https://digitalassetlinks.googleapis.com/v1/statements:list?source.web.site=https://refugi.ar&relation=delegate_permission/common.handle_all_urls)
-  tiene que listar `ar.refugi.app` con las huellas.
-- El teléfono, con depuración USB: `adb shell pm get-app-links ar.refugi.app` tiene que decir
-  `refugi.ar: verified`.
+## Conservar los datos anteriores
 
-## Links
+La TWA guarda datos en Chrome. La nueva app no puede leerlos automáticamente.
+Conservar esa copia, exportar un respaldo desde Chrome e importarlo en Android;
+verificar cantidades, fotos y perfiles antes de borrar nada. Las casas cloud vuelven
+a autenticar y sincronizar. Ensayar este proceso antes de entregar la actualización.
 
-La app abre los links de `https://refugi.ar`: invitaciones (`/unirme`), etiquetas QR (`/c/…`) y
-cualquier página. Android lo permite cuando verifica `assetlinks.json` (`autoVerify` en el
-manifiesto). Si no puede verificarlo, esos links se abren en el navegador.
-
-## El teléfono
-
-- **Chrome actualizado**, u otro navegador compatible con TWA. Sin uno compatible, la app abre una
-  pestaña personalizada (con barra de dirección). El manifiesto admite Android 7 (API 24) en adelante.
-- **La primera vez necesita conexión.** Después funciona sin conexión, con el service worker de la
-  web (lo mismo que la app instalada desde Chrome).
-- **Los datos viven en Chrome**, en el espacio de `refugi.ar`. Es el mismo que usa Chrome en ese
-  teléfono: si alguien ya usaba `refugi.ar` en Chrome, la app ve esa misma casa.
-- **Borrar los datos del sitio** en Chrome (Configuración → Configuración de sitios → refugi.ar)
-  borra la casa local. Para no perderla: un respaldo desde Ajustes → Datos, o la casa en la nube.
-- **Desbloqueo con huella:** usa WebAuthn de Chrome, como la web. Las huellas registradas en la app
-  anterior (Capacitor) quedaban en su Keystore: no sirven y se ignoran.
-- **Respaldos:** se descargan como en el navegador (carpeta Descargas).
+Los prototipos Capacitor con origen `localhost` tampoco comparten automáticamente su
+almacenamiento con este origen. La migración requiere ensayo y respaldo. Se conserva
+`ar.refugi.app` y la misma firma. Un APK debug no reemplaza una instalación de Play.
 
 ## Compilar
 
-Requisitos: JDK 21 y Android SDK 36. Android Studio no hace falta: alcanzan las herramientas de
-línea de comandos del SDK. El paquete no lleva la web, así que no hace falta compilar Next.
+Node 24, JDK 21, Android SDK 36 y `ANDROID_HOME`:
 
 ```sh
-npm run android:build                      # APK de prueba (debug)
-cd android && ./gradlew bundleRelease      # .aab firmado (con keystore.properties)
+npm ci
+npm run android:sync
+npm run android:build
 ```
 
-En Windows, `.\gradlew.bat`. El APK queda en `android/app/build/outputs/apk/debug/app-debug.apk`
-y el `.aab` en `android/app/build/outputs/bundle/release/app-release.aab`. El paquete para Play se
-arma normalmente desde GitHub (*Android release*), ver [PLAY_STORE.md](PLAY_STORE.md).
+`android:build` vuelve a generar recursos antes de Gradle. Después de `android:sync`,
+desde `android/` (Windows: `gradlew.bat`):
 
-El workflow *Android* compila y revisa (lint) en los PR que tocan `android/` o `assetlinks.json`.
-No hay recorridos en emulador: la app no tiene pantallas propias y la web se prueba con Playwright.
+```sh
+./gradlew --no-daemon :app:assembleDebug :app:assembleDebugAndroidTest :app:lintDebug
+```
 
-## Actualizar
+Gradle rechaza recursos ausentes, demo o build sin nube. Las variantes Next comparten
+`.next/`: no compilarlas simultáneamente. El APK queda en
+`android/app/build/outputs/apk/debug/app-debug.apk`.
 
-- **Cambios de la web:** se publican con el deploy de la web. No hace falta subir nada a Play.
-- **Cambios de la app** (ícono, nombre, colores, dominio, librería): subir el `versionCode`
-  (*Android release* lo hace solo) y conservar la misma clave de subida.
+En este Windows/JDK, AF_UNIX falla con `Unable to establish loopback connection`.
+El build se verificó con `JAVA_TOOL_OPTIONS` configurando `-Djdk.net.unixdomain.tmpdir`
+a un directorio inexistente: Java usa entonces su fallback TCP. Es un workaround
+local, no una opción necesaria para release ni un cambio de seguridad de la app.
 
-El identificador `ar.refugi.app` no cambia nunca: con otro, Play lo trata como otra app.
+## Pruebas y entrega
 
-## Publicar en Play Store
+### Android contra el laboratorio de la PC
 
-Ver [PLAY_STORE.md](PLAY_STORE.md): clave de subida, paquete firmado desde GitHub Actions,
-respuestas de Play Console, textos de la ficha y borrado de cuenta.
+La variante `lab` instala **Refugiar Lab**, con paquete `ar.refugi.app.lab` y firma
+debug. Conserva la interfaz empaquetada. Usa `http://localhost:4195` mediante
+`adb reverse`; la excepción HTTP está limitada a localhost y al source set `lab`.
+No recibe enlaces de casas de producción. El APK principal mantiene HTTPS,
+`usesCleartextTraffic=false` y no incluye esa configuración de red.
+Esta separación usa los [build types de Android](https://developer.android.com/build/build-variants).
 
-## Nombre de la app
+Con una familia preparada por `npm run local:family`, detener las ventanas y
+arrancar `npm run local:family -- --skip-build --server-only`. En otra terminal,
+desde la raíz del repositorio, con SDK/Java configurados:
 
-El nombre visible sale de una sola variable: `NEXT_PUBLIC_APP_NAME` (por defecto, "Refugiar").
-La lee la web (`src/config/brand.ts`: textos, título, manifest de la PWA, mensajes) y Gradle (el
-nombre bajo el ícono de Android). Para compilar con otro nombre, definila antes de compilar.
+```powershell
+# Regenerar recursos si cambió la app.
+npm run android:sync
+.\android\gradlew.bat --no-daemon -p android :app:assembleLab :app:assembleLabAndroidTest -PtestBuildType=lab
+$labSerial = 'emulator-5558' # elegir un dispositivo de prueba con WebView compatible
+$labAdb = "$env:ANDROID_HOME/platform-tools/adb.exe"
+& $labAdb -s $labSerial install -r android/app/build/outputs/apk/lab/app-lab.apk
+& $labAdb -s $labSerial install -r android/app/build/outputs/apk/androidTest/lab/app-lab-androidTest.apk
+node scripts/prepare-android-family.mjs $labSerial
+& $labAdb -s $labSerial shell am instrument -w -e class ar.refugi.app.FamilyCloudTest ar.refugi.app.lab.test/androidx.test.runner.AndroidJUnitRunner
+& $labAdb -s $labSerial reverse --remove tcp:4195
+```
 
-No cambian con el nombre: el `applicationId` de Android, el dominio, el nombre de las bases locales,
-el sello `app` de los respaldos y los datos ya guardados. Si cambiaran, se perdería el acceso a lo
-existente o a la app publicada.
+El preparador exige una cuenta ficticia `@example.test`, app Lab instalada y
+servidor local. Copia las credenciales por ADB, sin imprimirlas; el test retira ese
+archivo del dispositivo y el preparador retira la copia temporal de la PC.
+Si se interrumpe la instrumentación antes de ejecutar su limpieza, retirar
+`/sdcard/Android/data/ar.refugi.app.lab/files/family-account.json` con ADB.
+No usar `connectedLabAndroidTest` para conservar la instalación manual: el runner
+de Gradle puede desinstalar el paquete al terminar. Revisar el texto de resultados
+de `am instrument`: su código de salida por sí solo no acredita pruebas aprobadas.
 
-La app se llamó OpenDomus hasta antes de la primera publicación. Como no tenía usuarios, se renombró
-todo, incluidos los identificadores internos: el `applicationId` es `ar.refugi.app` (por el dominio
-`refugi.ar`), las bases locales son `RefugiarDB`, las claves de almacenamiento empiezan con `refugiar-` y el
-sello `app` de los respaldos es "Refugiar". Los datos y cuentas de prueba creados con OpenDomus no se leen.
+`FamilyCloudTest` exige capacidades criptográficas, usa el formulario de acceso,
+comprueba IDs contra la API real y busca el producto inicial en Heladera. Luego
+bloquea la red de WebView y recarga, exigiendo un documento nuevo y fallo de la API
+por falta de red. **Aprobado el 11/10/2026**, `OK (1 test)`, en una instalación Lab
+nueva con Android API 36.1 y AOSP WebView `145.0.7632.218`. Se autenticó con la
+cuenta ficticia existente y descargó su casa; no se inyectaron claves ni registros
+en IndexedDB. El test comprueba también que retiró el archivo de credenciales.
+Requiere mantener el producto inicial de la familia de prueba. No prueba todavía
+consumos concurrentes Android/web, OAuth, passkeys, TLS de producción ni hardware físico.
+
+Entorno y artefactos del ensayo:
+
+- AVD `refugiar-cloud-api36_1`, imagen `system-images;android-36.1;google_apis;x86_64`
+  revisión 4; partición de datos 4 GB. La configuración inicial de 800 MB no alcanza.
+- El APK de WebView procede del [repositorio oficial AOSP, revisión fija](https://android.googlesource.com/platform/external/chromium-webview/+/04e0e02c9aac0d05b99d2c20c19b74b5b3577728/145.0.7632.218/x86_64/).
+  Se verificó la firma con `apksigner` y la identidad del contenido contra el objeto
+  Git `c753e27a6a7e70ce9f1195a40708512b0d1a5b9a`. SHA-256 del archivo:
+  `af7ecf4693d6e7f5859d4c8342ffba7667fdd7d15c39ec0c31298a914b1ee7f1`.
+  Es un proveedor de prueba AOSP instalado solo en el emulador, no una dependencia
+  incorporada al APK de Refugiar ni una instrucción de actualización para usuarios.
+- Proveedor seleccionado mediante `adb shell cmd webviewupdate set-webview-implementation com.android.webview`.
+  El proveedor Google original se conservó instalado. Android acepta esta selección
+  en la imagen de desarrollo sin modificar sus comprobaciones de firma.
+- Emulator 37.2.12, `-gpu software`, navegación de tres botones. La navegación por
+  gestos disparaba una aserción de `mapper.ranchu` en `RegionSamplingThread` y
+  reiniciaba servicios del emulador. Se seleccionó con
+  `adb shell cmd overlay enable-exclusive --category com.android.internal.systemui.navbar.threebutton`.
+  Esta adaptación del entorno no certifica estabilidad gráfica ni gestos en teléfonos.
+- Resultado local: `.family-lab/local/android-family-result.txt`; fuente y hash del
+  proveedor en `.family-lab/local/webview-source.json`. Ambos están ignorados por Git.
+- SHA-256 del APK Lab ensayado:
+  `26a5192b93cf130092a9de3f7bb98652609b524ac2203775b0474d706ad823a4`.
+
+Las pruebas instrumentadas usan una casa ficticia y selectores nativos. El QR
+inyectado es una imagen: no certifica cámara física. El ensayo de actualización
+requiere preparar esa casa, instalar versionCode 2 y pasar `upgrade=true` al runner.
+
+Para repetir la tanda de autonomía en un emulador dedicado, desactivar Wi-Fi y datos
+y activar modo avión **antes de instalar y abrir la app**. Desde `android/`:
+
+```sh
+./gradlew --no-daemon :app:connectedDebugAndroidTest '-Pandroid.testInstrumentationRunnerArguments.class=ar.refugi.app.NativeFlowTest'
+```
+
+La tanda usa datos ficticios y puede reemplazar su casa de prueba. No ejecutarla
+contra una instalación con datos personales. Incluye respaldo/importación con foto,
+recreación de actividad, QR sintético, permiso de cámara, cancelación y reintento de
+respaldo. Una comprobación adicional bloquea la red de WebView: los recursos propios
+siguen disponibles y `/api` falla por falta de red, sin devolver el HTML de inicio.
+Los resultados quedan en `android/app/build/reports/androidTests/connected/debug/`.
+
+### Ensayo de actualización conservando datos
+
+Verificado el 11/10/2026 en `refugiar-mvp` (API 35), sin internet: versión debug 1 → 2,
+cierre forzado y reinicio del emulador. Conservó sesión, nombre importado, anotación y
+foto. Es una actualización entre paquetes autónomos del mismo origen y firma debug;
+**no demuestra migración desde la TWA de Play ni desde el antiguo origen localhost**.
+
+Usar exclusivamente un emulador de pruebas. `connectedDebugAndroidTest` desinstala la
+app al terminar; para este ensayo instalar con `adb` y ejecutar el runner directamente.
+Desde `android/`, con `adb` en PATH y seleccionando el serial del emulador:
+
+```sh
+./gradlew :app:assembleDebug :app:assembleDebugAndroidTest -PappVersionCode=1
+adb -s SERIAL install app/build/outputs/apk/debug/app-debug.apk
+adb -s SERIAL install app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk
+adb -s SERIAL shell am instrument -w -e class 'ar.refugi.app.NativeFlowTest#sampleHouseRoundTripsThroughNativePickersAndScanner' ar.refugi.app.test/androidx.test.runner.AndroidJUnitRunner
+./gradlew :app:assembleDebug :app:assembleDebugAndroidTest -PappVersionCode=2
+adb -s SERIAL shell am force-stop ar.refugi.app
+adb -s SERIAL install -r app/build/outputs/apk/debug/app-debug.apk
+adb -s SERIAL install -r app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk
+adb -s SERIAL shell am instrument -w -e upgrade true -e class ar.refugi.app.UpgradeFlowTest ar.refugi.app.test/androidx.test.runner.AndroidJUnitRunner
+```
+
+Debe informar `OK (1 test)` en ambas fases. Después de reiniciar y esperar a que
+Android termine de arrancar, comprobar modo avión y repetir el último comando.
+No ejecutar `pm clear` ni desinstalar entre fases: eso invalidaría el ensayo.
+
+Antes de Play: instalación y arranque sin red, cierre forzado, reinicio, actualización
+sin pérdida, Android/web con API real, permisos, recuperación y hardware físico.
+Ver [PLAY_STORE.md](PLAY_STORE.md). Un AAB firmado no prueba aceptación funcional.

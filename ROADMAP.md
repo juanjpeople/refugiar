@@ -7,17 +7,24 @@ El detalle de cada funcionalidad está en [docs/features](docs/features/).
 
 ## 🔨 Ahora
 
-- **Android en Play Store**: prueba interna, después prueba cerrada (12 testers, 14 días). → [Play Store](docs/PLAY_STORE.md)
-- **Más skins** con vista previa en Ajustes. → [ajustes](docs/features/ajustes.md)
-- **2FA y passkeys para el admin**: acceso seguro a todo lo de la nube. → [nube](docs/features/nube.md)
-- **Esta hoja de ruta** y una página por funcionalidad.
+- **Android autónomo**: recursos dentro del APK, datos propios, arranque y desbloqueo sin internet; conservar sincronización web. Publicar después de demostrarlo.
+- **Resiliencia**: conservar pendientes y reintentos sin duplicar cambios al reconectar.
+- **Familia en cuatro ventanas**: cerrar el laboratorio local existente con dos admins y dos chicos.
+- **Cierre para integración**: revisar el conjunto, comprobar compilación, registrar evidencia y preparar PR; sin publicación en Play.
+
+Orden, dependencias, estados y criterios de aceptación: [Cimientos del MVP](docs/CIMIENTOS_MVP.md).
 
 ## ⏭️ Después
 
+- **Cifrado local y recuperación**: dos adultos administradores con recuperación independiente.
+- **Base ESP32 local**: medir viabilidad con hardware real antes de cerrar el protocolo; nube opcional de apoyo.
+- **Validación familiar completa**: variante cloud, alacena/compras y sincronización Android/web en teléfonos reales.
+- **Correos verificables**: entrega real, plantillas y límites gratuitos.
 - **Ajustes en dos paneles** y apariencia rápida desde el avatar.
 - **Plantillas de página** (`ListPage`, `DetailPage`) y registro de funcionalidades. → [unificación visual](docs/UNIFICACION_VISUAL.md)
 - **Votaciones** ("¿qué comemos?"). → [especificación](PLAN.md#4-votaciones)
-- **Cifrado local** de la base del dispositivo. → [seguridad](PLAN.md#-seguridad-qué-hay-y-qué-sigue)
+- **Tutoriales reproducibles y release**: dos recorridos reales, clips por capítulo y gates de autonomía/sincronización. → [Cimientos del MVP](docs/CIMIENTOS_MVP.md)
+- **Más skins** con vista previa en Ajustes. → [ajustes](docs/features/ajustes.md)
 - **Google y GitHub reales**: configurar y probar las apps OAuth. → [acceso social](docs/ACCESO_SOCIAL.md)
 - **Nombres internos de la nube** (Worker, D1, bucket) a Refugiar. Prioridad baja.
 
@@ -27,12 +34,11 @@ Anotadas para no perderlas. Pasan a ⏭️ cuando se decide hacerlas.
 
 - Mails automáticos de invitación. Necesita un proveedor de correo.
 - Avisos por WhatsApp Business. Es pago; el link compartido ya llega por WhatsApp.
-- Sincronizar celulares sin nube. Mucho esfuerzo; hoy alcanza con exportar e importar.
 - Finanzas: quién pagó qué, balances, presupuestos y metas.
 - Préstamo de herramientas e inventarios temporales.
 - Bóveda de documentos: garantías, pólizas, manuales.
 - Chat interno con avisos de la casa.
-- Servidor autoalojado (Raspberry, NAS) y sensores ESP32. → [plataformas](docs/PLATAFORMAS.md)
+- Distribución adicional para Raspberry/NAS y sensores, después de validar la base local ESP32. → [plataformas](docs/PLATAFORMAS.md)
 - Multimedia en la NAS (Jellyfin, Plex) y modo party.
 - Suscripciones por casa para la nube. → [plan de producción](docs/PLAN_PRODUCCION.md#etapa-6-suscripciones-automáticas)
 
