@@ -92,7 +92,7 @@ local, no una opción necesaria para release ni un cambio de seguridad de la app
 
 ### Recorrido manual en teléfono real: 15 minutos
 
-Estado del 11/10/2026: **pendiente de ejecución física**. `adb devices -l` solo
+Estado inicial del 11/10/2026, antes de conectar el teléfono: `adb devices -l` solo
 mostró `emulator-5556`; no se identificó teléfono ni paquete instalado en hardware
 real. Base revisada: `main` en `84d9cbc`. Candidato disponible: AAB versionCode 3,
 versión 0.1.0, código de app `a994050`, workflow 38188403731. Que el AAB exista o
@@ -113,9 +113,9 @@ El usuario confirmó que no había datos importantes y autorizó borrar los dato
 de prueba. Se ejecutó `pm clear --user 0 ar.refugi.app` únicamente en el A55
 seleccionado; ADB devolvió `Success`. Luego el usuario actualizó desde Play:
 ADB confirmó versionCode 3 / 0.1.0 en el A55, con `lastUpdateTime`
-`2026-10-11 22:16:13`. Quedan pendientes el ingreso y el recorrido funcional.
-Este ensayo partirá de datos limpios y **no certificará migración** desde localhost.
-El recorrido funcional aún no está ejecutado. Consultar ADB con `--user 0`
+`2026-10-11 22:16:13`. Los resultados funcionales posteriores figuran abajo.
+Este ensayo partió de datos limpios y **no certifica migración** desde localhost.
+Consultar ADB con `--user 0`
 cuando corresponda: los perfiles secundarios del teléfono no forman parte del ensayo.
 
 #### Evidencia física parcial: casa local (11/10/2026)
@@ -151,10 +151,57 @@ Capturas y script del ensayo quedan ignorados en `.family-lab/physical-a55/`:
 y `restore-result.json`. No se modificó código de la app.
 
 **Límites:** el respaldo no tenía fotos ni anotaciones; no quedaron verificadas.
-Todavía faltan acceso cloud, dos adultos distintos, descarga inicial, sincronización
-bidireccional y concurrencia. Este ensayo local no reemplaza esas comprobaciones
+El ensayo local por sí solo no acredita acceso cloud, dos adultos distintos,
+descarga inicial, sincronización bidireccional ni concurrencia. No reemplaza esas comprobaciones
 ni certifica migración de la versión 1. La restauración usó la web desplegada en
 ese momento; no se verificó el commit de ese despliegue.
+
+#### Evidencia física parcial: casa cloud y dos adultos (11/10/2026)
+
+Con autorización del usuario se prepararon dos cuentas ficticias `@example.test`
+y la casa `Casa prueba A55 Web`. La cuenta A ingresó con contraseña en el A55,
+validó un código beta y subió la casa local cifrada. La cuenta B se creó desde la
+web, descargó su kit de recuperación y pidió entrar mediante la invitación QR
+generada por A, con rol Administrador. A aprobó el pedido desde Familia en Android;
+B descargó la casa y quedó con su propio perfil Administrador. No se enviaron correos
+ni mensajes. La aprobación tardó en aparecer; apareció tras reabrir y esperar.
+No se certificó actualización instantánea de pedidos.
+
+- Preparación: A llevó Rice de 1 a 10 paquetes usando `+`; la web recibió 10 y
+  mostró la actividad de A. Ambos usaron el mismo producto de Kitchen cupboard.
+- Con A sin red (modo avión, Wi-Fi y datos apagados), `Used one` dejó 9. Se forzó
+  el cierre y se abrió Android en frío todavía sin red: conservó 9 y dos consumos
+  acumulados, incluido el del ensayo local. B seguía mostrando 10.
+- Al reconectar A, B recibió 9. B consumió uno desde la web y Android recibió 8.
+  Quedó comprobada la sincronización en ambos sentidos con cuentas distintas.
+- Con ambos en 8 se desconectó Android. A consumió uno offline y B consumió uno
+  online sin haber recibido el cambio de A: ambos mostraban 7 en sus copias.
+  Al reconectar Android, ambos convergieron a 6 y cinco consumos acumulados.
+  Se recargó la web y se forzó cierre/reapertura de Android: ambos conservaron 6.
+  Es concurrencia con Android aislado y web online, no dos clientes offline.
+- Android exportó nuevamente usando el selector nativo a Downloads. Se copió a
+  `.family-lab/physical-a55/backup-cloud-six.json`: 34.425 bytes, SHA-256
+  `1a5cd91d48da1d983781d060d337f343c9ecb25d4145ac7b7ad0d25f4490dad8`.
+  El archivo contiene Rice en 6, cinco consumos con IDs distintos (dos de A,
+  dos de B y el consumo local previo), 69 productos y cuatro perfiles.
+  Este segundo archivo se inspeccionó; la restauración aislada acreditada arriba
+  corresponde al primer respaldo local, no a este archivo final.
+- Al liberar el teléfono se verificó modo avión apagado, Wi-Fi y datos activados
+  (`0/1/1`). No se reinstaló, borró ni cambió la versión de la app durante el recorrido.
+
+Evidencias locales ignoradas: `cloud-created.png`, `cloud-rice-prepared.png`,
+`cloud-offline-nine.png`, `cloud-cold-offline-nine.png`,
+`cloud-web-to-android-eight.png`, en `.family-lab/physical-a55/`.
+La concurrencia quedó en `concurrent-android-seven.png`,
+`concurrent-converged-six.png` y `cloud-reopened-six.png`.
+Las credenciales ficticias, claves e invitaciones no se incluyen en Git.
+
+Este recorrido parte de una casa subida desde Android: no acredita descargar
+una casa cloud en una instalación Android vacía. Tampoco acredita recuperación de
+cuentas, correo entregado, fotos cloud, OAuth, passkeys ni migración entre orígenes.
+El A55 muestra en Ajustes un aviso de navegador que recomienda instalar la app aun
+estando en la app nativa. Es un texto contextual incorrecto, no evidencia de pérdida
+de datos; se registra sin ampliar esta entrega con cambios de UI.
 
 Preparación previa (instalaciones/alta de cuentas no están incluidas en los 15 minutos):
 
