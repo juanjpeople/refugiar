@@ -15,6 +15,8 @@ test("desbloqueo local: registrar, verificar la firma y conservar PIN de respald
     for (const digit of ["1", "2", "3", "4"]) await drawer.getByRole("button", { name: digit, exact: true }).click();
     await drawer.getByRole("button", { name: "OK", exact: true }).click();
   }
+  // El hash del PIN es asíncrono: esperar su confirmación antes de registrar y recargar.
+  await expect(drawer.getByRole("button", { name: "Cambiar PIN", exact: true })).toBeVisible();
   await drawer.getByRole("button", { name: "Registrar este dispositivo", exact: true }).click();
   await expect(drawer.getByText(/Registrada el /)).toBeVisible();
   await page.evaluate(() => sessionStorage.removeItem("refugiar-lock"));
@@ -39,6 +41,7 @@ test("desbloqueo local: cancelar biometría no evita el PIN de respaldo", async 
     for (const digit of ["1", "2", "3", "4"]) await drawer.getByRole("button", { name: digit, exact: true }).click();
     await drawer.getByRole("button", { name: "OK", exact: true }).click();
   }
+  await expect(drawer.getByRole("button", { name: "Cambiar PIN", exact: true })).toBeVisible();
   await drawer.getByRole("button", { name: "Registrar este dispositivo", exact: true }).click();
   await expect(drawer.getByText(/Registrada el /)).toBeVisible();
   await cdp.send("WebAuthn.setUserVerified", { authenticatorId, isUserVerified: false });
