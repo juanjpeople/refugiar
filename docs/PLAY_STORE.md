@@ -188,7 +188,8 @@ Open source (AGPL-3.0): github.com/juanjpeople/refugiar
 ### Descargar para subir manualmente
 
 Ejecutar `npm run android:download` descarga el AAB del último workflow
-**Android release** exitoso, incluso si se compiló desde una rama de prueba.
+**Android release** terminado, incluso si se compiló desde una rama de prueba o si falló
+solo la subida a Play (el AAB firmado se guarda antes de subirlo).
 Requiere GitHub CLI (`gh`) instalado y `gh auth login`. No requiere acceso a la API
 de Google ni una cuenta de servicio. No genera una compilación nueva.
 
