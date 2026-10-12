@@ -24,6 +24,7 @@ Orden, dependencias, estados y criterios de aceptación: [Cimientos del MVP](doc
 - **Tutoriales reproducibles y release**: dos recorridos reales, clips por capítulo y gates de autonomía/sincronización. → [Cimientos del MVP](docs/CIMIENTOS_MVP.md)
 - **Más skins** con vista previa en Ajustes. → [ajustes](docs/features/ajustes.md)
 - **Google y GitHub reales**: configurar y probar las apps OAuth. → [acceso social](docs/ACCESO_SOCIAL.md)
+- **Sistema de diseño** (`/design`): componentes superpuestos (breadcrumb sobre el menú interno) y menús internos no responsivos.
 - **Nombres internos de la nube** (Worker, D1, bucket) a Refugiar. Prioridad baja.
 
 ## 💡 Ideas
@@ -36,6 +37,7 @@ Anotadas para no perderlas. Pasan a ⏭️ cuando se decide hacerlas.
 - Préstamo de herramientas e inventarios temporales.
 - Bóveda de documentos: garantías, pólizas, manuales.
 - Chat interno con avisos de la casa.
+- Eventos recurrentes para chicos y adultos (extracurriculares, deportes, idiomas, gimnasio, turnos médicos) con recordatorios por evento; aviso al salir de casa solo opt-in y en el teléfono, sin enviar ubicación.
 - Sensores conectados a la base ESP32, después de validarla. → [plataformas](docs/PLATAFORMAS.md)
 - Servidor de casa usable desde la app de Android (hoy solo desde el navegador). → [servidor de casa](docs/SERVIDOR_CASA.md)
 - Multimedia en la NAS (Jellyfin, Plex) y modo party.
