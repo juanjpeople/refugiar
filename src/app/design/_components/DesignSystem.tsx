@@ -1,6 +1,6 @@
 "use client";
 
-import { Anchor, Col, Flex, Row, Typography } from "antd";
+import { Anchor, Col, Flex, Grid, Row, Select, Typography, theme } from "antd";
 import type { ReactNode } from "react";
 import { RequirePermission } from "@/components/auth/RequirePermission";
 import { PageHeader } from "@/components/ui";
@@ -10,6 +10,7 @@ import { FormsSection } from "./FormsSection";
 import { FoundationsSection } from "./FoundationsSection";
 import { MotionSection } from "./MotionSection";
 import { PrimitivesSection } from "./PrimitivesSection";
+import { SheetsSection } from "./SheetsSection";
 import { RecipesFlow } from "./RecipesFlow";
 import { ReviewSection } from "./ReviewSection";
 import { SecuritySection } from "./SecuritySection";
@@ -31,14 +32,22 @@ const TOC = [
   { group: "Componentes antd", items: [["botones", "Botones"], ["feedback", "Feedback"], ["formularios", "Formularios"], ["tablas", "Tablas"]] },
   {
     group: "Componentes propios",
-    items: [["componentes-estructura", "Estructura"], ["componentes-estados", "Estados"], ["componentes-seleccion", "Selección"], ["componentes-datos", "Datos"], ["componentes-espacios", "Espacios"], ["componentes-entrada", "Entrada"], ["componentes-paneles", "Paneles"], ["componentes-plantillas", "Plantillas"], ["componentes-plantillas-detalle", "Detalle"]],
+    items: [["componentes-estructura", "Estructura"], ["componentes-estados", "Estados"], ["componentes-seleccion", "Selección"], ["componentes-datos", "Datos"], ["componentes-fichas", "Fichas"], ["componentes-espacios", "Espacios"], ["componentes-entrada", "Entrada"], ["componentes-paneles", "Paneles"], ["componentes-plantillas", "Plantillas"], ["componentes-plantillas-detalle", "Detalle"]],
   },
   { group: "Flujos", items: [["flujo-almacenamiento", "Almacenamiento"], ["flujo-catalogo", "Catálogo"], ["flujo-recetas", "Recetas"], ["flujo-entrada", "Entrada"]] },
   { group: "Calidad", items: [["revision", "Revisión antes de un PR"]] },
   { group: "Seguridad", items: [["permisos", "Matriz de permisos"], ["can", "<Can>"], ["servicios", "Servicios"]] },
 ] as const;
 
+/** La barra de arriba de la app es fija: el índice arranca debajo, nunca detrás de las migas. */
+const useHeaderOffset = () => {
+  const { token } = theme.useToken();
+  return token.controlHeight * 2 + token.marginLG;
+};
+
 export function DesignSystem() {
+  const screens = Grid.useBreakpoint();
+  const offset = useHeaderOffset();
   return (
     <RequirePermission perform="settings.design">
       <PageHeader
@@ -49,7 +58,8 @@ export function DesignSystem() {
       <Row gutter={32}>
         <Col xs={0} lg={5}>
           <Anchor
-            offsetTop={24}
+            offsetTop={offset}
+            targetOffset={offset}
             items={TOC.map(({ group, items }) => ({
               key: group,
               href: `#${items[0][0]}`,
@@ -59,6 +69,7 @@ export function DesignSystem() {
           />
         </Col>
         <Col xs={24} lg={19}>
+          {!screens.lg && <JumpTo />}
           <Section title="Fundamentos">
             <FoundationsSection />
             <SignatureSection />
@@ -73,6 +84,7 @@ export function DesignSystem() {
           </Section>
           <Section title="Componentes propios">
             <PrimitivesSection />
+            <SheetsSection />
             <EntrySection />
             <PanesSection />
             <TemplatesSection />
@@ -93,6 +105,42 @@ export function DesignSystem() {
         </Col>
       </Row>
     </RequirePermission>
+  );
+}
+
+/** En tableta y celular el índice no entra al costado: un buscador fijo arriba lleva a cada bloque. */
+function JumpTo() {
+  const { token } = theme.useToken();
+  const offset = useHeaderOffset();
+  return (
+    <div
+      style={{
+        position: "sticky",
+        top: token.controlHeight * 2 + token.marginXS,
+        zIndex: 5,
+        marginBottom: token.marginLG,
+        padding: token.paddingXS,
+        borderRadius: token.borderRadiusLG,
+        background: `color-mix(in srgb, ${token.colorBgContainer} 85%, transparent)`,
+        backdropFilter: "blur(12px)",
+        border: `1px solid ${token.colorBorderSecondary}`,
+      }}
+    >
+      <Select
+        showSearch
+        optionFilterProp="label"
+        aria-label="Ir a una sección del sistema de diseño"
+        placeholder="Ir a…"
+        style={{ width: "100%", minHeight: 44 }}
+        options={TOC.map(({ group, items }) => ({ label: group, title: group, options: items.map(([id, title]) => ({ value: id, label: title })) }))}
+        onChange={(id: string) => {
+          const target = document.getElementById(id);
+          if (!target) return;
+          window.scrollTo({ top: target.getBoundingClientRect().top + window.scrollY - offset, behavior: "smooth" });
+          window.history.replaceState(null, "", `#${id}`);
+        }}
+      />
+    </div>
   );
 }
 
