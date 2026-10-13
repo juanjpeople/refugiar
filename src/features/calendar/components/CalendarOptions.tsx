@@ -1,10 +1,10 @@
 "use client";
 
-import { App, Button, Card, Checkbox, Flex, Select, Typography, theme } from "antd";
+import { App, Button, Checkbox, Drawer, Flex, Grid, Select, Typography, theme } from "antd";
+import { Settings2 } from "lucide-react";
 import { useId, useRef, useState } from "react";
 import { useLiveQuery } from "dexie-react-hooks";
 import { Callout } from "@/components/ui";
-import { Reveal } from "@/components/motion";
 import { useI18n } from "@/i18n";
 import { useCurrentUser } from "@/lib/auth/session";
 import { usePermission } from "@/lib/auth/hooks";
@@ -46,12 +46,18 @@ export function CalendarOptions({ value, onChange, disabled }: { value: Calendar
   </Flex>;
 }
 
-export function CalendarSettingsPanel() {
+/**
+ * Feriados y escuela: un botón en el encabezado del Calendario abre el panel al costado, así la
+ * configuración no le quita lugar a la agenda.
+ */
+export function CalendarSettingsButton() {
   const saved = useLiveQuery(readCalendarSettings);
+  const [open, setOpen] = useState(false);
   const [draft, setDraft] = useState<CalendarPreferences | null>(null);
   const [busy, setBusy] = useState(false);
   const pending = useRef(false);
   const { token } = theme.useToken();
+  const screens = Grid.useBreakpoint();
   const canManage = usePermission("calendar.manage");
   const actor = useCurrentUser();
   const { t } = useI18n();
@@ -61,16 +67,24 @@ export function CalendarSettingsPanel() {
     if (pending.current) return;
     pending.current = true;
     setBusy(true);
-    try { await saveCalendarPreferences(actor, draft ?? saved ?? DEFAULT_CALENDAR); setDraft(null); message.success(t("school.saved")); }
+    try { await saveCalendarPreferences(actor, draft ?? saved ?? DEFAULT_CALENDAR); setDraft(null); setOpen(false); message.success(t("school.saved")); }
     catch (error) { message.error(getErrorMessage(error, t)); }
     finally { pending.current = false; setBusy(false); }
   }
-  return <Reveal><Card style={{ marginBottom: token.marginLG }}><details>
-    <summary style={{ cursor: "pointer", minHeight: 44, alignContent: "center" }}>{t("school.configure")}</summary>
-    <Flex vertical gap={token.margin} style={{ marginTop: token.margin }}>
-      <CalendarOptions value={draft ?? saved ?? DEFAULT_CALENDAR} onChange={setDraft} disabled={busy} />
-      <Callout>{t("school.termHelp")}</Callout>
-      <Button type="primary" loading={busy} disabled={!draft || busy} aria-label={t("school.save")} onClick={() => void save()}>{t("school.save")}</Button>
-    </Flex>
-  </details></Card></Reveal>;
+  return <>
+    <Button icon={<Settings2 />} onClick={() => setOpen(true)}>{t("calendar.settings")}</Button>
+    <Drawer
+      open={open}
+      title={t("school.configure")}
+      size={screens.sm ? 480 : "100%"}
+      onClose={() => { if (!pending.current) { setOpen(false); setDraft(null); } }}
+      footer={<Button type="primary" block loading={busy} disabled={!draft || busy} aria-label={t("school.save")} onClick={() => void save()}>{t("school.save")}</Button>}
+      destroyOnHidden
+    >
+      <Flex vertical gap={token.margin}>
+        <CalendarOptions value={draft ?? saved ?? DEFAULT_CALENDAR} onChange={setDraft} disabled={busy} />
+        <Callout>{t("school.termHelp")}</Callout>
+      </Flex>
+    </Drawer>
+  </>;
 }

@@ -24,7 +24,6 @@ Orden, dependencias, estados y criterios de aceptación: [Cimientos del MVP](doc
 - **Tutoriales reproducibles y release**: dos recorridos reales, clips por capítulo y gates de autonomía/sincronización. → [Cimientos del MVP](docs/CIMIENTOS_MVP.md)
 - **Más skins** con vista previa en Ajustes. → [ajustes](docs/features/ajustes.md)
 - **Google y GitHub reales**: configurar y probar las apps OAuth. → [acceso social](docs/ACCESO_SOCIAL.md)
-- **Sistema de diseño** (`/design`): componentes superpuestos (breadcrumb sobre el menú interno) y menús internos no responsivos.
 - **Nombres internos de la nube** (Worker, D1, bucket) a Refugiar. Prioridad baja.
 
 ## 💡 Ideas
@@ -49,6 +48,7 @@ Lo último arriba. El PR que termina algo lo agrega acá.
 
 | Cuándo | Qué | PR |
 | --- | --- | --- |
+| 2026-10 | Jerarquía visual y ancho por página: Escuela por niveles (hoy, horario, viaje, materias por semana), carril de listas en Compras, calendario más legible con la hora actual, contenido que aprovecha pantallas anchas e índice de `/design` arreglado | #PR |
 | 2026-10 | Nube cerrada antes de la prueba cerrada: cuenta solo con código o invitación, lista de espera que habilitás desde `/admin`, capacidad y topes por casa editables, claves que entrega solo un admin y encabezados de seguridad | #82 |
 | 2026-10 | Servidor de casa en una PC o Raspberry, sin servicios externos (`npm run casa`); prototipo de base ESP32; política de privacidad al día con Android | #81 |
 | 2026-10 | Escuela de cada chico: ficha, cómo llega, horario y materias | #80 |

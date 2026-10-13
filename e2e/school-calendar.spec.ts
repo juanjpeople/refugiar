@@ -19,7 +19,7 @@ test("elige país, agenda materias y tareas por hijo y respeta días sin clases"
     });
   }, { now: new Date("2026-07-09T07:00:00-03:00").getTime() });
   await page.goto("/calendario");
-  await page.getByText("Configurar feriados y escuela", { exact: true }).click();
+  await page.getByRole("button", { name: "Feriados y escuela", exact: true }).click();
   await page.getByRole("checkbox", { name: "Usar la agenda escolar" }).check();
   await page.getByRole("combobox", { name: "País para los feriados", exact: true }).fill("Argentina");
   await page.getByRole("combobox", { name: "País para los feriados", exact: true }).press("Enter");
@@ -98,7 +98,7 @@ test("escuela en inglés: validación, guardado único y ancho de 320 px", async
   await page.goto("/ajustes#idioma");
   await page.getByText("English", { exact: true }).click();
   await page.goto("/calendario");
-  await page.getByText("Configure holidays and school", { exact: true }).click();
+  await page.getByRole("button", { name: "Holidays and school", exact: true }).click();
   await page.getByRole("checkbox", { name: "Use the school planner" }).check();
   await page.getByRole("button", { name: "Save settings", exact: true }).click();
   await expect(page.getByText("Calendar configured", { exact: true })).toBeVisible();
