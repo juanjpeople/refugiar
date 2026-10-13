@@ -48,7 +48,7 @@ Lo último arriba. El PR que termina algo lo agrega acá.
 
 | Cuándo | Qué | PR |
 | --- | --- | --- |
-| 2026-10 | Jerarquía visual y ancho por página: Escuela por niveles (hoy, horario, viaje, materias por semana), carril de listas en Compras, calendario más legible con la hora actual, contenido que aprovecha pantallas anchas e índice de `/design` arreglado | #PR |
+| 2026-10 | Jerarquía visual y ancho por página: Escuela por niveles (hoy, horario, viaje, materias por semana), carril de listas en Compras, calendario más legible con la hora actual, contenido que aprovecha pantallas anchas e índice de `/design` arreglado | #83 |
 | 2026-10 | Nube cerrada antes de la prueba cerrada: cuenta solo con código o invitación, lista de espera que habilitás desde `/admin`, capacidad y topes por casa editables, claves que entrega solo un admin y encabezados de seguridad | #82 |
 | 2026-10 | Servidor de casa en una PC o Raspberry, sin servicios externos (`npm run casa`); prototipo de base ESP32; política de privacidad al día con Android | #81 |
 | 2026-10 | Escuela de cada chico: ficha, cómo llega, horario y materias | #80 |
