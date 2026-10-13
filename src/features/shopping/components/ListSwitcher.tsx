@@ -4,7 +4,7 @@ import { Button, Flex, Typography, theme } from "antd";
 import { motion } from "framer-motion";
 import { Archive, Plus } from "lucide-react";
 import { useState } from "react";
-import { IconTile, PrivacyBadge } from "@/components/ui";
+import { IconTile, PrivacyBadge, ScrollRail } from "@/components/ui";
 import { useI18n } from "@/i18n";
 import { APPEARANCE_ICONS, tint } from "@/lib/appearance";
 import { SPRING } from "@/lib/motion";
@@ -18,7 +18,10 @@ interface ListSwitcherProps {
   onCreate?: () => void;
 }
 
-/** Listas como tarjetas que se deslizan: cuánto falta y, si tienen presupuesto, cómo vienen. */
+/**
+ * Listas como tarjetas en un carril (ScrollRail): cuánto falta y, si tienen presupuesto, cómo
+ * vienen. La elegida siempre queda a la vista.
+ */
 export function ListSwitcher({ lists, selectedId, onSelect, onCreate }: ListSwitcherProps) {
   const { t } = useI18n();
   const { token } = theme.useToken();
@@ -28,11 +31,7 @@ export function ListSwitcher({ lists, selectedId, onSelect, onCreate }: ListSwit
 
   return (
     <div style={{ marginBottom: 24 }}>
-      <div
-        role="tablist"
-        aria-label={t("shopping.lists.title")}
-        style={{ display: "flex", gap: 10, overflowX: "auto", padding: "4px 2px 10px", scrollSnapType: "x proximity" }}
-      >
+      <ScrollRail role="tablist" label={t("shopping.lists.title")} activeKey={selectedId}>
         {visible.map((summary) => (
           <ListTab key={summary.list.id} summary={summary} selected={summary.list.id === selectedId} onSelect={() => onSelect(summary.list.id)} />
         ))}
@@ -62,7 +61,7 @@ export function ListSwitcher({ lists, selectedId, onSelect, onCreate }: ListSwit
             <Plus /> {t("shopping.lists.new")}
           </motion.button>
         )}
-      </div>
+      </ScrollRail>
       {archived.length > 0 && (
         <Button type="link" size="small" icon={<Archive />} style={{ paddingInline: 0 }} onClick={() => setShowArchived((value) => !value)}>
           {showArchived ? t("shopping.lists.hideArchived") : t("shopping.lists.showArchived", { count: archived.length })}
@@ -89,7 +88,7 @@ function ListTab({ summary, selected, onSelect }: { summary: ListSummary; select
       transition={SPRING.snappy}
       style={{
         flex: "0 0 auto",
-        width: 220,
+        width: 240,
         scrollSnapAlign: "start",
         textAlign: "start",
         padding: 12,

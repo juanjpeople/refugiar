@@ -16,7 +16,7 @@ import { usePreferences } from "@/hooks/usePreferences";
 import { useT } from "@/i18n";
 import { useCurrentUser, useIsLocked, useLockStore, useMembersStore, useSessionStore } from "@/lib/auth/session";
 import { FONT_SIZES } from "@/lib/theme";
-import { APP_ROUTES } from "@/lib/navigation/routes";
+import { APP_ROUTES, CONTENT_WIDTH, findRoute } from "@/lib/navigation/routes";
 import { useDeviceStore } from "@/store/useDeviceStore";
 import { useUiStore } from "@/store/useNavigationStore";
 import type { SidebarMode } from "@/store/usePreferencesStore";
@@ -144,6 +144,9 @@ function DefaultLayout({ children }: { children: ReactNode }) {
   const t = useT();
   const screens = Grid.useBreakpoint();
   const { sidebar } = usePreferences();
+  const pathname = usePathname();
+  // Cada página usa el ancho que le sirve: las grillas y tableros, toda la pantalla; el resto, uno cómodo de leer.
+  const contentWidth = CONTENT_WIDTH[findRoute(pathname)?.width ?? "default"];
   const drawerOpen = useUiStore((s) => s.navDrawerOpen);
   const setDrawerOpen = useUiStore((s) => s.setNavDrawerOpen);
   const toggleSidebar = useToggleSidebar();
@@ -256,14 +259,14 @@ function DefaultLayout({ children }: { children: ReactNode }) {
         {/* El mismo resplandor de marca que la landing: da profundidad sin costo (es un gradiente). */}
         <Content
           style={{
-            padding: isMobile ? "24px 16px" : "32px 24px",
+            padding: isMobile ? "24px 16px" : screens.xl ? "32px 40px" : "32px 24px",
             background: haloBackground(skin, `radial-gradient(ellipse 70% 40% at 60% -5%, ${token.colorPrimaryBg}, transparent 70%)`),
             // Del alto de la pantalla, no del contenido: si no, el halo se achica y crece al cambiar de página.
             backgroundSize: "100% 100vh",
             backgroundRepeat: "no-repeat",
           }}
         >
-          <div style={{ maxWidth: 1100, margin: "0 auto" }}>{children}</div>
+          <div style={{ maxWidth: contentWidth, margin: "0 auto" }}>{children}</div>
         </Content>
       </Layout>
 
