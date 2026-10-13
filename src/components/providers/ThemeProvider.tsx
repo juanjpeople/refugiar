@@ -33,6 +33,12 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     document.documentElement.style.fontSize = `${(baseFontSize / FONT_SIZES.md) * 100}%`;
   }, [baseFontSize]);
 
+  // Barras de desplazamiento, campos y menús nativos del navegador siguen el modo elegido en la app,
+  // no solo el del sistema: si no, en oscuro aparecen barras blancas.
+  useEffect(() => {
+    document.documentElement.style.colorScheme = isDark ? "dark" : "light";
+  }, [isDark]);
+
   // "Reducir movimiento" de la app también apaga las transiciones de página del navegador (globals.css).
   useEffect(() => {
     document.documentElement.dataset.motion = motion;

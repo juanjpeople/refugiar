@@ -1,6 +1,15 @@
 # Escuela
 
-La escuela de cada chico, en una sola página: **Escuela** en el menú.
+La escuela de cada chico, en una sola página: **Escuela** en el menú. La ficha va de lo más usado a
+lo de consulta:
+
+1. **Quién**: el chico, su escuela y su grado. Con varios chicos, se elige uno arriba.
+2. **Hoy**: si tiene clases, a qué hora entra y sale, quién lo lleva y lo busca, qué clases tiene y
+   qué llevar. Si no tiene, cuándo vuelve.
+3. **De todos los días**: horario con los días marcados, cómo va y cómo vuelve.
+4. **Materias**: el horario semanal, una columna por día (hoy destacado). En el celular, un día debajo
+   del otro.
+5. **Al costado**: los datos de la escuela con "Llamar", el fin de clases y lo que hay que tener en cuenta.
 
 ## Qué hace
 
@@ -17,7 +26,7 @@ La escuela de cada chico, en una sola página: **Escuela** en el menú.
 
 Escuela → **Cargar escuela** en la ficha del chico. Con la ficha guardada, **Agregar materia**: nombre, días, horario y fin de clases. Tocar una materia abre su clase para cambiarla o borrarla.
 
-Desde Familia, el botón **Escuela** de cada chico lleva a su ficha.
+Desde Familia, el botón **Escuela** de cada chico abre su ficha.
 
 ## Quién ve y quién edita
 
