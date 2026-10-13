@@ -18,7 +18,15 @@ export interface AppRoute {
   hidden?: boolean;
   /** Necesita `?id=`: sin él no sirve, así que no va a la búsqueda ni a "Recientes". */
   needsId?: boolean;
+  /**
+   * Ancho del contenido. `wide`: tableros y grillas que ganan columnas con la pantalla (calendario,
+   * inventario, compras). Por defecto, un ancho cómodo de leer. Ver CONTENT_WIDTH.
+   */
+  width?: "wide";
 }
+
+/** Ancho máximo del contenido de una página, en px (el resto es margen). */
+export const CONTENT_WIDTH = { default: 1280, wide: 1680 } as const;
 
 /**
  * Registro único de rutas: de acá salen el menú, las migas de pan, la búsqueda (Ctrl+K),
@@ -28,14 +36,14 @@ export interface AppRoute {
  */
 export const APP_ROUTES: AppRoute[] = [
   { id: "home", href: "/", labelKey: "nav.routes.home", icon: House, section: "main" },
-  { id: "inventory", href: "/inventario", labelKey: "nav.routes.inventory", icon: Boxes, permission: "inventory.view", section: "main" },
-  { id: "space", href: "/inventario/lugar", labelKey: "nav.routes.space", icon: MapPin, permission: "inventory.view", section: "main", parent: "inventory", hidden: true, needsId: true },
-  { id: "container", href: "/inventario/ver", labelKey: "nav.routes.container", icon: Boxes, permission: "inventory.view", section: "main", parent: "inventory", hidden: true, needsId: true },
+  { id: "inventory", href: "/inventario", labelKey: "nav.routes.inventory", icon: Boxes, permission: "inventory.view", section: "main", width: "wide" },
+  { id: "space", href: "/inventario/lugar", labelKey: "nav.routes.space", icon: MapPin, permission: "inventory.view", section: "main", parent: "inventory", hidden: true, needsId: true, width: "wide" },
+  { id: "container", href: "/inventario/ver", labelKey: "nav.routes.container", icon: Boxes, permission: "inventory.view", section: "main", parent: "inventory", hidden: true, needsId: true, width: "wide" },
   { id: "scan", href: "/inventario/escanear", labelKey: "nav.routes.scan", icon: ScanLine, permission: "inventory.view", section: "main", parent: "inventory", hidden: true },
   { id: "camera", href: "/inventario/camara", labelKey: "camera.title", icon: ScanLine, permission: "inventory.view", section: "main", parent: "inventory", hidden: true },
-  { id: "calendar", href: "/calendario", labelKey: "nav.routes.calendar", icon: CalendarDays, permission: "calendar.view", section: "main" },
+  { id: "calendar", href: "/calendario", labelKey: "nav.routes.calendar", icon: CalendarDays, permission: "calendar.view", section: "main", width: "wide" },
   { id: "school", href: "/escuela", labelKey: "nav.routes.school", icon: GraduationCap, permission: "calendar.view", section: "main" },
-  { id: "compras", href: "/compras", labelKey: "nav.routes.compras", icon: ShoppingCart, permission: "shopping.view", section: "main" },
+  { id: "compras", href: "/compras", labelKey: "nav.routes.compras", icon: ShoppingCart, permission: "shopping.view", section: "main", width: "wide" },
   { id: "recipes", href: "/recetas", labelKey: "nav.routes.recipes", icon: ChefHat, permission: "recipes.view", section: "main" },
   { id: "projects", href: "/proyectos", labelKey: "nav.routes.projects", icon: HardHat, permission: "projects.view", section: "main" },
   { id: "project", href: "/proyectos/ver", labelKey: "nav.routes.project", icon: HardHat, permission: "projects.view", section: "main", parent: "projects", hidden: true, needsId: true },
@@ -45,7 +53,7 @@ export const APP_ROUTES: AppRoute[] = [
   { id: "family", href: "/familia", labelKey: "nav.routes.family", icon: Users, section: "system" },
   { id: "privacy", href: "/privacidad", labelKey: "nav.routes.privacy", icon: ShieldCheck, section: "system" },
   { id: "settings", href: "/ajustes", labelKey: "nav.routes.settings", icon: Settings, section: "system" },
-  { id: "design", href: "/design", labelKey: "nav.routes.design", icon: Palette, permission: "settings.design", section: "system" },
+  { id: "design", href: "/design", labelKey: "nav.routes.design", icon: Palette, permission: "settings.design", section: "system", width: "wide" },
   { id: "account", href: "/cuenta", labelKey: "nav.routes.account", icon: Sparkles, section: "system", external: true, hidden: true },
   { id: "feedback", href: "/feedback", labelKey: "nav.routes.feedback", icon: MessageSquare, section: "system", external: true, hidden: true },
   { id: "privacyPolicy", href: "/politica-de-privacidad", labelKey: "nav.routes.privacyPolicy", icon: ShieldCheck, section: "system", external: true, hidden: true },

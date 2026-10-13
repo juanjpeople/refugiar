@@ -147,3 +147,11 @@ html[data-motion="reduced"]::view-transition-new(*) {
     animation: none !important;
   }
 }
+
+/* ScrollRail: lo que sigue se nota por el borde difuminado y las flechas, no por una barra. */
+.od-rail {
+  scrollbar-width: none;
+}
+.od-rail::-webkit-scrollbar {
+  display: none;
+}

@@ -10,6 +10,7 @@ import { RequirePermission } from "@/components/auth/RequirePermission";
 import { PageHeader, LoadingSkeleton } from "@/components/ui";
 import { MemberAvatar } from "@/components/ui/MemberAvatar";
 import { useElementWidth } from "@/hooks/useElementWidth";
+import { useNow } from "@/hooks/useNow";
 import { useMembers } from "@/features/members/hooks";
 import { useI18n } from "@/i18n";
 import { APPEARANCE_ICONS, tint } from "@/lib/appearance";
@@ -18,7 +19,7 @@ import { DURATION, EASE_OUT } from "@/lib/motion";
 import type { CalendarEvent, Occurrence } from "../domain";
 import { useOccurrences } from "../hooks";
 import { EventModal } from "./EventModal";
-import { CalendarSettingsPanel } from "./CalendarOptions";
+import { CalendarSettingsButton } from "./CalendarOptions";
 
 type View = "week" | "month";
 
@@ -87,6 +88,7 @@ export function CalendarPage() {
         description={t("calendar.description")}
         extra={
           <Can perform="calendar.manage">
+            <CalendarSettingsButton />
             <Button type="primary" icon={<Plus />} onClick={() => setModal({ day: cursor })}>
               {t("calendar.newEvent")}
             </Button>
@@ -94,7 +96,6 @@ export function CalendarPage() {
         }
       />
 
-      <CalendarSettingsPanel />
       {/* Barra: período, navegación, vista y filtro por miembro. */}
       <Flex align="center" justify="space-between" gap={12} wrap style={{ marginBottom: 16 }}>
         <Flex align="center" gap={8} wrap style={{ minWidth: 0 }}>
@@ -224,17 +225,27 @@ function WeekView({
 }) {
   const { token } = theme.useToken();
   const { t } = useI18n();
+  const now = useNow();
+  const ended = (occurrence: Occurrence) => (occurrence.allDay ? dayjs(occurrence.end).endOf("day").valueOf() : occurrence.end) <= now;
+  /** Los eventos del día, con la línea de "ahora" entre lo que pasó y lo que viene (solo hoy). */
+  const agenda = (items: Occurrence[], today: boolean) => {
+    const upcoming = items.findIndex((occurrence) => !occurrence.allDay && !ended(occurrence));
+    const marker = today && items.some((occurrence) => !occurrence.allDay) ? (upcoming === -1 ? items.length : upcoming) : -1;
+    const chips = items.map((occurrence) => <EventChip key={occurrence.key} occurrence={occurrence} onOpen={onOpen} past={ended(occurrence)} detailed />);
+    if (marker !== -1) chips.splice(marker, 0, <NowMarker key="now" />);
+    return chips;
+  };
 
   return (
     <div style={{ display: "grid", gridTemplateColumns: stacked ? "1fr" : "repeat(7, minmax(0, 1fr))", gap: stacked ? 8 : 10 }}>
       {days.map((day) => {
         const items = occurrences.filter((occurrence) => onDay(occurrence, day));
-        const today = day.isSame(dayjs(), "day");
+        const today = day.isSame(dayjs(now), "day");
         return (
           <div
             key={day.valueOf()}
             style={{
-              minHeight: stacked ? undefined : 360,
+              minHeight: stacked ? undefined : 200,
               padding: stacked ? "10px 12px" : 10,
               borderRadius: token.borderRadiusLG,
               border: `1px solid ${today ? token.colorPrimaryBorder : token.colorBorderSecondary}`,
@@ -256,9 +267,7 @@ function WeekView({
                       {t("calendar.empty")}
                     </Typography.Text>
                   )}
-                  {items.map((occurrence) => (
-                    <EventChip key={occurrence.key} occurrence={occurrence} onOpen={onOpen} detailed />
-                  ))}
+                  {agenda(items, today)}
                 </Flex>
                 {onAdd ? <Button type="text" icon={<Plus />} aria-label={t("calendar.newEvent")} onClick={() => onAdd(day)} style={{ width: 40, height: 40 }} /> : <span />}
               </>
@@ -268,9 +277,12 @@ function WeekView({
                   <DayHeader day={day} vertical />
                   {onAdd && <Button type="text" size="small" icon={<Plus />} aria-label={t("calendar.newEvent")} onClick={() => onAdd(day)} />}
                 </Flex>
-                {items.map((occurrence) => (
-                  <EventChip key={occurrence.key} occurrence={occurrence} onOpen={onOpen} detailed />
-                ))}
+                {items.length === 0 && (
+                  <Typography.Text type="secondary" style={{ fontSize: token.fontSizeSM }}>
+                    {t("calendar.empty")}
+                  </Typography.Text>
+                )}
+                {agenda(items, today)}
               </>
             )}
           </div>
@@ -387,14 +399,14 @@ function MonthView({
 }
 
 /** Evento en el calendario: color propio, ícono, horario y quiénes participan. */
-function EventChip({ occurrence, onOpen, detailed = false }: { occurrence: Occurrence; onOpen: (occurrence: Occurrence) => void; detailed?: boolean }) {
+function EventChip({ occurrence, onOpen, detailed = false, past = false }: { occurrence: Occurrence; onOpen: (occurrence: Occurrence) => void; detailed?: boolean; past?: boolean }) {
   const { token } = theme.useToken();
   const { t, format } = useI18n();
   const members = useMembers() ?? [];
   const palette = tint(token, occurrence.color);
   const Icon = occurrence.icon ? APPEARANCE_ICONS[occurrence.icon] : null;
   const title = occurrence.birthdayOf ? t("calendar.birthday", { name: occurrence.title }) : occurrence.title;
-  const time = occurrence.allDay ? t("calendar.allDay") : `${format.time(occurrence.start)}${occurrence.end > occurrence.start ? ` – ${format.time(occurrence.end)}` : ""}`;
+  const time = occurrence.allDay ? t("calendar.allDay") : `${format.time(occurrence.start)}${occurrence.end > occurrence.start ? `–${format.time(occurrence.end)}` : ""}`;
   const participants = members.filter((member) => occurrence.participantIds.includes(member.id));
 
   return (
@@ -419,30 +431,58 @@ function EventChip({ occurrence, onOpen, detailed = false }: { occurrence: Occur
         color: token.colorText,
         fontSize: detailed ? token.fontSize : token.fontSizeSM,
         overflow: "hidden",
+        // Lo que ya pasó se ve más tenue: lo que viene resalta solo.
+        opacity: past ? 0.55 : 1,
+        transition: `opacity ${DURATION.base}s`,
       }}
     >
-      <Flex align="center" gap={6} style={{ minWidth: 0 }}>
+      <Flex align={detailed ? "flex-start" : "center"} gap={6} style={{ minWidth: 0 }}>
         {Icon && (
-          <span style={{ display: "inline-flex", color: palette.solid, flexShrink: 0 }}>
+          <span style={{ display: "inline-flex", color: palette.solid, flexShrink: 0, marginTop: detailed ? 3 : 0 }}>
             <Icon />
           </span>
         )}
-        <span style={{ fontWeight: 600, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{title}</span>
+        <span
+          style={
+            detailed
+              ? { fontWeight: 600, lineHeight: 1.3, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden", overflowWrap: "anywhere" }
+              : { fontWeight: 600, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }
+          }
+        >
+          {title}
+        </span>
       </Flex>
       {detailed && (
-        <Flex align="center" justify="space-between" gap={6} style={{ marginTop: 2 }}>
-          <span style={{ fontSize: token.fontSizeSM, color: token.colorTextSecondary, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", minWidth: 0 }}>{time}</span>
+        <Flex align="center" justify="space-between" gap={6} wrap style={{ marginTop: 4 }}>
+          <span style={{ fontSize: token.fontSizeSM, color: token.colorTextSecondary, whiteSpace: "nowrap", fontVariantNumeric: "tabular-nums" }}>{time}</span>
           {participants.length > 0 && (
-            <Flex style={{ marginInlineEnd: 4 }}>
+            <Flex align="center" style={{ marginInlineEnd: 4 }}>
               {participants.slice(0, 3).map((member, index) => (
-                <span key={member.id} style={{ marginInlineStart: index ? -6 : 0 }}>
-                  <MemberAvatar member={member} size={18} />
+                <span key={member.id} style={{ marginInlineStart: index ? -6 : 0, borderRadius: "50%", boxShadow: `0 0 0 2px ${palette.bg}` }}>
+                  <MemberAvatar member={member} size={20} />
                 </span>
               ))}
+              {participants.length > 3 && (
+                <span style={{ marginInlineStart: 4, fontSize: token.fontSizeSM, color: token.colorTextSecondary }}>+{participants.length - 3}</span>
+              )}
             </Flex>
           )}
         </Flex>
       )}
     </motion.button>
+  );
+}
+
+/** Hoy, entre lo que ya pasó y lo que viene: la hora actual, como una línea. */
+function NowMarker() {
+  const { token } = theme.useToken();
+  const { t, format } = useI18n();
+  const now = useNow();
+  return (
+    <Flex role="separator" aria-label={`${t("calendar.now")} ${format.time(now)}`} align="center" gap={6} style={{ marginBlock: 2 }}>
+      <span style={{ width: 8, height: 8, borderRadius: "50%", background: token.colorError, flexShrink: 0 }} />
+      <span style={{ flex: 1, height: 2, borderRadius: 1, background: token.colorError }} />
+      <span style={{ fontSize: token.fontSizeSM, fontWeight: 600, color: token.colorError, fontVariantNumeric: "tabular-nums" }}>{format.time(now)}</span>
+    </Flex>
   );
 }
