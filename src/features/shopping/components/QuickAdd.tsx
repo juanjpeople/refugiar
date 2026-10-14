@@ -8,7 +8,7 @@ import { StockTag } from "@/components/ui";
 import { getStockStatus, isUnit, UNITS, type Unit } from "@/features/inventory/domain";
 import { useT } from "@/i18n";
 import { SPRING } from "@/lib/motion";
-import { SHOPPING_LIMITS, suggestedQuantity } from "../domain";
+import { parsePastedList, SHOPPING_LIMITS, suggestedQuantity } from "../domain";
 import { useInventoryOptions, useShoppingActions, type ItemPlace } from "../hooks";
 
 /**
@@ -20,7 +20,7 @@ export function QuickAdd({ listId }: { listId: string }) {
   const { token } = theme.useToken();
   const screens = Grid.useBreakpoint();
   const options = useInventoryOptions();
-  const { add } = useShoppingActions();
+  const { add, addMany } = useShoppingActions();
   const inputRef = useRef<GetRef<typeof AutoComplete>>(null);
   // Enter con una sugerencia resaltada la elige; sin sugerencia, anota. Se cuenta cuántas veces se
   // eligió algo y se compara con lo que había al apretar Enter (fase de captura, antes que nadie).
@@ -61,6 +61,21 @@ export function QuickAdd({ listId }: { listId: string }) {
     inputRef.current?.focus();
   }
 
+  /** Una lista pegada (varios renglones) se anota entera. Lo que coincide con el inventario se vincula. */
+  async function pasteList(text: string) {
+    const names = parsePastedList(text);
+    if (names.length === 0 || saving) return;
+    setSaving(true);
+    const byName = new Map((options ?? []).map((option) => [option.item.name.toLowerCase(), option.item]));
+    await addMany(names.map((pasted) => {
+      const item = byName.get(pasted.toLowerCase());
+      return { name: item?.name ?? pasted, quantity: item ? suggestedQuantity(item) : 1, unit: item && isUnit(item.unit) ? item.unit : "unidades", inventoryItemId: item?.id, listId };
+    }));
+    setSaving(false);
+    setName("");
+    setLinked(null);
+  }
+
   return (
     <Card styles={{ body: { padding: screens.sm ? 16 : 12 } }} style={{ marginBottom: 16 }}>
       <Flex
@@ -69,6 +84,13 @@ export function QuickAdd({ listId }: { listId: string }) {
         align="center"
         onKeyDownCapture={(event) => {
           if (event.key === "Enter") selectionsAtEnter.current = selections.current;
+        }}
+        onPasteCapture={(event) => {
+          // Un renglón solo se pega como siempre; varios renglones se anotan de una vez.
+          const text = event.clipboardData.getData("text");
+          if (!/\r?\n/.test(text.trim())) return;
+          event.preventDefault();
+          void pasteList(text);
         }}
       >
         <AutoComplete
@@ -136,6 +158,12 @@ export function QuickAdd({ listId }: { listId: string }) {
           </Button>
         </Flex>
       </Flex>
+
+      {!linked && (
+        <Typography.Text type="secondary" style={{ display: "block", paddingTop: 8, fontSize: token.fontSizeSM }}>
+          {t("shopping.add.pasteHint")}
+        </Typography.Text>
+      )}
 
       <AnimatePresence initial={false}>
         {linked && (

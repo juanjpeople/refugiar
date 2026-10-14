@@ -15,7 +15,8 @@ for (const privacy of ["Privado", "Adultos"]) {
     await page.getByRole("button", { name: "Crear lista" }).click();
     await page.waitForURL(/compras\?lista=/);
     await page.reload();
-    await page.getByRole("button", { name: "Editar lista", exact: true }).click();
+    await page.getByRole("button", { name: "Más acciones", exact: true }).click();
+    await page.getByRole("menuitem", { name: "Editar lista" }).click();
     await expect(page.getByRole("radio", { name: privacy, exact: true })).toBeChecked();
     await page.getByRole("button", { name: "Cancelar", exact: true }).click();
 
@@ -27,7 +28,8 @@ for (const privacy of ["Privado", "Adultos"]) {
     await page.getByPlaceholder("Ej. Sanitarios, Herramientas de jardín").fill("Lista compartida");
     await page.getByRole("button", { name: "Crear lista" }).click();
     await page.waitForURL(/compras\?lista=/);
-    await page.getByRole("button", { name: "Editar lista", exact: true }).click();
+    await page.getByRole("button", { name: "Más acciones", exact: true }).click();
+    await page.getByRole("menuitem", { name: "Editar lista" }).click();
     await expect(page.getByRole("radio", { name: "Familia", exact: true })).toBeChecked();
   });
 }

@@ -48,7 +48,7 @@ for (const colorScheme of ["light", "dark"] as const) {
     await expect(storage.getByRole("heading", { name: "Taller", exact: true })).toBeVisible();
     await settleCapture(page, storage);
     await storage.screenshot({ path: testInfo.outputPath(`${colorScheme}-design-recinto.png`), animations: "disabled", style: "header { visibility: hidden !important; }" });
-    await storage.getByText("3 · Contenedor", { exact: true }).click();
+    await storage.getByText("3 · Mueble o caja", { exact: true }).click();
     await expect(storage.getByRole("heading", { name: "Alacena", exact: true })).toBeVisible();
     await settleCapture(page, storage);
     await storage.screenshot({ path: testInfo.outputPath(`${colorScheme}-design-contenedor.png`), animations: "disabled", style: "header { visibility: hidden !important; }" });
