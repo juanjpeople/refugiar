@@ -1,6 +1,6 @@
 "use client";
 
-import { Col, Form, Input, InputNumber, Modal, Row, Select, Switch, theme } from "antd";
+import { Col, Collapse, Form, Input, InputNumber, Modal, Row, Select, Switch, theme } from "antd";
 import { useEffect, useState } from "react";
 import { useT } from "@/i18n";
 import { INVENTORY_LIMITS, UNITS, type NewInventoryItem } from "../domain";
@@ -58,6 +58,8 @@ export function ProductModal({ containerId, place, open, onClose }: { containerI
         >
           <Input autoFocus placeholder={t("inventory.form.namePlaceholder")} maxLength={INVENTORY_LIMITS.nameMaxLength} />
         </Form.Item>
+        {/* Para guardar algo alcanza el nombre: cantidades y avisos de reposición, si hacen falta, acá. */}
+        <Collapse ghost size="small" items={[{ key: "more", label: t("inventory.form.more"), forceRender: true, children: (<>
         <Row gutter={token.margin}>
           <Col xs={12} sm={8}>
             <Form.Item name="quantity" label={t("inventory.form.quantity")} rules={[{ required: true, message: t("inventory.form.required") }]}>
@@ -87,6 +89,7 @@ export function ProductModal({ containerId, place, open, onClose }: { containerI
             </Form.Item>
           </Col>
         </Row>
+        </>) }]} />
         {/* Enter en un campo guarda, como en el resto de los formularios. */}
         <button type="submit" hidden />
       </Form>

@@ -599,7 +599,7 @@ const { inventoryView } = usePreferences();
       <FlowFrame<Step>
         steps={[
           { value: "inventory", label: "1 · Inventario" },
-          { value: "space", label: "2 · Recinto" },
+          { value: "space", label: "2 · Lugar" },
           { value: "container", label: "3 · Contenedor" },
           { value: "item", label: "4 · Ficha" },
           { value: "camera", label: "5 · Cámara" },
