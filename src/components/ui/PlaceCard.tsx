@@ -31,7 +31,7 @@ interface PlaceCardProps {
   title: string;
   icon: LucideIcon;
   color: AppearanceColor;
-  /** Una línea de resumen ("4 contenedores · 17 productos"). */
+  /** Una línea de resumen ("4 muebles y cajas · 17 cosas"). */
   meta?: ReactNode;
   /** Pie con estado: lo que necesita atención o que está todo bien. */
   status?: { tone: "success" | "warning"; text: ReactNode };

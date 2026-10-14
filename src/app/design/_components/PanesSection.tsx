@@ -1,9 +1,9 @@
 "use client";
 
 import { Button, Segmented } from "antd";
-import { Database, Languages, Paintbrush } from "lucide-react";
+import { Boxes, CalendarDays, Database, House, Languages, Paintbrush, ScanLine, ShoppingCart } from "lucide-react";
 import { useState } from "react";
-import { SectionPanes, SettingRow } from "@/components/ui";
+import { BottomBar, SectionPanes, SettingRow } from "@/components/ui";
 import { DemoBlock } from "./DemoBlock";
 
 const SECTIONS = [
@@ -41,6 +41,39 @@ export function PanesSection() {
           </SettingRow>
         )}
       </SectionPanes>
+    </DemoBlock>
+  );
+}
+
+const BAR_ITEMS = [
+  { id: "home", href: "/design#componentes-barra", label: "Inicio", icon: House },
+  { id: "inventory", href: "/design#componentes-barra", label: "Inventario", icon: Boxes },
+  { id: "compras", href: "/design#componentes-barra", label: "Compras", icon: ShoppingCart },
+  { id: "calendar", href: "/design#componentes-barra", label: "Calendario", icon: CalendarDays },
+];
+
+export function BottomBarBlock() {
+  const [active, setActive] = useState("inventory");
+
+  return (
+    <DemoBlock
+      id="componentes-barra"
+      title="Barra de abajo: BottomBar"
+      description="Solo en el celular (menos de md). Lleva lo de todos los días a un toque del pulgar: Inicio, Inventario, Compras y Calendario, con Escanear en el centro, más grande. El resto sigue en el menú ☰. Respeta los permisos del perfil: si alguien no ve Compras, la barra no lo muestra. No aparece en las pantallas de cámara, que tienen sus propios botones abajo. El contenido deja su alto libre (BOTTOM_BAR_HEIGHT más el margen seguro del teléfono)."
+      code={`<BottomBar aria-label={t("nav.bottomBar")} items={items} activeId={activeId}
+  action={{ id: "scan", href: "/inventario/escanear", label: t("nav.routes.scan"), icon: ScanLine }} />`}
+    >
+      <div style={{ maxWidth: 420 }}>
+        <BottomBar
+          position="static"
+          layoutId="design-bottom-bar"
+          aria-label="Barra de ejemplo"
+          activeId={active}
+          onSelect={setActive}
+          items={BAR_ITEMS}
+          action={{ id: "scan", href: "/design#componentes-barra", label: "Escanear QR", icon: ScanLine }}
+        />
+      </div>
     </DemoBlock>
   );
 }

@@ -8,6 +8,8 @@ Cada perfil acomoda la app a su gusto.
 - Tema claro, oscuro o del sistema, color de marca, radio, tamaño de letra, densidad y animaciones.
 - Idioma (español e inglés), modo del menú y atajos de teclado.
 - **Datos**: exportar e importar JSON (los exports viejos se migran), borrar caché y borrar todo.
+- **Casa solo en este dispositivo**: la app pide al navegador que no borre sus datos, e Inicio recuerda hacer un respaldo si el último tiene más de una semana ("En una semana" lo pospone).
+- En el celular, el encabezado de las páginas es siempre compacto (solo título y acciones).
 - Se instala como **PWA** y avisa cuando hay una versión nueva.
 
 ## Cómo se usa

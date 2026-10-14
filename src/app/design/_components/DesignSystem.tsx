@@ -22,7 +22,7 @@ import { LabelShapes, StorageFlow } from "./StorageFlow";
 import { VoiceSection } from "./VoiceSection";
 import { EntryFlow, EntrySection } from "./EntrySection";
 import { CatalogSection } from "./CatalogSection";
-import { PanesSection } from "./PanesSection";
+import { BottomBarBlock, PanesSection } from "./PanesSection";
 import { DetailTemplateSection, TemplatesSection } from "./TemplatesSection";
 
 // El orden de cada grupo es el orden en la página (el índice sigue el scroll).
@@ -34,7 +34,7 @@ const TOC = [
   { group: "Componentes antd", items: [["botones", "Botones"], ["feedback", "Feedback"], ["formularios", "Formularios"], ["tablas", "Tablas"]] },
   {
     group: "Componentes propios",
-    items: [["componentes-estructura", "Estructura"], ["componentes-estados", "Estados"], ["componentes-seleccion", "Selección"], ["componentes-datos", "Datos"], ["componentes-fichas", "Fichas"], ["componentes-espacios", "Espacios"], ["componentes-entrada", "Entrada"], ["componentes-paneles", "Paneles"], ["componentes-plantillas", "Plantillas"], ["componentes-plantillas-detalle", "Detalle"]],
+    items: [["componentes-estructura", "Estructura"], ["componentes-estados", "Estados"], ["componentes-seleccion", "Selección"], ["componentes-datos", "Datos"], ["componentes-fichas", "Fichas"], ["componentes-espacios", "Espacios"], ["componentes-entrada", "Entrada"], ["componentes-paneles", "Paneles"], ["componentes-barra", "Barra de abajo"], ["componentes-plantillas", "Plantillas"], ["componentes-plantillas-detalle", "Detalle"]],
   },
   { group: "Flujos", items: [["flujo-almacenamiento", "Almacenamiento"], ["etiquetas", "Etiquetas QR"], ["flujo-catalogo", "Catálogo"], ["flujo-recetas", "Recetas"], ["flujo-entrada", "Entrada"]] },
   { group: "Calidad", items: [["revision", "Revisión antes de un PR"]] },
@@ -89,6 +89,7 @@ export function DesignSystem() {
             <SheetsSection />
             <EntrySection />
             <PanesSection />
+            <BottomBarBlock />
             <TemplatesSection />
             <DetailTemplateSection />
           </Section>

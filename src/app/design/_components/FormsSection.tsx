@@ -65,7 +65,7 @@ export function FormsSection() {
             </Form.Item>
           </Col>
           <Col xs={24} md={12}>
-            <Form.Item name="kind" label="Contenedor">
+            <Form.Item name="kind" label="Mueble">
               <Segmented
                 block
                 options={(["fridge", "pantry", "toolbox"] as const).map((value) => ({ value, label: t(`storage.containerKinds.${value}`) }))}

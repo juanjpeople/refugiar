@@ -2,7 +2,7 @@
  * Recetas de la casa: ingredientes vinculados al inventario (o texto libre), pasos, etiquetas
  * y porciones. Sin React ni base de datos.
  */
-import { INVENTORY_LIMITS, isUnit, type InventoryItem } from "@/features/inventory/domain";
+import { INVENTORY_LIMITS, isUnit, type InventoryItem, type Unit } from "@/features/inventory/domain";
 import { ValidationError } from "@/lib/errors";
 import { isPrivacy, type Privacy } from "@/lib/sync/scope";
 
@@ -65,6 +65,68 @@ function parseIngredient(input: RecipeIngredient): RecipeIngredient {
   const unit = input.unit?.trim() ?? "";
   if (linked && !isUnit(unit)) throw new ValidationError("errors.validation.unitInvalid");
   return { itemId: input.itemId || undefined, name, quantity: input.quantity, unit: unit.slice(0, 20) };
+}
+
+// --- Pegar una receta --------------------------------------------------------------
+
+/** Unidades escritas a mano → las del inventario. Lo demás (taza, cucharada) queda como se escribió. */
+const UNIT_WORDS: Record<string, Unit> = {
+  g: "gr", gr: "gr", grs: "gr", gramo: "gr", gramos: "gr",
+  kg: "kg", kgs: "kg", kilo: "kg", kilos: "kg", kilogramo: "kg", kilogramos: "kg",
+  l: "litros", lt: "litros", lts: "litros", litro: "litros", litros: "litros",
+  unidad: "unidades", unidades: "unidades", u: "unidades",
+  paquete: "paquetes", paquetes: "paquetes",
+  metro: "metros", metros: "metros",
+};
+/** Medidas de cocina que no están en el inventario: se guardan tal cual, como unidad del ingrediente suelto. */
+const KITCHEN_UNITS = new Set(["ml", "cc", "taza", "tazas", "cda", "cdas", "cucharada", "cucharadas", "cdita", "cditas", "cucharadita", "cucharaditas", "pizca", "pizcas", "diente", "dientes", "lata", "latas", "sobre", "sobres", "cup", "cups", "tbsp", "tsp"]);
+const FRACTIONS: Record<string, number> = { "½": 0.5, "¼": 0.25, "¾": 0.75, "⅓": 1 / 3, "⅔": 2 / 3 };
+
+/** Saca viñetas, números de lista y casillas del principio de un renglón. */
+function stripMarker(line: string): string {
+  return line.replace(/^\s*(?:[-*•·–—]+|\d+\s*[.)-]\s|\[[ xX]?\]|[☐☑✓✔])\s*/u, "").trim();
+}
+
+function parseAmount(text: string): number | null {
+  const mixed = text.match(/^(\d+)\s+(\d+)\/(\d+)$/);
+  if (mixed) return Number(mixed[1]) + Number(mixed[2]) / Number(mixed[3]);
+  const fraction = text.match(/^(\d+)\/(\d+)$/);
+  if (fraction) return Number(fraction[2]) ? Number(fraction[1]) / Number(fraction[2]) : null;
+  if (text in FRACTIONS) return FRACTIONS[text];
+  const value = Number(text.replace(",", "."));
+  return Number.isFinite(value) ? value : null;
+}
+
+/** "200 g de harina", "2 huevos", "½ taza de leche", "Sal a gusto" → un ingrediente suelto. */
+export function parseIngredientLine(raw: string): { name: string; quantity: number; unit: string } | null {
+  const line = stripMarker(raw);
+  if (!line) return null;
+  const match = line.match(/^(\d+\s+\d+\/\d+|\d+\/\d+|\d+(?:[.,]\d+)?|[½¼¾⅓⅔])\s*(.*)$/u);
+  const amount = match ? parseAmount(match[1]) : null;
+  let rest = match && amount !== null && amount > 0 ? match[2] : line;
+  let unit = "";
+  if (rest !== line) {
+    const word = rest.match(/^([\p{L}.]+)\s+(.*)$/u);
+    const key = word?.[1].toLowerCase().replace(/\.$/, "");
+    if (word && key && (key in UNIT_WORDS || KITCHEN_UNITS.has(key))) {
+      unit = UNIT_WORDS[key] ?? word[1].replace(/\.$/, "");
+      rest = word[2];
+    }
+    rest = rest.replace(/^de\s+/i, "");
+  }
+  const name = rest.trim().slice(0, INVENTORY_LIMITS.nameMaxLength);
+  if (!name) return null;
+  const quantity = rest !== line && amount !== null ? Math.min(amount, INVENTORY_LIMITS.maxQuantity) : 1;
+  return { name, quantity: Math.round(quantity * 100) / 100, unit: unit || (rest !== line ? "unidades" : "") };
+}
+
+/** La preparación pegada → un paso por renglón (sin "1.", "Paso 2:" ni renglones vacíos). */
+export function parseStepLines(text: string): string[] {
+  return text
+    .split(/\r?\n/)
+    .map((line) => stripMarker(line).replace(/^paso\s*\d+\s*[:.)-]?\s*/i, "").trim().slice(0, RECIPE_LIMITS.stepMaxLength))
+    .filter(Boolean)
+    .slice(0, RECIPE_LIMITS.maxSteps);
 }
 
 /** Normaliza y valida. Los formularios validan para UX; esto es lo que vale. */
