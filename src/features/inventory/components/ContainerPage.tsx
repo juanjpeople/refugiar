@@ -1,7 +1,7 @@
 "use client";
 
 import { App, Button, Card, Col, Dropdown, Flex, Row, Typography, theme } from "antd";
-import { ArrowRightLeft, Boxes, Camera, CopyPlus, EllipsisVertical, Layers, NotebookPen, PackageOpen, PackageX, Pencil, Plus, Printer, QrCode, RotateCcwClock, Trash2 } from "lucide-react";
+import { ArrowRightLeft, Boxes, Camera, CopyPlus, EllipsisVertical, Images, Layers, NotebookPen, PackageOpen, PackageX, Pencil, Plus, Printer, QrCode, RotateCcwClock, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useContext, useState, type CSSProperties } from "react";
@@ -24,7 +24,7 @@ import { useT } from "@/i18n";
 import { tint } from "@/lib/appearance";
 import { usePermission } from "@/lib/auth/hooks";
 import { useTrackVisit } from "@/components/layout/useShell";
-import { cameraHref, containerHref, spaceHref } from "@/lib/navigation/routes";
+import { cameraHref, containerHref, photosHref, spaceHref } from "@/lib/navigation/routes";
 import { usePageCrumbs } from "@/store/useBreadcrumbStore";
 import { getStockStatus, type StockStatus } from "../domain";
 import { useInventoryItems } from "../hooks";
@@ -139,11 +139,12 @@ export function ContainerPage() {
               <Button icon={<QrCode />} onClick={() => setLabels([labelOf(container, place)])}>
                 {t("storage.label")}
               </Button>
-              {(canManage || canViewActivity) && (
+              {(canManage || canViewActivity || counts.children > 0) && (
                 <Dropdown
                   trigger={["click"]}
                   menu={{
                     items: [
+                      ...(counts.children > 0 ? [{ key: "photos", icon: <Images />, label: <Link href={photosHref({ id: container.id })}>{t("photos.title")}</Link> }] : []),
                       ...(canManage ? [{ key: "edit", icon: <Pencil />, label: t("storage.edit"), onClick: () => setDialog("edit") }] : []),
                       ...(canAddChild ? [{ key: "child", icon: <Layers />, label: t("storage.addSubcontainer"), onClick: () => setDialog("addChild") }] : []),
                       ...(canAddChild ? [{ key: "many", icon: <CopyPlus />, label: t("storage.bulk.title"), onClick: () => setDialog("addMany") }] : []),

@@ -1,7 +1,7 @@
 "use client";
 
 import { Button, Dropdown, theme } from "antd";
-import { Boxes, Camera, CopyPlus, EllipsisVertical, MapPinOff, Pencil, Plus, Printer, Trash2 } from "lucide-react";
+import { Boxes, Camera, CopyPlus, EllipsisVertical, Images, ListChecks, MapPinOff, Pencil, Plus, Printer, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
@@ -10,7 +10,7 @@ import { DetailMissing, DetailPage, IconTile, PathCrumbs, ViewSwitcher } from "@
 import { useTrackVisit } from "@/components/layout/useShell";
 import { usePreferences, useSetPreference } from "@/hooks/usePreferences";
 import { useT } from "@/i18n";
-import { cameraHref, spaceHref } from "@/lib/navigation/routes";
+import { cameraHref, organizeHref, photosHref, spaceHref } from "@/lib/navigation/routes";
 import { usePageCrumbs } from "@/store/useBreadcrumbStore";
 import { spaceAppearance } from "../domain";
 import { useStorageOverview } from "../hooks";
@@ -46,6 +46,8 @@ export function SpacePage() {
   const totals = spaceTotals(space);
   const all = flattenOverview([space]);
   const menu = [
+    { key: "photos", icon: <Images />, label: <Link href={photosHref({ space: space.id })}>{t("photos.title")}</Link> },
+    ...(actions.onAddContainer ? [{ key: "organize", icon: <ListChecks />, label: <Link href={organizeHref(space.id)}>{t("organize.title")}</Link> }] : []),
     ...(actions.onAddContainer ? [{ key: "many", icon: <CopyPlus />, label: t("storage.bulk.title"), onClick: () => setBulkOpen(true) }] : []),
     ...(actions.onEditSpace ? [{ key: "edit", icon: <Pencil />, label: t("storage.editSpace"), onClick: () => actions.onEditSpace?.(space) }] : []),
     ...(actions.onDeleteSpace ? [{ type: "divider" as const }, { key: "delete", danger: true, icon: <Trash2 />, label: t("storage.delete"), onClick: () => actions.onDeleteSpace?.(space) }] : []),

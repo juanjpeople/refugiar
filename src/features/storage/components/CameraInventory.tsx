@@ -1,12 +1,12 @@
 "use client";
 
-import { Button, Card, Col, Flex, Grid, Input, Row, Segmented, Select, Space, Tag, Typography, theme } from "antd";
+import { Button, Card, Col, Flex, Grid, Input, Row, Segmented, Select, Space, Switch, Tag, Typography, theme } from "antd";
 import { AnimatePresence } from "framer-motion";
 import { useLiveQuery } from "dexie-react-hooks";
-import { Box, Camera, CameraOff, ExternalLink, MapPin, ScanLine, Search, SwitchCamera, X } from "lucide-react";
+import { BellRing, Box, Camera, CameraOff, ExternalLink, MapPin, MoonStar, ScanLine, Search, SwitchCamera, X } from "lucide-react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { RequirePermission } from "@/components/auth/RequirePermission";
 import { Reveal } from "@/components/motion";
 import { Callout, CameraViewport, EmptyState, IconTile, ListRow, PageHeader, SectionHeader, StockTag, type CameraDetection } from "@/components/ui";
@@ -53,18 +53,34 @@ function CameraInventoryView({ initialMode }: { initialMode: CameraMode }) {
   const [seen, setSeen] = useState<QrDetection[]>([]);
   const memory = useRef(new Map<string, { detection: QrDetection; at: number }>());
   const [aspect, setAspect] = useState(4 / 3);
+  const [notify, setNotify] = useState(true);
+  const [dark, setDark] = useState(false);
+  // Cajas que ya avisaron para lo buscado: suena una vez por caja, no en cada cuadro.
+  const alerted = useRef({ query: "", ids: new Set<string>() });
   const data = useLiveQuery(async () => {
     const [spaces, containers, items, notes] = await Promise.all([db.spaces.toArray(), db.containers.orderBy("name").toArray(), db.inventory.toArray(), db.containerContents.toArray()]);
     return { spaces, containers, items, notes, index: indexStorage(spaces, containers, items, notes) };
   });
   const byCode = useMemo(() => new Map((data?.containers ?? []).map((container) => [container.code, container])), [data]);
-  const camera = useCameraScanner((detections, stopFrame) => {
+  const camera = useCameraScanner((detections, stopFrame, flash) => {
     const valid = detections.filter((detection) => codeFromScan(detection.rawValue));
     if (mode === "qr") {
       const code = valid[0] ? codeFromScan(valid[0].rawValue) : null;
       if (code) { stopFrame(); router.push(qrHref(code)); }
       else if (detections.length) setInvalid(true);
       return;
+    }
+    if (notify && query.trim() && data) {
+      if (alerted.current.query !== query) alerted.current = { query, ids: new Set() };
+      for (const detection of valid) {
+        const match = byCode.get(codeFromScan(detection.rawValue)!);
+        if (!match || alerted.current.ids.has(match.id)) continue;
+        const content = cameraContents(match.id, data.containers, data.items, data.notes, query);
+        if (content.items.length + content.notes.length === 0) continue;
+        alerted.current.ids.add(match.id);
+        signal();
+        void flash();
+      }
     }
     const now = Date.now();
     for (const detection of valid) memory.current.set(codeFromScan(detection.rawValue)!, { detection, at: now });
@@ -132,17 +148,29 @@ function CameraInventoryView({ initialMode }: { initialMode: CameraMode }) {
   return <>
     <PageHeader eyebrow={t("storage.eyebrow")} title={t("camera.title")} description={t(mode === "find" ? "camera.findDescription" : "camera.description")} />
     <Reveal delay={0.05}>
-      <Segmented<CameraMode> aria-label={t("camera.mode")} value={mode} onChange={changeMode} vertical={!screens.sm} block={!screens.sm} style={{ marginBottom: token.marginLG }} options={[
+      {/* AR es experimental: no está entre los modos de siempre, se entra desde un enlace aparte. */}
+      <Segmented<CameraMode> aria-label={t("camera.mode")} value={mode} onChange={changeMode} vertical={!screens.sm} block={!screens.sm} style={{ marginBottom: mode === "ar" ? token.marginLG : token.marginXS }} options={[
         { value: "qr", label: t("scan.title"), icon: <ScanLine /> },
         { value: "find", label: t("camera.findMode"), icon: <Search /> },
-        { value: "ar", label: <span style={{ display: "inline-flex", alignItems: "center", gap: token.marginXS }}><span>{t("camera.arMode")}</span><Tag bordered={false} style={{ marginInlineEnd: 0 }}>{t("camera.experimental")}</Tag></span>, icon: <Box /> },
+        ...(mode === "ar" ? [{ value: "ar" as const, label: <span style={{ display: "inline-flex", alignItems: "center", gap: token.marginXS }}><span>{t("camera.arMode")}</span><Tag bordered={false} style={{ marginInlineEnd: 0 }}>{t("camera.experimental")}</Tag></span>, icon: <Box /> }] : []),
       ]} />
+      {mode !== "ar" && <div style={{ marginBottom: token.marginSM }}><Button type="link" size="small" icon={<Box />} onClick={() => changeMode("ar")} style={{ paddingInline: 0 }}>{t("camera.tryAr")}</Button></div>}
     </Reveal>
     <Row gutter={[token.marginLG, token.marginLG]}>
       <Col xs={24} lg={14}>
         <Reveal delay={0.1}>
           <Flex vertical gap={token.margin}>
             {mode === "find" && <Input size="large" prefix={<Search />} placeholder={t("camera.search")} aria-label={t("camera.search")} value={query} onChange={(event) => setQuery(event.target.value)} allowClear />}
+            {mode === "find" && (
+              <Flex gap={token.marginSM} wrap align="center" justify="space-between">
+                <label style={{ display: "inline-flex", alignItems: "center", gap: token.marginXS }}>
+                  <Switch checked={notify} onChange={(checked) => { setNotify(checked); if (checked) signal(true); }} />
+                  <span><BellRing /> {t("camera.notify")}</span>
+                </label>
+                <Button icon={<MoonStar />} disabled={!camera.active || !query.trim()} onClick={() => { signal(true); setDark(true); }}>{t("camera.dark")}</Button>
+              </Flex>
+            )}
+            {mode === "find" && <Typography.Text type="secondary" style={{ fontSize: token.fontSizeSM, marginTop: -token.marginXS }}>{t("camera.notifyHelp")}</Typography.Text>}
             {mode !== "ar" && <>
               {hydrated && !supported && <Callout>{t("scan.unsupported")}</Callout>}
               {(camera.status === "denied" || camera.status === "failed") && <Callout tone="danger" role="alert">{t(`scan.${camera.status}`)}</Callout>}
@@ -223,7 +251,55 @@ function CameraInventoryView({ initialMode }: { initialMode: CameraMode }) {
         </Reveal>
       </Col>
     </Row>
+    {dark && camera.active && <DarkScreen query={query} onExit={() => setDark(false)} />}
   </>;
+}
+
+/**
+ * Pantalla negra mientras se busca: la cámara sigue leyendo debajo y avisa con sonido, vibración
+ * y destello. En pantallas OLED el negro casi no gasta batería. La pantalla no se apaga mientras dura.
+ */
+function DarkScreen({ query, onExit }: { query: string; onExit: () => void }) {
+  const { t } = useI18n();
+  const { token } = theme.useToken();
+  useEffect(() => {
+    let lock: { release: () => Promise<void> } | null = null;
+    const nav = navigator as Navigator & { wakeLock?: { request: (type: "screen") => Promise<{ release: () => Promise<void> }> } };
+    nav.wakeLock?.request("screen").then((sentinel) => { lock = sentinel; }).catch(() => undefined);
+    return () => { void lock?.release(); };
+  }, []);
+  return (
+    <button
+      type="button"
+      onClick={onExit}
+      aria-label={t("camera.darkExit")}
+      // Negro puro a propósito: es lo que ahorra batería en pantallas OLED, no depende del tema.
+      style={{ position: "fixed", inset: 0, zIndex: 2000, border: "none", background: "black", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "flex-end", paddingBottom: token.paddingXL * 2, gap: token.marginXS, cursor: "pointer" }}
+    >
+      <Typography.Text style={{ color: token.colorTextQuaternary }}>{t("camera.darkSearching", { query: query.trim() })}</Typography.Text>
+      <Typography.Text style={{ color: token.colorTextQuaternary, fontSize: token.fontSizeSM }}>{t("camera.darkExit")}</Typography.Text>
+    </button>
+  );
+}
+
+let audio: AudioContext | null = null;
+
+/** Aviso de "está acá": un pitido corto y una vibración (donde el teléfono la permite). `warmup` solo prepara el audio. */
+function signal(warmup = false) {
+  try {
+    audio ??= new AudioContext();
+    if (audio.state === "suspended") void audio.resume();
+    if (warmup) return;
+    const oscillator = audio.createOscillator();
+    const gain = audio.createGain();
+    oscillator.frequency.value = 880;
+    gain.gain.setValueAtTime(0.25, audio.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, audio.currentTime + 0.35);
+    oscillator.connect(gain).connect(audio.destination);
+    oscillator.start();
+    oscillator.stop(audio.currentTime + 0.35);
+  } catch { /* Sin audio: queda la vibración. */ }
+  if (!warmup) navigator.vibrate?.([120, 60, 120]);
 }
 
 /** Sobre el video: zoom (1×, 2×, 3×) y cambio de lente, solo si la cámara los ofrece. */

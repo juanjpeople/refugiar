@@ -128,14 +128,14 @@ export function SpaceModal({ open, space, onClose, onCreated }: { open: boolean;
   );
 }
 
-type LocationValue = `space:${string}` | `container:${string}`;
+export type LocationValue = `space:${string}` | `container:${string}`;
 type ContainerFormValues = Omit<NewContainer, "spaceId" | "parentId"> & { location: LocationValue };
 
 /**
  * Árbol de ubicaciones: recintos y, adentro, sus contenedores. Se deshabilita lo que no puede
  * recibir al contenedor (él mismo, sus compartimentos, o lo que ya está en el último nivel).
  */
-function useLocationTree(editingId?: string) {
+export function useLocationTree(editingId?: string) {
   const spaces = useSpaces();
   const containers = useContainers();
 
