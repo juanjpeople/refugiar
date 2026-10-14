@@ -13,9 +13,9 @@ import { useDeviceStore } from "@/store/useDeviceStore";
 import { useResetPreferences } from "@/hooks/usePreferences";
 import { useI18n } from "@/i18n";
 import { useCurrentUser } from "@/lib/auth/session";
-import { downloadJson } from "@/lib/download";
 import { getErrorMessage } from "@/lib/errors";
-import { clearCache, deleteAllData, exportAllData, getStorageEstimate, importAllData, parseExport } from "../service";
+import { clearCache, deleteAllData, getStorageEstimate, importAllData, parseExport } from "../service";
+import { useExportBackup } from "../useBackup";
 import { SettingRow } from "@/components/ui";
 
 export function DataSettings() {
@@ -25,7 +25,7 @@ export function DataSettings() {
   const user = useCurrentUser();
   const resetPreferences = useResetPreferences();
   const [estimate, setEstimate] = useState<{ usage: number; quota: number } | null>(null);
-  const [busy, setBusy] = useState<"export" | "cache" | "import" | null>(null);
+  const [busy, setBusy] = useState<"cache" | "import" | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
   const { modal } = App.useApp();
   const [wipeOpen, setWipeOpen] = useState(false);
@@ -35,7 +35,7 @@ export function DataSettings() {
     getStorageEstimate().then(setEstimate);
   }, []);
 
-  async function run(kind: "export" | "cache" | "import", action: () => Promise<void>) {
+  async function run(kind: "cache" | "import", action: () => Promise<void>) {
     setBusy(kind);
     try {
       await action();
@@ -46,12 +46,8 @@ export function DataSettings() {
     }
   }
 
-  const onExport = () =>
-    run("export", async () => {
-      const data = await exportAllData(user);
-      const saved = await downloadJson(data, `refugiar-${new Date().toISOString().slice(0, 10)}.json`);
-      if (saved) message.success(t("settings.data.export.done"));
-    });
+  const backup = useExportBackup();
+  const onExport = () => void backup.exportNow();
 
   /** Lee el archivo, muestra qué trae y recién con la confirmación reemplaza los datos. */
   const onImportFile = (file: File) =>
@@ -134,7 +130,7 @@ export function DataSettings() {
 
       <SettingRow label={t("settings.data.export.title")} description={t("settings.data.export.text")}>
         {adminOnly((disabled) => (
-          <Button icon={<Download />} loading={busy === "export"} disabled={disabled} onClick={onExport}>
+          <Button icon={<Download />} loading={backup.busy} disabled={disabled} onClick={onExport}>
             {t("settings.data.export.button")}
           </Button>
         ))}

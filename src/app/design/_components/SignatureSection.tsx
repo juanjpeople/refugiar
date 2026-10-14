@@ -116,7 +116,7 @@ borderBottom: \`1px solid \${token.colorBorderSecondary}\`,
                         </Typography.Text>
                         <Typography.Text type="secondary">productos</Typography.Text>
                       </Flex>
-                      <Typography.Text type="secondary">en 9 contenedores</Typography.Text>
+                      <Typography.Text type="secondary">en 9 muebles y cajas</Typography.Text>
                     </NavCard>
                   </StaggerItem>
                 </Col>

@@ -46,7 +46,7 @@ function StructureBlock() {
     <DemoBlock
       id="componentes-estructura"
       title="Estructura: PageHeader, SectionHeader y PathCrumbs"
-      description="Una página tiene un solo PageHeader (eyebrow, título, descripción, como mucho dos acciones; en páginas de detalle, leading con el IconTile o la escena de la entidad). Cada sección abre con SectionHeader, o con el title de su Card si la sección es una sola tarjeta (como en Recetas). Lo que nunca: mezclar los dos estilos, Title sueltos o <strong> como encabezado en la misma página. En una página anidada (un recinto, un contenedor, un compartimento), PathCrumbs va en crumbs del PageHeader en lugar del eyebrow: cada tramo abre su página y mide 44 px, porque en celular las migas de la cabecera no se ven. La ruta se parte en líneas, nunca recorta un nombre."
+      description="Una página tiene un solo PageHeader (eyebrow, título, descripción, como mucho dos acciones; en páginas de detalle, leading con el IconTile o la escena de la entidad). En el celular es siempre compacto: solo título y acciones. Cada sección abre con SectionHeader, o con el title de su Card si la sección es una sola tarjeta (como en Recetas). Lo que nunca: mezclar los dos estilos, Title sueltos o <strong> como encabezado en la misma página. En una página anidada (un lugar, un mueble, una caja), PathCrumbs va en crumbs del PageHeader en lugar del eyebrow: cada tramo abre su página y mide 44 px, porque en celular las migas de la cabecera no se ven. La ruta se parte en líneas, nunca recorta un nombre."
       code={`
 import { PageHeader, SectionHeader } from "@/components/ui";
 
@@ -400,9 +400,9 @@ function SpacesBlock() {
 </RoomFloor>
 
 <PlaceCard href={spaceHref(space.id)} title="Taller" icon={Hammer} color="volcano" floor="dots"
-  meta="6 contenedores · 17 productos"
+  meta="6 muebles y cajas · 17 cosas"
   shortcuts={[{ key: id, href: containerHref(id), name: "Caja de herramientas", label: "Caja de herramientas · 2 para reponer", icon: ToolCase, color: "volcano", alert: true }]}
-  more={{ count: 2, label: "2 contenedores más en Taller" }}
+  more={{ count: 2, label: "2 muebles más en Taller" }}
   status={{ tone: "warning", text: "2 para reponer" }} />
 
 <ContainerScene container={container} compact open />   {/* la escena de la página del contenedor */}
@@ -424,17 +424,17 @@ function SpacesBlock() {
       <div onClickCapture={(event) => { if ((event.target as Element).closest("a")) event.preventDefault(); }} style={{ marginBottom: 24 }}>
         <Row gutter={[16, 16]}>
           <Col xs={24} md={12}>
-            <PlaceCard href="#" title="Taller" icon={Hammer} color="volcano" floor="dots" meta="8 contenedores · 17 productos"
+            <PlaceCard href="#" title="Taller" icon={Hammer} color="volcano" floor="dots" meta="8 muebles y cajas · 17 cosas"
               shortcuts={[
                 { key: "toolbox", href: "#", name: "Caja de herramientas", label: "Caja de herramientas · 2 para reponer", icon: ToolCase, color: "volcano", alert: true },
                 { key: "shelf", href: "#", name: "Estantería", label: "Estantería", icon: Archive, color: "purple" },
                 { key: "box", href: "#", name: "Caja de cables", label: "Caja de cables", icon: Box, color: "gold" },
               ]}
-              more={{ count: 5, label: "5 contenedores más en Taller" }}
+              more={{ count: 5, label: "5 muebles más en Taller" }}
               status={{ tone: "warning", text: "2 para reponer" }} />
           </Col>
           <Col xs={24} md={12}>
-            <PlaceCard href="#" title="Cocina" icon={CookingPot} color="orange" floor="tiles" meta="3 contenedores · 22 productos"
+            <PlaceCard href="#" title="Cocina" icon={CookingPot} color="orange" floor="tiles" meta="3 muebles y cajas · 22 cosas"
               shortcuts={[
                 { key: "fridge", href: "#", name: "Heladera", label: "Heladera", icon: Refrigerator, color: "cyan" },
                 { key: "pantry", href: "#", name: "Alacena", label: "Alacena", icon: Archive, color: "orange" },

@@ -150,6 +150,30 @@ export function parseShoppingQuantity(quantity: number): number {
 }
 
 /** Cuánto comprar para volver al mínimo (al menos 1). */
+/** Cuántos renglones se anotan de una vez al pegar una lista. */
+export const PASTE_MAX_LINES = 50;
+
+/**
+ * Una lista pegada (de WhatsApp, una nota, un mail) → un nombre por renglón. Saca viñetas,
+ * números y casillas ("- ", "• ", "1. ", "[ ] "), renglones vacíos y repetidos.
+ */
+export function parsePastedList(text: string): string[] {
+  const seen = new Set<string>();
+  const names: string[] = [];
+  for (const raw of text.split(/\r?\n/)) {
+    const name = raw
+      .replace(/^\s*(?:[-*•·–—]+|\d+[.)]|\[[ xX]?\]|[☐☑✓✔])\s*/u, "")
+      .trim()
+      .slice(0, SHOPPING_LIMITS.nameMaxLength);
+    const key = name.toLowerCase();
+    if (!name || seen.has(key)) continue;
+    seen.add(key);
+    names.push(name);
+    if (names.length === PASTE_MAX_LINES) break;
+  }
+  return names;
+}
+
 export function suggestedQuantity(item: Pick<InventoryItem, "quantity" | "minThreshold">): number {
   return Math.max(1, item.minThreshold - item.quantity);
 }

@@ -1,18 +1,19 @@
 "use client";
 
-import { Package, ScanLine } from "lucide-react";
+import { NotebookText, Package, ScanLine } from "lucide-react";
 import { useMemo } from "react";
 import { useAllInventoryItems } from "@/features/inventory/hooks";
 import type { FeatureSearch, SearchContext } from "@/lib/navigation/commands";
 import { containerHref, spaceHref } from "@/lib/navigation/routes";
 import { containerAppearance, spaceAppearance } from "./domain";
-import { useContainers, useSpaces } from "./hooks";
+import { useAllContainerContents, useContainers, useSpaces } from "./hooks";
 
-/** Recintos, contenedores y productos ("leche" lleva al contenedor donde está guardada). */
+/** Lugares, muebles, cajas, cosas y anotaciones ("tornillos 6mm" lleva a la caja donde está anotado). */
 export function useStorageSearch({ t, router, visible }: SearchContext): FeatureSearch {
   const spaces = useSpaces();
   const containers = useContainers();
   const items = useAllInventoryItems();
+  const contents = useAllContainerContents();
 
   return useMemo(() => {
     const containerById = new Map((containers ?? []).map((container) => [container.id, container]));
@@ -49,6 +50,19 @@ export function useStorageSearch({ t, router, visible }: SearchContext): Feature
                 run: () => router.push(containerHref(item.containerId, { item: item.id })),
               }];
             }),
+            // Lo que se anotó en una caja (el modo Ordenar guarda así lo que hay adentro).
+            ...(contents ?? []).flatMap((entry) => {
+              const container = containerById.get(entry.containerId);
+              if (!container) return [];
+              return [{
+                id: `content:${entry.id}`,
+                group: "items" as const,
+                label: `${entry.text} · ${container.spaceName} › ${container.path}`,
+                icon: NotebookText,
+                keywords: container.code,
+                run: () => router.push(containerHref(entry.containerId)),
+              }];
+            }),
           ]
         : [],
       actions: visible.has("scan")
@@ -62,5 +76,5 @@ export function useStorageSearch({ t, router, visible }: SearchContext): Feature
         return undefined;
       },
     };
-  }, [spaces, containers, items, visible, t, router]);
+  }, [spaces, containers, items, contents, visible, t, router]);
 }

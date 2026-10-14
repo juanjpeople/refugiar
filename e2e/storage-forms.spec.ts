@@ -11,7 +11,7 @@ test("los tipos se eligen con teclado sin perder el nombre y conservan una sola 
   await expect(dialog).toHaveCount(0);
   await expect(page.getByRole("heading", { name: "Patio chico", exact: true })).toBeVisible();
 
-  await page.getByRole("button", { name: "Agregar contenedor", exact: true }).first().click();
+  await page.getByRole("button", { name: "Agregar mueble", exact: true }).first().click();
   await dialog.getByLabel("Nombre", { exact: true }).fill("Cables para revisar");
   await dialog.getByRole("radio", { name: "Caja", exact: true }).press("ArrowRight");
   await expect(dialog.getByRole("radio", { name: "Canasto", exact: true })).toBeChecked();
