@@ -10,9 +10,10 @@ import { EmptyState } from "./EmptyState";
 import { LoadingSkeleton } from "./LoadingSkeleton";
 import { PageHeader, type PageHeaderProps } from "./PageHeader";
 import { SectionHeader } from "./SectionHeader";
+import { belowHeader } from "@/components/layout/constants";
 
 /** Alto de la cabecera fija: un ancla (#seccion) deja el título de la sección a la vista. */
-export const DETAIL_ANCHOR_OFFSET = 96;
+export const DETAIL_ANCHOR_OFFSET = belowHeader(16);
 
 export interface DetailSection {
   /** Ancla de la sección (`/ruta#id`) y su key. */

@@ -46,14 +46,19 @@ interface UiState {
   paletteOpen: boolean;
   /** Menú en Drawer (mobile o menú oculto en escritorio). */
   navDrawerOpen: boolean;
+  /** Alto real de la barra fija de arriba (px): crece si las migas o las acciones bajan de renglón. */
+  headerHeight: number;
   setPaletteOpen: (open: boolean) => void;
   setNavDrawerOpen: (open: boolean) => void;
+  setHeaderHeight: (height: number) => void;
 }
 
 /** Estado efímero de la interfaz (no se persiste). */
 export const useUiStore = create<UiState>()((set) => ({
   paletteOpen: false,
   navDrawerOpen: false,
+  headerHeight: 80,
   setPaletteOpen: (paletteOpen) => set({ paletteOpen }),
   setNavDrawerOpen: (navDrawerOpen) => set({ navDrawerOpen }),
+  setHeaderHeight: (headerHeight) => set((state) => (state.headerHeight === headerHeight ? state : { headerHeight })),
 }));

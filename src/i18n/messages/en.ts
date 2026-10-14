@@ -625,6 +625,19 @@ export const en: Messages = {
       created: "Item added",
       saved: "Changes saved",
       deleted: "Item deleted",
+      moved: { one: "Item moved", other: "{count} items moved" },
+    },
+    move: {
+      button: "Move",
+      title: "Move to another box",
+      what: "What you're moving",
+      whatHelp: "Check what you're taking out of this box.",
+      all: "Everything ({count})",
+      to: "Where to",
+      toHelp: "Pick the box from the list or scan its label. It's kept in the history and you can move it again anytime.",
+      scan: "Scan destination",
+      scanTitle: "Scan the destination box",
+      submit: { one: "Move {count}", other: "Move {count}" },
     },
   },
   storage: {
@@ -1031,6 +1044,8 @@ export const en: Messages = {
     manual: "No camera? Type the label's code",
     manualPlaceholder: "e.g. K7QM",
     go: "Open",
+    use: "Use",
+    unknown: "That label isn't in this household. Check the selected household or the sync.",
   },
   qr: {
     resolving: "Looking for the container…",
