@@ -8,7 +8,7 @@ import { useCurrentUser } from "@/lib/auth/session";
 import { db } from "@/lib/db";
 import { getErrorMessage } from "@/lib/errors";
 import { normalizeContainerCode, type Container, type NewContainer, type NewSpace, type Space } from "./domain";
-import { addContainerContents, createContainer, createSpace, deleteContainer, deleteContainerContent, deleteSpace, saveContainerContent, updateContainer, updateSpace } from "./service";
+import { addContainerContents, createContainer, createContainers, createSpace, deleteContainer, deleteContainerContent, deleteSpace, saveContainerContent, updateContainer, updateSpace } from "./service";
 import { ancestorsOf, flattenTree, pathLabel } from "./tree";
 
 export interface ContainerOverview extends Container {
@@ -206,6 +206,8 @@ export function useStorageActions() {
     updateSpace: (id: string, input: NewSpace) => run(() => updateSpace(user, id, input).then(() => true), t("storage.toast.saved")),
     deleteSpace: (id: string) => run(() => deleteSpace(user, id).then(() => true), t("storage.toast.deleted")),
     createContainer: (input: NewContainer) => run(() => createContainer(user, input), t("storage.toast.containerCreated")),
+    createContainers: (base: Omit<NewContainer, "name">, names: string[]) =>
+      run(() => createContainers(user, base, names), t("storage.toast.containersCreated", { count: names.filter((name) => name.trim()).length })),
     updateContainer: (id: string, input: NewContainer) => run(() => updateContainer(user, id, input).then(() => true), t("storage.toast.saved")),
     deleteContainer: (id: string) => run(() => deleteContainer(user, id).then(() => true), t("storage.toast.deleted")),
   };

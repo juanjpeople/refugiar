@@ -16,7 +16,7 @@ import { ReviewSection } from "./ReviewSection";
 import { SecuritySection } from "./SecuritySection";
 import { SignatureSection } from "./SignatureSection";
 import { SkinsSection } from "./SkinsSection";
-import { StorageFlow } from "./StorageFlow";
+import { LabelShapes, StorageFlow } from "./StorageFlow";
 import { VoiceSection } from "./VoiceSection";
 import { EntryFlow, EntrySection } from "./EntrySection";
 import { CatalogSection } from "./CatalogSection";
@@ -92,6 +92,7 @@ export function DesignSystem() {
           </Section>
           <Section title="Flujos">
             <StorageFlow />
+            <LabelShapes />
             <CatalogSection />
             <RecipesFlow />
             <EntryFlow />
