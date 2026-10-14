@@ -40,3 +40,4 @@ export { InfoTile } from "./InfoTile";
 export { ScrollRail } from "./ScrollRail";
 export { WeekdayChips, type WeekdayChip } from "./WeekdayChips";
 export { WeekSchedule, type WeekScheduleDay, type WeekScheduleEntry } from "./WeekSchedule";
+export { BOTTOM_BAR_HEIGHT, BottomBar, type BottomBarItem } from "./BottomBar";

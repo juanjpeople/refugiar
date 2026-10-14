@@ -10,6 +10,8 @@ import { useCurrentUser, useLockStore } from "@/lib/auth/session";
 import { findRoute } from "@/lib/navigation/routes";
 import { useBreadcrumbStore } from "@/store/useBreadcrumbStore";
 import { useNavigationStore, useUiStore } from "@/store/useNavigationStore";
+import { persistStorage } from "@/features/cloud/diagnostics";
+import { useDeviceStore } from "@/store/useDeviceStore";
 
 /**
  * Botón de menú: en escritorio alterna completo ↔ solo íconos; si el menú está oculto
@@ -122,4 +124,16 @@ export function useTrackVisit(href: string | null) {
   useEffect(() => {
     if (user && href) visit(user.id, href);
   }, [user, href, visit]);
+}
+
+/**
+ * Casa solo en este dispositivo: pide al navegador que no borre sus datos (ni las fotos) cuando le
+ * falta espacio o pasan días sin visitas. Chrome lo concede si la app está instalada o se usa seguido;
+ * Safari en iPhone solo lo respeta con la app agregada a la pantalla de inicio.
+ */
+export function useKeepLocalData() {
+  const mode = useDeviceStore((s) => s.mode);
+  useEffect(() => {
+    if (mode === "local") void persistStorage();
+  }, [mode]);
 }

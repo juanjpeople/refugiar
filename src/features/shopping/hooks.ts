@@ -217,6 +217,11 @@ export function useShoppingActions() {
 
   return {
     add: (input: NewShoppingItem) => run(() => addShoppingItem(user, input)),
+    /** Varias cosas de una vez (una lista pegada), con un solo aviso al final. */
+    addMany: (inputs: NewShoppingItem[]) =>
+      run(async () => {
+        for (const input of inputs) await addShoppingItem(user, input);
+      }, t("shopping.toast.addedMany", { count: inputs.length })),
     confirm: (candidateIds: string[]) =>
       run(() => confirmSuggestions(user, candidateIds), candidateIds.length > 1 ? t("shopping.toast.confirmedAll", { count: candidateIds.length }) : undefined),
     dismiss: (candidateId: string, never = false) => run(() => dismissSuggestion(user, candidateId, never), never ? t("shopping.toast.never") : undefined),

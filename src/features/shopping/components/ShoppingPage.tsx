@@ -4,7 +4,7 @@ import { formatQuantity, formatUnit } from "@/features/inventory/format";
 
 import { App, Button, Card, Col, Dropdown, Flex, Grid, Progress, Row, Tag, Tooltip, Typography, theme } from "antd";
 import { AnimatePresence, LayoutGroup, motion } from "framer-motion";
-import { Archive, ArchiveRestore, ArrowLeftRight, ClipboardList, Ellipsis, Eraser, FolderOpen, MapPin, Pencil, ShoppingBag, ShoppingBasket, Trash2, Wallet, type LucideIcon } from "lucide-react";
+import { Archive, ArchiveRestore, ArrowLeftRight, ClipboardList, Ellipsis, Eraser, FolderOpen, MapPin, Pencil, Share2, ShoppingBag, ShoppingBasket, Trash2, Wallet, type LucideIcon } from "lucide-react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState, type ReactNode } from "react";
@@ -53,10 +53,10 @@ export function ShoppingPage() {
   const list = data?.list;
   const home = listId === HOME_LIST_ID;
   const summary = lists?.find((entry) => entry.list.id === listId);
-  const hasCandidates = (data?.candidates.length ?? 0) > 0;
 
   const listActions = list
     ? [
+        { key: "edit", icon: <Pencil />, label: t("shopping.lists.edit"), onClick: () => setDialog("edit") },
         ...(!home
           ? [
               list.archivedAt
@@ -117,13 +117,10 @@ export function ShoppingPage() {
         }
         description={home ? t("shopping.description") : t("shopping.lists.description")}
         extra={
-          list &&
-          canManage && (
+          list && (
             <>
-              <Tooltip title={t("shopping.lists.edit")}>
-                <Button icon={<Pencil />} aria-label={t("shopping.lists.edit")} onClick={() => setDialog("edit")} />
-              </Tooltip>
-              {listActions.length > 0 && (
+              {data && data.pending.length > 0 && <ShareButton title={listName(list, t)} rows={data.pending} />}
+              {canManage && (
                 <Dropdown menu={{ items: listActions }} trigger={["click"]} placement="bottomRight">
                   <Button icon={<Ellipsis />} aria-label={t("shopping.lists.more")} />
                 </Dropdown>
@@ -141,8 +138,8 @@ export function ShoppingPage() {
         <>
           <Summary pending={data.pending.length} budget={data.budget} review={home ? data.candidates.length : undefined} />
           <Row gutter={[24, 24]}>
-            {/* En el celular, si hay algo para revisar va primero: es lo que pide una decisión. */}
-            <Col xs={{ span: 24, order: hasCandidates ? 2 : 1 }} lg={{ span: 15, order: 1 }}>
+            {/* En el celular la lista va primero: en el súper es lo que se mira. Lo para revisar, abajo. */}
+            <Col xs={{ span: 24, order: 1 }} lg={{ span: 15, order: 1 }}>
               {canManage && !list.archivedAt && (
                 <Reveal delay={0.1}>
                   <QuickAdd key={list.id} listId={list.id} />
@@ -152,7 +149,7 @@ export function ShoppingPage() {
                 <ListCard list={list} lists={lists ?? []} pending={data.pending} bought={data.bought} />
               </Reveal>
             </Col>
-            <Col xs={{ span: 24, order: hasCandidates ? 1 : 2 }} lg={{ span: 9, order: 2 }}>
+            <Col xs={{ span: 24, order: 2 }} lg={{ span: 9, order: 2 }}>
               <Reveal delay={0.2} style={{ position: "sticky", top: belowHeader(8) }}>
                 <Flex vertical gap={16}>
                   {home && <ReviewPanel candidates={data.candidates} />}
@@ -175,7 +172,24 @@ export function ShoppingPage() {
 function Summary({ pending, budget, review }: { pending: number; budget: ListBudget; review?: number }) {
   const { t, format } = useI18n();
   const { token } = theme.useToken();
+  const screens = Grid.useBreakpoint();
   const money = (cents: number) => format.money(cents, budget.currency);
+
+  // En el celular, una sola línea: la lista tiene que quedar a la vista sin bajar.
+  if (!screens.md) {
+    const parts = [
+      t("shopping.lists.pendingCount", { count: pending }),
+      ...(review ? [t("home.shoppingReview", { count: review })] : []),
+      ...(budget.totalCents > 0 ? [`${t("shopping.summary.total")}: ${money(budget.totalCents)}`] : []),
+    ];
+    return (
+      <Reveal>
+        <Typography.Paragraph type="secondary" style={{ margin: `0 0 ${token.margin}px` }}>
+          {parts.join(" · ")}
+        </Typography.Paragraph>
+      </Reveal>
+    );
+  }
 
   return (
     <Stagger delay={0.05}>
@@ -470,5 +484,39 @@ function RowItem({ row, currency, targets }: { row: ShoppingRow; currency: Curre
         )}
       </Flex>
     </motion.div>
+  );
+}
+
+// --- Compartir ----------------------------------------------------------------------
+
+/** La lista como texto ("☐ Leche · 2 litros"), para WhatsApp o donde sea. Sin compartir nativo, se copia. */
+function ShareButton({ title, rows }: { title: string; rows: ShoppingRow[] }) {
+  const { t, format } = useI18n();
+  const { message } = App.useApp();
+  const label = t("shopping.lists.share");
+
+  const share = async () => {
+    const text = [title, "", ...rows.map((row) => `☐ ${row.name} · ${formatQuantity(t, row.quantity, row.unit, format.number)}`)].join("\n");
+    if (navigator.share) {
+      try {
+        await navigator.share({ title, text });
+        return;
+      } catch (error) {
+        // Cerró el menú de compartir: no es un error.
+        if (error instanceof DOMException && error.name === "AbortError") return;
+      }
+    }
+    try {
+      await navigator.clipboard.writeText(text);
+      message.success(t("shopping.toast.shared"));
+    } catch {
+      message.error(t("errors.unexpected"));
+    }
+  };
+
+  return (
+    <Tooltip title={label}>
+      <Button icon={<Share2 />} aria-label={label} onClick={() => void share()} />
+    </Tooltip>
   );
 }

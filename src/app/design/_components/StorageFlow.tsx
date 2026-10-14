@@ -600,7 +600,7 @@ const { inventoryView } = usePreferences();
         steps={[
           { value: "inventory", label: "1 · Inventario" },
           { value: "space", label: "2 · Lugar" },
-          { value: "container", label: "3 · Contenedor" },
+          { value: "container", label: "3 · Mueble o caja" },
           { value: "item", label: "4 · Ficha" },
           { value: "camera", label: "5 · Cámara" },
         ]}

@@ -61,7 +61,7 @@ test("cámara: un permiso denegado conserva la entrada manual", async ({ home: p
   await page.getByPlaceholder("Ej. K7QM").fill("K7QM");
   await page.getByRole("button", { name: "Abrir", exact: true }).click();
   await expect(page).toHaveURL(/\/c\?code=K7QM$/);
-  await expect(page.getByText("Este contenedor no está en este dispositivo", { exact: true })).toBeVisible();
+  await expect(page.getByText("Esta caja no está en este dispositivo", { exact: true })).toBeVisible();
 });
 
 test("QR: primera lectura sin conexión ni BarcodeDetector libera su stream", async ({ home: page, context }) => {
@@ -91,7 +91,7 @@ test("QR: primera lectura sin conexión ni BarcodeDetector libera su stream", as
   await page.goto("/inventario/escanear");
   await page.getByRole("button", { name: "Activar cámara" }).click();
   await expect(page).toHaveURL(/\/c\?code=K7QM$/);
-  await expect(page.getByText("Este contenedor no está en este dispositivo", { exact: true })).toBeVisible();
+  await expect(page.getByText("Esta caja no está en este dispositivo", { exact: true })).toBeVisible();
   expect(await page.evaluate(() => sessionStorage.getItem("qrTestStopped"))).toBe("true");
 });
 
@@ -182,8 +182,8 @@ test("cámara: un producto de un compartimento abre su contenedor desde la lista
   await page.goto("/inventario");
   await page.getByRole("link", { name: /^Alacena/ }).first().click();
   const code = (await page.getByText(/Código [A-Z0-9]{4}/).innerText()).match(/Código ([A-Z0-9]{4})/)![1];
-  await page.getByRole("button", { name: "Agregar compartimento", exact: true }).first().click();
-  const form = page.getByRole("dialog", { name: "Agregar compartimento", exact: true });
+  await page.getByRole("button", { name: "Agregar caja", exact: true }).first().click();
+  const form = page.getByRole("dialog", { name: "Agregar caja", exact: true });
   await form.getByLabel("Nombre", { exact: true }).fill("Cajón de especias");
   await form.getByRole("button", { name: "Aceptar", exact: true }).click();
   await expect(form).toBeHidden();

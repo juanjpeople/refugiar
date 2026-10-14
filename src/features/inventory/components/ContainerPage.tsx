@@ -33,7 +33,7 @@ import { ProductModal } from "./ProductModal";
 import { InventoryList } from "./InventoryList";
 import { ItemDrawer } from "./ItemDrawer";
 
-const SECTIONS = { children: "compartimentos", items: "productos", notes: "anotaciones", photos: "fotos" } as const;
+const SECTIONS = { children: "cajas", items: "cosas", notes: "anotaciones", photos: "fotos" } as const;
 
 /**
  * Página de un contenedor. Arriba, dónde está (tocable) y la escena que se abre; después lo que

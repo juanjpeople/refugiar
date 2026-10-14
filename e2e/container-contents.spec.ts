@@ -13,9 +13,9 @@ test("un QR abre fotos y contenido libre del taller, también sin conexión", as
   // Con algo adentro, lo que tiene va sección por sección: productos, anotaciones y fotos.
   await expect(page.getByRole("heading", { name: "Todavía está vacío", exact: true })).toHaveCount(0);
   const headings = await page.getByRole("main").getByRole("heading").allTextContents();
-  expect(headings.indexOf("Herramientas, insumos y productos")).toBeGreaterThanOrEqual(0);
-  expect(headings.indexOf("Qué hay acá")).toBeGreaterThan(headings.indexOf("Herramientas, insumos y productos"));
-  expect(headings.indexOf("Fotos del contenedor")).toBeGreaterThan(headings.indexOf("Qué hay acá"));
+  expect(headings.indexOf("Cosas con cantidad")).toBeGreaterThanOrEqual(0);
+  expect(headings.indexOf("Qué hay acá")).toBeGreaterThan(headings.indexOf("Cosas con cantidad"));
+  expect(headings.indexOf("Fotos")).toBeGreaterThan(headings.indexOf("Qué hay acá"));
   await page.getByRole("button", { name: "Editar anotación: Cables sueltos" }).click();
   await page.getByRole("textbox", { name: "Editar anotación", exact: true }).fill("Borrador cancelado");
   await page.getByRole("textbox", { name: "Editar anotación", exact: true }).press("Escape");
