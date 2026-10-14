@@ -7,7 +7,7 @@ import { Alert, Button, ConfigProvider, Drawer, Flex, Grid, Layout, Tooltip, Typ
 import { motion } from "framer-motion";
 import { Menu, PanelLeftClose, PanelLeftOpen } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
-import { useEffect, type ReactNode } from "react";
+import { useCallback, useEffect, useRef, type ReactNode } from "react";
 import { LockScreen } from "@/components/auth/LockScreen";
 import { MembersBridge } from "@/components/auth/MembersBridge";
 import { HouseMark } from "@/components/illustrations/HouseMark";
@@ -22,7 +22,7 @@ import { useUiStore } from "@/store/useNavigationStore";
 import type { SidebarMode } from "@/store/usePreferencesStore";
 import { CommandPalette } from "./CommandPalette";
 import { DataModeBadge } from "./DataModeBadge";
-import { SIDEBAR_WIDTH } from "./constants";
+import { HEADER_HEIGHT_VAR, SIDEBAR_WIDTH } from "./constants";
 import { HeaderActions, UserMenu } from "./HeaderActions";
 import { HeaderNavigation } from "./HeaderNavigation";
 import { Navigation } from "./Navigation";
@@ -148,6 +148,7 @@ function DefaultLayout({ children }: { children: ReactNode }) {
   // Cada página usa el ancho que le sirve: las grillas y tableros, toda la pantalla; el resto, uno cómodo de leer.
   const contentWidth = CONTENT_WIDTH[findRoute(pathname)?.width ?? "default"];
   const drawerOpen = useUiStore((s) => s.navDrawerOpen);
+  const headerRef = useMeasuredHeader();
   const setDrawerOpen = useUiStore((s) => s.setNavDrawerOpen);
   const toggleSidebar = useToggleSidebar();
   useGlobalShortcuts();
@@ -226,6 +227,7 @@ function DefaultLayout({ children }: { children: ReactNode }) {
 
       <Layout style={{ minWidth: 0 }}>
         <Header
+          ref={headerRef}
           style={{
             display: "flex",
             flexWrap: "wrap",
@@ -323,4 +325,26 @@ function KidsLayout({ children }: { children: ReactNode }) {
       </Layout>
     </ConfigProvider>
   );
+}
+
+/**
+ * Mide la barra fija de arriba y publica su alto (en el store y como variable CSS), para que los
+ * índices y paneles pegajosos frenen debajo de ella y nunca queden tapados por las migas.
+ */
+function useMeasuredHeader() {
+  const setHeaderHeight = useUiStore((s) => s.setHeaderHeight);
+  const observer = useRef<ResizeObserver | null>(null);
+  useEffect(() => () => observer.current?.disconnect(), []);
+  return useCallback((node: HTMLElement | null) => {
+    observer.current?.disconnect();
+    if (!node) return;
+    const publish = () => {
+      const height = Math.round(node.getBoundingClientRect().height);
+      document.documentElement.style.setProperty(HEADER_HEIGHT_VAR, `${height}px`);
+      setHeaderHeight(height);
+    };
+    publish();
+    observer.current = new ResizeObserver(publish);
+    observer.current.observe(node);
+  }, [setHeaderHeight]);
 }

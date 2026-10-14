@@ -27,6 +27,7 @@ import { QuickAdd } from "./QuickAdd";
 import { EstimatePrice, QuickPrice } from "./QuickPrice";
 import { ReviewPanel } from "./ReviewPanel";
 import { projectHref } from "@/lib/navigation/routes";
+import { belowHeader } from "@/components/layout/constants";
 
 export function ShoppingPage() {
   const { t } = useI18n();
@@ -152,7 +153,7 @@ export function ShoppingPage() {
               </Reveal>
             </Col>
             <Col xs={{ span: 24, order: hasCandidates ? 1 : 2 }} lg={{ span: 9, order: 2 }}>
-              <Reveal delay={0.2} style={{ position: "sticky", top: 88 }}>
+              <Reveal delay={0.2} style={{ position: "sticky", top: belowHeader(8) }}>
                 <Flex vertical gap={16}>
                   {home && <ReviewPanel candidates={data.candidates} />}
                   {(!home || data.budget.budgetCents !== undefined) && <BudgetCard summary={summary} budget={data.budget} onEdit={canManage ? () => setDialog("edit") : undefined} />}

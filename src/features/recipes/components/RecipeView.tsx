@@ -26,6 +26,7 @@ import { averageRating, checkAvailability, RECIPE_LIMITS, type IngredientCheck, 
 import { useRecipe, useRecipeActions } from "../hooks";
 import { CookModal } from "./CookModal";
 import { AvailabilityTag, RatingBadge, RecipeCover } from "./RecipeBits";
+import { belowHeader } from "@/components/layout/constants";
 
 export function RecipeView() {
   const { t } = useI18n();
@@ -146,7 +147,7 @@ export function RecipeView() {
 
       <Row gutter={[24, 24]}>
         <Col xs={24} lg={10}>
-          <Reveal delay={0.1} style={{ position: screens.lg ? "sticky" : undefined, top: 88 }}>
+          <Reveal delay={0.1} style={{ position: screens.lg ? "sticky" : undefined, top: belowHeader(8) }}>
             <Card title={t("recipes.ingredients")} styles={{ body: { paddingBlock: 4 } }}>
               {/* Dentro del cuerpo (no en el encabezado): en columnas angostas el título no se corta. */}
               <Flex align="center" justify="space-between" gap={12} style={{ paddingBlock: 12, borderBottom: `1px solid ${token.colorBorderSecondary}` }}>

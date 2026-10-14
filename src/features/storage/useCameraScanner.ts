@@ -33,7 +33,7 @@ const track = (capture: MediaStream | null) => capture?.getVideoTracks?.()[0];
  * Una cámara por pantalla. Elige la lente trasera principal, pide resolución alta, enfoque continuo
  * y zoom si el equipo los ofrece. Cancela permisos tardíos, timers y tracks al salir o ir a segundo plano.
  */
-export function useCameraScanner(onFrame: (detections: QrDetection[], stop: () => void) => void) {
+export function useCameraScanner(onFrame: (detections: QrDetection[], stop: () => void, flash: () => Promise<void>) => void) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const stream = useRef<MediaStream | null>(null);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -124,7 +124,7 @@ export function useCameraScanner(onFrame: (detections: QrDetection[], stop: () =
         try {
           const detections = await detector.detect(video);
           if (!active()) return;
-          callback.current(detections, stop);
+          callback.current(detections, stop, flash);
           if (active()) timer.current = setTimeout(tick, 200);
         } catch {
           if (active()) { release(); setStatus("failed"); }
@@ -158,6 +158,18 @@ export function useCameraScanner(onFrame: (detections: QrDetection[], stop: () =
     } catch { /* La cámara rechazó el zoom: queda el que tenía. */ }
   }
 
+  /** Un destello corto con la linterna de la cámara, si la tiene (Android). En iPhone no hace nada. */
+  async function flash() {
+    const video = track(stream.current);
+    const capabilities = video?.getCapabilities?.() as (MediaTrackCapabilities & { torch?: boolean }) | undefined;
+    if (!video || !capabilities?.torch) return;
+    try {
+      await video.applyConstraints({ advanced: [{ torch: true } as MediaTrackConstraintSet] });
+      await new Promise((resolve) => setTimeout(resolve, 250));
+      await video.applyConstraints({ advanced: [{ torch: false } as MediaTrackConstraintSet] });
+    } catch { /* Sin linterna: alcanzan el sonido y la vibración. */ }
+  }
+
   useEffect(() => {
     const visibility = () => { if (document.hidden) stop(); };
     document.addEventListener("visibilitychange", visibility);
@@ -166,6 +178,6 @@ export function useCameraScanner(onFrame: (detections: QrDetection[], stop: () =
 
   return {
     videoRef, status, start: () => start(), stop, active: status === "starting" || status === "scanning",
-    lenses, lens, chooseLens, zoom, applyZoom,
+    lenses, lens, chooseLens, zoom, applyZoom, flash,
   };
 }

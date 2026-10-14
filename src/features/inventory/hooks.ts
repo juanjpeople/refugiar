@@ -8,7 +8,7 @@ import { useCurrentUser } from "@/lib/auth/session";
 import { db } from "@/lib/db";
 import { getErrorMessage } from "@/lib/errors";
 import { forecastUsage, needsRestock, USAGE_WINDOW_DAYS, type InventoryItem, type InventoryItemPatch, type NewInventoryItem, type UsageForecast } from "./domain";
-import { adjustInventoryQuantity, consumeInventoryItem, createInventoryItem, deleteInventoryItem, undoQuantityChange, updateInventoryItem } from "./service";
+import { adjustInventoryQuantity, consumeInventoryItem, createInventoryItem, deleteInventoryItem, moveInventoryItems, undoQuantityChange, updateInventoryItem } from "./service";
 
 /** Productos de un contenedor, reactivos a cambios en la base. `undefined` mientras carga. */
 export function useInventoryItems(containerId: string) {
@@ -111,6 +111,8 @@ export function useInventoryActions() {
       run(() => createInventoryItem(user, containerId, input), t("inventory.toast.created")),
     adjust: (id: string, delta: number) => run(() => adjustInventoryQuantity(user, id, delta)),
     update: (id: string, patch: InventoryItemPatch) => run(() => updateInventoryItem(user, id, patch), t("inventory.toast.saved")),
+    move: (ids: string[], containerId: string) =>
+      run(() => moveInventoryItems(user, ids, containerId), t("inventory.toast.moved", { count: ids.length })),
     remove: (id: string) => run(() => deleteInventoryItem(user, id), t("inventory.toast.deleted")),
     /** Devuelve el resultado (cuánto se descontó, cuánto faltó y la entrada del historial) o `null` si falló. */
     consume: async (id: string, amount = 1) => {

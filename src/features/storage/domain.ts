@@ -131,10 +131,23 @@ export function parseContentText(input: string): string {
   return text;
 }
 
+/**
+ * Etiqueta impresa en blanco: su código queda reservado (ninguna caja nueva lo recibe) hasta que
+ * alguien la escanea y dice qué caja es. Vive en `houseSettings` con id `label:<código>`.
+ */
+export interface ReservedLabel {
+  id: `label:${string}`;
+  kind: "label";
+  code: string;
+  updatedAt: number;
+}
+
+export const reservedLabelId = (code: string) => `label:${code}` as const;
+
 export type NewContainer = Pick<Container, "name" | "kind" | "spaceId" | "parentId" | "color" | "icon">;
 
 /** `maxDepth`: niveles de anidamiento (1 = directo en el recinto; 3 = placard → puerta → cajón). */
-export const STORAGE_LIMITS = { nameMaxLength: 60, codeLength: 4, maxDepth: 3 } as const;
+export const STORAGE_LIMITS = { nameMaxLength: 60, codeLength: 4, maxDepth: 3, maxBulk: 50, maxBlankLabels: 200 } as const;
 
 // Sin 0/O, 1/I/L ni 5/S: se lee bien impreso chico y se tipea sin dudar.
 const CODE_ALPHABET = "ABCDEFGHJKMNPQRTUVWXYZ2346789";
