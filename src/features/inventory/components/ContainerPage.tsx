@@ -1,7 +1,7 @@
 "use client";
 
 import { App, Button, Card, Col, Dropdown, Flex, Row, Typography, theme } from "antd";
-import { Boxes, Camera, EllipsisVertical, Layers, NotebookPen, PackageOpen, PackageX, Pencil, Plus, Printer, QrCode, RotateCcwClock, Trash2 } from "lucide-react";
+import { ArrowRightLeft, Boxes, Camera, CopyPlus, EllipsisVertical, Images, Layers, NotebookPen, PackageOpen, PackageX, Pencil, Plus, Printer, QrCode, RotateCcwClock, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useContext, useState, type CSSProperties } from "react";
@@ -17,17 +17,18 @@ import { ContainerScene } from "@/features/storage/components/ContainerScene";
 import type { LabelData } from "@/features/storage/components/ContainerLabel";
 import { NotesSection, PhotosSection } from "@/features/storage/components/ContainerContents";
 import { LabelModal } from "@/features/storage/components/LabelModal";
-import { ContainerModal } from "@/features/storage/components/StorageForms";
+import { BulkContainersModal, ContainerModal } from "@/features/storage/components/StorageForms";
 import { containerAppearance, spaceAppearance, STORAGE_LIMITS } from "@/features/storage/domain";
 import { useContainer, useContainerContents, useSpaces, useStorageActions } from "@/features/storage/hooks";
 import { useT } from "@/i18n";
 import { tint } from "@/lib/appearance";
 import { usePermission } from "@/lib/auth/hooks";
 import { useTrackVisit } from "@/components/layout/useShell";
-import { cameraHref, containerHref, spaceHref } from "@/lib/navigation/routes";
+import { cameraHref, containerHref, photosHref, spaceHref } from "@/lib/navigation/routes";
 import { usePageCrumbs } from "@/store/useBreadcrumbStore";
 import { getStockStatus, type StockStatus } from "../domain";
 import { useInventoryItems } from "../hooks";
+import { MoveItemsModal } from "./MoveItemsModal";
 import { ProductModal } from "./ProductModal";
 import { InventoryList } from "./InventoryList";
 import { ItemDrawer } from "./ItemDrawer";
@@ -56,7 +57,7 @@ export function ContainerPage() {
   // La ficha a la que se llegó (`?item=`) se abre sola una vez; cerrarla no la vuelve a abrir.
   const [closedArrival, setClosedArrival] = useState<string | null>(null);
   const shownItem = openItem ?? (arrivedItem && arrivedItem !== closedArrival ? arrivedItem : null);
-  const [dialog, setDialog] = useState<"edit" | "addChild" | "product" | null>(null);
+  const [dialog, setDialog] = useState<"edit" | "addChild" | "addMany" | "product" | "move" | null>(null);
   const [labels, setLabels] = useState<LabelData[] | null>(null);
   const [notesOpen, setNotesOpen] = useState(false);
   const canManage = usePermission("storage.manage");
@@ -138,13 +139,15 @@ export function ContainerPage() {
               <Button icon={<QrCode />} onClick={() => setLabels([labelOf(container, place)])}>
                 {t("storage.label")}
               </Button>
-              {(canManage || canViewActivity) && (
+              {(canManage || canViewActivity || counts.children > 0) && (
                 <Dropdown
                   trigger={["click"]}
                   menu={{
                     items: [
+                      ...(counts.children > 0 ? [{ key: "photos", icon: <Images />, label: <Link href={photosHref({ id: container.id })}>{t("photos.title")}</Link> }] : []),
                       ...(canManage ? [{ key: "edit", icon: <Pencil />, label: t("storage.edit"), onClick: () => setDialog("edit") }] : []),
                       ...(canAddChild ? [{ key: "child", icon: <Layers />, label: t("storage.addSubcontainer"), onClick: () => setDialog("addChild") }] : []),
+                      ...(canAddChild ? [{ key: "many", icon: <CopyPlus />, label: t("storage.bulk.title"), onClick: () => setDialog("addMany") }] : []),
                       ...(canViewActivity ? [{ key: "activity", icon: <RotateCcwClock />, label: t("activity.button"), onClick: () => setActivityOpen(true) }] : []),
                       ...(canManage ? [{ type: "divider" as const }, { key: "delete", danger: true, icon: <Trash2 />, label: t("storage.delete"), onClick: confirmDelete }] : []),
                     ],
@@ -171,6 +174,7 @@ export function ContainerPage() {
                       <Can perform="inventory.create"><Button type="primary" icon={<Plus />} onClick={() => setDialog("product")}>{t("inventory.form.title")}</Button></Can>
                       <Can perform="storage.manage"><Button icon={<NotebookPen />} onClick={addNote}>{t("storage.contents.new")}</Button></Can>
                       {canAddChild && <Button icon={<Layers />} onClick={() => setDialog("addChild")}>{t("storage.addSubcontainer")}</Button>}
+                      {canAddChild && <Button icon={<CopyPlus />} onClick={() => setDialog("addMany")}>{t("storage.bulk.title")}</Button>}
                     </Flex>
                   }
                 />
@@ -187,6 +191,7 @@ export function ContainerPage() {
               extra: (
                 <>
                   <Button icon={<Printer />} onClick={() => setLabels(container.children.map((child) => labelOf(child, `${place} › ${container.name}`)))}>{t("storage.printLabels")}</Button>
+                  {canAddChild && <Button icon={<CopyPlus />} onClick={() => setDialog("addMany")}>{t("storage.addMany")}</Button>}
                   {canAddChild && <Button icon={<Plus />} onClick={() => setDialog("addChild")}>{t("storage.addSubcontainer")}</Button>}
                 </>
               ),
@@ -213,7 +218,12 @@ export function ContainerPage() {
               icon: Boxes,
               title: t("storage.contents.inventory"),
               description: counts.items ? t("storage.itemCount", { count: counts.items }) : t("inventory.list.emptyHint"),
-              extra: canCreate && <Button type="primary" icon={<Plus />} onClick={() => setDialog("product")}>{t("inventory.form.title")}</Button>,
+              extra: canCreate && (
+                <>
+                  {counts.items > 0 && <Button icon={<ArrowRightLeft />} onClick={() => setDialog("move")}>{t("inventory.move.button")}</Button>}
+                  <Button type="primary" icon={<Plus />} onClick={() => setDialog("product")}>{t("inventory.form.title")}</Button>
+                </>
+              ),
             },
             content: (
               <>
@@ -231,9 +241,16 @@ export function ContainerPage() {
       >
         <ActivityDrawer containerId={container.id} place={container.name} open={activityOpen} onClose={() => setActivityOpen(false)} />
         <ItemDrawer itemId={shownItem} onClose={closeItem} />
+        <MoveItemsModal containerId={container.id} open={dialog === "move"} onClose={() => setDialog(null)} />
         <ProductModal containerId={container.id} place={container.name} open={dialog === "product"} onClose={() => setDialog(null)} />
         <ContainerModal open={dialog === "edit"} container={container} onClose={() => setDialog(null)} />
         <ContainerModal open={dialog === "addChild"} parentId={container.id} onClose={() => setDialog(null)} />
+        <BulkContainersModal
+          open={dialog === "addMany"}
+          parentId={container.id}
+          onClose={() => setDialog(null)}
+          onCreated={(created, where) => setLabels(created.map((child) => labelOf(child, where)))}
+        />
         <LabelModal open={!!labels} labels={labels ?? []} onClose={() => setLabels(null)} />
       </DetailPage>
     </RequirePermission>

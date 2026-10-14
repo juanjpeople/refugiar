@@ -1,7 +1,7 @@
 "use client";
 
-import { App, Button, Card, theme } from "antd";
-import { Camera, MapPin, Plus } from "lucide-react";
+import { App, Button, Card, Dropdown, theme } from "antd";
+import { Camera, EllipsisVertical, Images, ListChecks, MapPin, Plus, Tags } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -12,11 +12,12 @@ import { EmptyState, PageHeader, SectionHeader, ViewSwitcher, LoadingSkeleton } 
 import { usePreferences, useSetPreference } from "@/hooks/usePreferences";
 import { useT } from "@/i18n";
 import { usePermission } from "@/lib/auth/hooks";
-import { cameraHref, spaceHref } from "@/lib/navigation/routes";
+import { cameraHref, organizeHref, photosHref, spaceHref } from "@/lib/navigation/routes";
 import type { Container, Space } from "../domain";
 import { useStorageActions, useStorageOverview } from "../hooks";
 import { flattenOverview } from "../views";
 import type { LabelData } from "./ContainerLabel";
+import { BlankLabelsModal } from "./BlankLabelsModal";
 import { LabelModal } from "./LabelModal";
 import { InventoryDisplayMenu } from "./InventoryDisplayMenu";
 import { StorageHighlights } from "./StorageHighlights";
@@ -87,6 +88,8 @@ export function StoragePage() {
   const [dialog, setDialog] = useState<StorageDialog>(null);
   const actions = useStorageViewActions(setDialog);
   const close = () => setDialog(null);
+  const [blankOpen, setBlankOpen] = useState(false);
+  const canManage = usePermission("storage.manage");
 
   // Antes cada recinto era una sección de esta página (`#recinto-<id>`): los enlaces viejos abren su página.
   useEffect(() => {
@@ -104,12 +107,24 @@ export function StoragePage() {
         description={t("storage.description")}
         extra={
           <>
+            {canManage && <Link href={organizeHref()}><Button icon={<ListChecks />}>{t("organize.button")}</Button></Link>}
             <Link href={cameraHref()}><Button icon={<Camera />}>{t("camera.openMode")}</Button></Link>
             <Can perform="storage.manage">
               <Button type="primary" icon={<Plus />} onClick={() => setDialog({ kind: "space" })}>
                 {t("storage.addSpace")}
               </Button>
             </Can>
+            <Dropdown
+              trigger={["click"]}
+              menu={{
+                items: [
+                  { key: "photos", icon: <Images />, label: <Link href={photosHref()}>{t("photos.title")}</Link> },
+                  ...(canManage ? [{ key: "blank", icon: <Tags />, label: t("labels.blank.title"), onClick: () => setBlankOpen(true) }] : []),
+                ],
+              }}
+            >
+              <Button icon={<EllipsisVertical />} aria-label={t("common.moreActions")} />
+            </Dropdown>
           </>
         }
       />
@@ -155,6 +170,7 @@ export function StoragePage() {
       )}
 
       <StorageDialogs dialog={dialog} onClose={close} onSpaceCreated={(id) => router.push(spaceHref(id))} />
+      <BlankLabelsModal open={blankOpen} onClose={() => setBlankOpen(false)} onReady={(labels) => setDialog({ kind: "labels", labels })} />
     </RequirePermission>
   );
 }

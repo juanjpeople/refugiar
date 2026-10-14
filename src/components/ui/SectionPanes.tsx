@@ -8,6 +8,7 @@ import { DURATION, EASE_OUT, HOVER_LIFT, SPRING, TAP } from "@/lib/motion";
 import { IconTile } from "./IconTile";
 import { ListRow } from "./ListRow";
 import { PanelHeader } from "./PanelHeader";
+import { belowHeader } from "@/components/layout/constants";
 
 export interface PaneSection {
   id: string;
@@ -80,7 +81,7 @@ export function SectionPanes({ sections, active, onSelect, onBack, backLabel, "a
 
   if (!wide) {
     return (
-      <div ref={panel} tabIndex={-1} style={{ outline: "none", scrollMarginTop: token.controlHeight * 2 }}>
+      <div ref={panel} tabIndex={-1} style={{ outline: "none", scrollMarginTop: belowHeader(token.marginSM) }}>
         {current ? (
           <Flex vertical gap={token.marginSM}>
             <motion.div whileTap={{ scale: TAP.control }} style={{ alignSelf: "flex-start" }}>
@@ -113,14 +114,14 @@ export function SectionPanes({ sections, active, onSelect, onBack, backLabel, "a
 
   return (
     <Flex gap={token.marginXL} align="flex-start">
-      <nav aria-label={ariaLabel} style={{ flex: `0 0 ${token.controlHeight * 9}px`, position: "sticky", top: token.controlHeight * 3 }}>
+      <nav aria-label={ariaLabel} style={{ flex: `0 0 ${token.controlHeight * 9}px`, position: "sticky", top: belowHeader(token.marginSM) }}>
         <Flex vertical gap={token.marginXXS}>
           {sections.map((section) => (
             <SectionLink key={section.id} section={section} selected={section.id === current?.id} onSelect={() => open(section.id)} />
           ))}
         </Flex>
       </nav>
-      <div ref={panel} style={{ flex: 1, minWidth: 0, scrollMarginTop: token.controlHeight * 3 }}>
+      <div ref={panel} style={{ flex: 1, minWidth: 0, scrollMarginTop: belowHeader(token.marginSM) }}>
         {detail}
       </div>
     </Flex>

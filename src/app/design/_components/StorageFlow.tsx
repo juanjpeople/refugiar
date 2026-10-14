@@ -9,6 +9,7 @@ import { CameraViewport, EmptyState, IconTile, ListRow, PageHeader, PathCrumbs, 
 import type { CatalogCategory } from "@/features/inventory/catalog";
 import { CATEGORY_APPEARANCE } from "@/features/inventory/catalog-appearance";
 import { getStockStatus, isUnit } from "@/features/inventory/domain";
+import { ContainerLabel } from "@/features/storage/components/ContainerLabel";
 import { ContainerScene } from "@/features/storage/components/ContainerScene";
 import { AddTile, ContainerTile } from "@/features/storage/components/ContainerTiles";
 import { CardsView, ListView, PlacesView, PlanView, useViewOptions, ViewStage } from "@/features/storage/components/StorageViews";
@@ -598,7 +599,7 @@ const { inventoryView } = usePreferences();
       <FlowFrame<Step>
         steps={[
           { value: "inventory", label: "1 · Inventario" },
-          { value: "space", label: "2 · Recinto" },
+          { value: "space", label: "2 · Lugar" },
           { value: "container", label: "3 · Contenedor" },
           { value: "item", label: "4 · Ficha" },
           { value: "camera", label: "5 · Cámara" },
@@ -614,6 +615,36 @@ const { inventoryView } = usePreferences();
         {step === "item" && <ItemScreen key={itemId} id={itemId} go={go} />}
         {step === "camera" && <CameraScreen go={go} />}
       </FlowFrame>
+    </DemoBlock>
+  );
+}
+
+const LABEL_SHAPES = [
+  { title: "Cajón chico · 25 × 25 mm", size: { width: 25, height: 25 } },
+  { title: "Caja · 50 × 25 mm", size: { width: 50, height: 25 } },
+  { title: "Caja grande · 60 × 70 mm", size: { width: 60, height: 70 } },
+];
+
+/** Etiquetas impresas: la misma pieza se acomoda a la forma (solo QR, QR al lado, QR arriba). */
+export function LabelShapes() {
+  const { token } = theme.useToken();
+  return (
+    <DemoBlock
+      id="etiquetas"
+      title="Etiquetas QR"
+      description="La etiqueta se acomoda a la medida de cada caja: chica, solo el QR y el código; ancha, el QR al lado del nombre; alta, el QR arriba. En blanco y negro siempre, porque se imprime. Se imprimen varias medidas juntas en hojas A4 (con línea de corte) o una por página en rollo. Para varias cajas a la vez: “Agregar varias”, una leyenda por línea."
+      code={`<ContainerLabel label={label} size={{ width: 50, height: 25 }} fields={fields} url={containerQrUrl(base, label.code)} />`}
+    >
+      <Flex wrap gap={token.marginLG} align="end">
+        {LABEL_SHAPES.map(({ title, size }) => (
+          <Flex key={title} vertical gap={token.marginXS} align="center">
+            <div style={{ zoom: 1.4, boxShadow: token.boxShadowTertiary }}>
+              <ContainerLabel label={{ id: title, name: "Tornillos y tarugos", code: "K7QM", spaceName: "Taller › Armario" }} size={size} url="https://refugi.ar/c/K7QM" />
+            </div>
+            <Typography.Text type="secondary" style={{ fontSize: token.fontSizeSM }}>{title}</Typography.Text>
+          </Flex>
+        ))}
+      </Flex>
     </DemoBlock>
   );
 }

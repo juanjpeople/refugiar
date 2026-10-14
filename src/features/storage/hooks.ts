@@ -7,8 +7,8 @@ import { useT } from "@/i18n";
 import { useCurrentUser } from "@/lib/auth/session";
 import { db } from "@/lib/db";
 import { getErrorMessage } from "@/lib/errors";
-import { normalizeContainerCode, type Container, type NewContainer, type NewSpace, type Space } from "./domain";
-import { addContainerContents, createContainer, createSpace, deleteContainer, deleteContainerContent, deleteSpace, saveContainerContent, updateContainer, updateSpace } from "./service";
+import { normalizeContainerCode, reservedLabelId, type Container, type NewContainer, type NewSpace, type Space } from "./domain";
+import { addContainerContents, assignLabel, createContainer, createContainers, reserveLabelCodes, createSpace, deleteContainer, deleteContainerContent, deleteSpace, saveContainerContent, updateContainer, updateSpace } from "./service";
 import { ancestorsOf, flattenTree, pathLabel } from "./tree";
 
 export interface ContainerOverview extends Container {
@@ -113,6 +113,16 @@ export function useContainerContents(containerId: string) {
  * Contenedores en orden de árbol, con su recinto, su nivel y su ruta ("Placard › Cajón 2").
  * Para selects con sangría, búsqueda y "mover a…".
  */
+/** ¿Es una etiqueta impresa en blanco que todavía no tiene caja? `undefined` mientras carga. */
+export function useIsFreeLabel(code: string) {
+  return useLiveQuery(async () => !!code && !!(await db.houseSettings.get(reservedLabelId(normalizeContainerCode(code)))), [code]);
+}
+
+/** Cuántas etiquetas en blanco esperan su caja. */
+export function useFreeLabelCount() {
+  return useLiveQuery(() => db.houseSettings.where("id").startsWith("label:").count());
+}
+
 export function useContainers() {
   return useLiveQuery(async () => {
     const [spaces, containers] = await Promise.all([db.spaces.orderBy("name").toArray(), db.containers.orderBy("name").toArray()]);
@@ -205,7 +215,11 @@ export function useStorageActions() {
     createSpace: (input: NewSpace) => run(() => createSpace(user, input), t("storage.toast.spaceCreated")),
     updateSpace: (id: string, input: NewSpace) => run(() => updateSpace(user, id, input).then(() => true), t("storage.toast.saved")),
     deleteSpace: (id: string) => run(() => deleteSpace(user, id).then(() => true), t("storage.toast.deleted")),
-    createContainer: (input: NewContainer) => run(() => createContainer(user, input), t("storage.toast.containerCreated")),
+    createContainer: (input: NewContainer, labelCode?: string) => run(() => createContainer(user, input, labelCode), t("storage.toast.containerCreated")),
+    reserveLabels: (count: number) => run(() => reserveLabelCodes(user, count)),
+    assignLabel: (containerId: string, code: string) => run(() => assignLabel(user, containerId, code).then(() => true), t("storage.toast.labelAssigned")),
+    createContainers: (base: Omit<NewContainer, "name">, names: string[]) =>
+      run(() => createContainers(user, base, names), t("storage.toast.containersCreated", { count: names.filter((name) => name.trim()).length })),
     updateContainer: (id: string, input: NewContainer) => run(() => updateContainer(user, id, input).then(() => true), t("storage.toast.saved")),
     deleteContainer: (id: string) => run(() => deleteContainer(user, id).then(() => true), t("storage.toast.deleted")),
   };

@@ -21,6 +21,7 @@ import { usePageCrumbs } from "@/store/useBreadcrumbStore";
 import { RECIPE_LIMITS, RECIPE_TAGS, type Recipe, type RecipeTag } from "../domain";
 import { useRecipe, useRecipeActions } from "../hooks";
 import { recipeHref } from "@/lib/navigation/routes";
+import { belowHeader } from "@/components/layout/constants";
 
 interface IngredientDraft {
   key: string;
@@ -241,7 +242,7 @@ function EditorForm({ recipe }: { recipe: Recipe | null }) {
         </Col>
 
         <Col xs={24} lg={10}>
-          <Reveal delay={0.2} style={{ position: screens.lg ? "sticky" : undefined, top: 88 }}>
+          <Reveal delay={0.2} style={{ position: screens.lg ? "sticky" : undefined, top: belowHeader(8) }}>
             <Card title={t("recipes.photos")}>
               {recipe ? (
                 <PhotoGallery ownerType="recipe" ownerId={recipe.id} editable coverId={recipe.coverPhotoId} onSetCover={(photoId) => setCover(recipe.id, photoId)} onFirstPhoto={(photoId) => !recipe.coverPhotoId && setCover(recipe.id, photoId)} />

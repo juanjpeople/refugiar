@@ -9,7 +9,7 @@ import { assertCan, type Actor } from "@/lib/auth/permissions";
 import { db } from "@/lib/db";
 import { NotFoundError, ValidationError } from "@/lib/errors";
 import { createId } from "@/lib/id";
-import { CONTENT_LIMITS, generateContainerCode, parseContainer, parseContentText, parseSpace, STORAGE_LIMITS, type NewContainer, type NewSpace } from "./domain";
+import { CONTENT_LIMITS, generateContainerCode, isValidContainerCode, normalizeContainerCode, parseContainer, parseContentText, parseSpace, reservedLabelId, STORAGE_LIMITS, type NewContainer, type NewSpace, type ReservedLabel } from "./domain";
 import { depthOf, descendantIds, subtreeHeight } from "./tree";
 
 export async function createSpace(actor: Actor | null, input: NewSpace) {
@@ -45,11 +45,14 @@ export async function deleteSpace(actor: Actor | null, id: string) {
   });
 }
 
-/** Código único: el índice `&code` lo garantiza; si choca (muy improbable), se reintenta. */
+/**
+ * Código único: el índice `&code` lo garantiza entre cajas; además no puede ser el de una etiqueta
+ * impresa en blanco que todavía espera su caja. Si choca (muy improbable), se reintenta.
+ */
 async function uniqueCode() {
   for (let attempt = 0; attempt < 10; attempt++) {
     const code = generateContainerCode();
-    if (!(await db.containers.where("code").equals(code).first())) return code;
+    if (!(await db.containers.where("code").equals(code).first()) && !(await db.houseSettings.get(reservedLabelId(code)))) return code;
   }
   throw new ValidationError("errors.storage.codeExhausted");
 }
@@ -81,18 +84,83 @@ async function resolvePlacement(data: NewContainer, movingId?: string): Promise<
   return { spaceId: parent.spaceId, parentId: parent.id };
 }
 
-export async function createContainer(actor: Actor | null, input: NewContainer) {
+/** Crea un contenedor. Con `labelCode`, usa esa etiqueta impresa en blanco (y la deja de reservar). */
+export async function createContainer(actor: Actor | null, input: NewContainer, labelCode?: string) {
   assertCan(actor, "storage.manage");
   const data = parseContainer(input);
   const now = Date.now();
   const id = createId();
-  await db.transaction("rw", db.spaces, db.containers, db.activity, async () => {
+  await db.transaction("rw", [db.spaces, db.containers, db.activity, db.houseSettings], async () => {
     const placement = await resolvePlacement(data);
-    const code = await uniqueCode();
+    const code = labelCode ? await claimLabel(labelCode) : await uniqueCode();
     await db.containers.add({ ...data, ...placement, id, code, createdAt: now, updatedAt: now });
     await recordActivity(actor, { module: "storage", action: "create", entityId: id, entityName: data.name, containerId: id, place: data.name });
   });
   return id;
+}
+
+/** Reserva `count` códigos para imprimir etiquetas en blanco y pegarlas antes de cargar las cajas. */
+export async function reserveLabelCodes(actor: Actor | null, count: number) {
+  assertCan(actor, "storage.manage");
+  const total = Math.floor(count);
+  if (!(total >= 1 && total <= STORAGE_LIMITS.maxBlankLabels)) throw new ValidationError("errors.storage.tooMany", { max: STORAGE_LIMITS.maxBlankLabels });
+  const codes: string[] = [];
+  await db.transaction("rw", db.containers, db.houseSettings, async () => {
+    const now = Date.now();
+    for (let index = 0; index < total; index++) {
+      const code = await uniqueCode();
+      const label: ReservedLabel = { id: reservedLabelId(code), kind: "label", code, updatedAt: now };
+      await db.houseSettings.add(label);
+      codes.push(code);
+    }
+  });
+  return codes;
+}
+
+/** Usa una etiqueta reservada: la saca de la reserva y devuelve su código (falla si no está libre). */
+async function claimLabel(input: string) {
+  const code = normalizeContainerCode(input);
+  if (!isValidContainerCode(code) || !(await db.houseSettings.get(reservedLabelId(code)))) throw new ValidationError("errors.storage.labelNotFree");
+  if (await db.containers.where("code").equals(code).first()) throw new ValidationError("errors.storage.labelNotFree");
+  await db.houseSettings.delete(reservedLabelId(code));
+  return code;
+}
+
+/**
+ * Pega una etiqueta en blanco a una caja que ya existe: la caja pasa a tener ese código y su
+ * etiqueta anterior deja de abrirla.
+ */
+export async function assignLabel(actor: Actor | null, containerId: string, labelCode: string) {
+  assertCan(actor, "storage.manage");
+  await db.transaction("rw", [db.containers, db.activity, db.houseSettings], async () => {
+    const container = await db.containers.get(containerId);
+    if (!container) throw new NotFoundError("errors.notFound.container");
+    const code = await claimLabel(labelCode);
+    await db.containers.update(containerId, { code, updatedAt: Date.now() });
+    await recordActivity(actor, { module: "storage", action: "update", entityId: containerId, entityName: container.name, containerId, place: container.name });
+  });
+}
+
+/** Varias cajas de una vez en el mismo lugar (una por nombre), con su código para imprimir. */
+export async function createContainers(actor: Actor | null, base: Omit<NewContainer, "name">, names: string[]) {
+  assertCan(actor, "storage.manage");
+  const list = names.map((name) => name.trim()).filter(Boolean);
+  if (list.length === 0) throw new ValidationError("errors.validation.nameRequired");
+  if (list.length > STORAGE_LIMITS.maxBulk) throw new ValidationError("errors.storage.tooMany", { max: STORAGE_LIMITS.maxBulk });
+  const parsed = list.map((name) => parseContainer({ ...base, name }));
+  const now = Date.now();
+  const created: { id: string; name: string; code: string }[] = [];
+  await db.transaction("rw", db.spaces, db.containers, db.activity, async () => {
+    const placement = await resolvePlacement(parsed[0]);
+    for (const data of parsed) {
+      const id = createId();
+      const code = await uniqueCode();
+      await db.containers.add({ ...data, ...placement, id, code, createdAt: now, updatedAt: now });
+      await recordActivity(actor, { module: "storage", action: "create", entityId: id, entityName: data.name, containerId: id, place: data.name });
+      created.push({ id, name: data.name, code });
+    }
+  });
+  return created;
 }
 
 export async function updateContainer(actor: Actor | null, id: string, input: NewContainer) {

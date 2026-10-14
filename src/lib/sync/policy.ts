@@ -62,6 +62,9 @@ export function isAllowed(author: SyncAuthor, change: Change, existing: Row | un
     return ownerType === "container" ? can(actor, "storage.manage") : ownerType === "recipe" && can(actor, "recipes.manage");
   }
 
+  // Etiquetas impresas en blanco (`label:<código>`): son del inventario, no del calendario.
+  if (change.t === "houseSettings" && change.id.startsWith("label:")) return can(actor, "storage.manage");
+
   if (change.k === "del") return any(DELETE[change.t]);
 
   if (change.t === "members" && !can(actor, "members.manage")) {
