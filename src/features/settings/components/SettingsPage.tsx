@@ -35,6 +35,7 @@ import { DataSettings } from "./DataSettings";
 import { SidebarPreview, SkinLivePreview, SkinPreview, ThemePreview } from "./Previews";
 import { SettingRow } from "@/components/ui";
 import { usePwaStore } from "@/store/usePwaStore";
+import { belowHeader } from "@/components/layout/constants";
 
 const SECTIONS = [
   { id: "apariencia", key: "appearance", icon: Paintbrush },
@@ -120,7 +121,7 @@ function AppearanceSettings() {
             />
           </Col>
           <Col xs={24} xl={10}>
-            <div style={screens.xl ? { position: "sticky", top: token.controlHeight * 3 } : undefined}>
+            <div style={screens.xl ? { position: "sticky", top: belowHeader(token.marginSM) } : undefined}>
               <Typography.Text strong aria-live="polite" style={{ display: "block", marginBottom: token.marginXS }}>
                 {t("settings.appearance.livePreview.label", { name: t(`settings.appearance.skins.${shown}.title`) })}
               </Typography.Text>

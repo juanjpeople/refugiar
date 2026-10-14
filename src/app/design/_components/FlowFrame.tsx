@@ -28,7 +28,10 @@ export function FlowFrame<T extends string>({ steps, step, onStep, status, scree
   return (
     <div>
       <Flex justify="space-between" align="center" gap={12} wrap style={{ marginBottom: 12 }}>
-        <Segmented<T> value={step} onChange={onStep} options={steps} vertical={!screens.sm} block={!screens.sm} style={{ maxWidth: "100%" }} />
+        {/* En celular, uno debajo del otro; en tableta, si no entran, se desliza de costado en vez de salirse. */}
+        <div style={{ maxWidth: "100%", overflowX: "auto", flex: screens.sm ? "0 1 auto" : "1 1 100%" }}>
+          <Segmented<T> value={step} onChange={onStep} options={steps} vertical={!screens.sm} block={!screens.sm} />
+        </div>
         {status === "adopted" ? (
           <Tag color="success" variant="filled" icon={<CircleCheck />} style={{ margin: 0, display: "inline-flex", alignItems: "center", gap: 6 }}>
             Así se ve hoy en la app

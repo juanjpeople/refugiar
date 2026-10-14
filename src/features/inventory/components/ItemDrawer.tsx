@@ -5,13 +5,14 @@ import { useSkin } from "@/skins/useSkin";
 import { formatQuantity, formatUnit } from "@/features/inventory/format";
 
 import { App, Button, Col, Collapse, Divider, Drawer, Flex, Form, Grid, Input, InputNumber, Row, Select, Space, Switch, Typography, theme } from "antd";
-import { Boxes, ListPlus, PackageMinus, PackageOpen, Save } from "lucide-react";
+import { Boxes, ListPlus, PackageMinus, PackageOpen, Save, ScanLine } from "lucide-react";
 import { useState, type ReactNode } from "react";
 import { Can } from "@/components/auth/Can";
 import { IconTile, PathCrumbs, QuantityStepper, StockTag } from "@/components/ui";
 import { PricePanel } from "@/features/prices/components/PricePanel";
 import { suggestedQuantity } from "@/features/shopping/domain";
 import { useShoppingActions } from "@/features/shopping/hooks";
+import { ScanContainerModal } from "@/features/storage/components/ScanContainerModal";
 import { useContainer, useContainers } from "@/features/storage/hooks";
 import { useNow } from "@/hooks/useNow";
 import { useI18n, useT } from "@/i18n";
@@ -152,6 +153,7 @@ function LocationPanel({ item }: { item: InventoryItem }) {
   const containers = useContainers();
   const { update } = useInventoryActions();
   const canEdit = usePermission("inventory.create");
+  const [scanning, setScanning] = useState(false);
 
   // Contenedores agrupados por recinto para "Mover a".
   const groups = new Map<string, { value: string; label: string }[]>();
@@ -175,6 +177,7 @@ function LocationPanel({ item }: { item: InventoryItem }) {
         />
       )}
       {canEdit && (
+        <Flex gap={token.marginXS}>
         <Select
           aria-label={t("inventory.item.moveTo")}
           placeholder={t("inventory.item.moveTo")}
@@ -182,9 +185,20 @@ function LocationPanel({ item }: { item: InventoryItem }) {
           showSearch={{ optionFilterProp: "label" }}
           options={[...groups].map(([spaceName, options]) => ({ label: spaceName, options: options.filter((option) => option.value !== item.containerId) }))}
           onChange={(containerId: string | null) => { if (containerId) void update(item.id, { containerId }); }}
-          style={{ width: "100%" }}
+          style={{ flex: 1, minWidth: 0 }}
         />
+        <Button icon={<ScanLine />} aria-label={t("inventory.move.scanTitle")} onClick={() => setScanning(true)} />
+        </Flex>
       )}
+      <ScanContainerModal
+        open={scanning}
+        title={t("inventory.move.scanTitle")}
+        onClose={() => setScanning(false)}
+        onFound={(target) => {
+          setScanning(false);
+          if (target.id !== item.containerId) void update(item.id, { containerId: target.id });
+        }}
+      />
     </Flex>
   );
 }

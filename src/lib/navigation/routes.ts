@@ -1,4 +1,4 @@
-import { Boxes, CalendarDays, ChefHat, GraduationCap, HardHat, House, MapPin, MessageSquare, Palette, ScanLine, Settings, ShieldCheck, ShoppingCart, Sparkles, Users, type LucideIcon } from "lucide-react";
+import { Boxes, CalendarDays, ChefHat, GraduationCap, HardHat, House, Images, ListChecks, MapPin, MessageSquare, Palette, ScanLine, Settings, ShieldCheck, ShoppingCart, Sparkles, Users, type LucideIcon } from "lucide-react";
 import type { MessageKey } from "@/i18n/translate";
 import type { Permission } from "@/lib/auth/permissions";
 
@@ -40,6 +40,8 @@ export const APP_ROUTES: AppRoute[] = [
   { id: "space", href: "/inventario/lugar", labelKey: "nav.routes.space", icon: MapPin, permission: "inventory.view", section: "main", parent: "inventory", hidden: true, needsId: true, width: "wide" },
   { id: "container", href: "/inventario/ver", labelKey: "nav.routes.container", icon: Boxes, permission: "inventory.view", section: "main", parent: "inventory", hidden: true, needsId: true, width: "wide" },
   { id: "scan", href: "/inventario/escanear", labelKey: "nav.routes.scan", icon: ScanLine, permission: "inventory.view", section: "main", parent: "inventory", hidden: true },
+  { id: "organize", href: "/inventario/ordenar", labelKey: "organize.title", icon: ListChecks, permission: "storage.manage", section: "main", parent: "inventory", hidden: true },
+  { id: "photos", href: "/inventario/fotos", labelKey: "photos.title", icon: Images, permission: "inventory.view", section: "main", parent: "inventory", hidden: true },
   { id: "camera", href: "/inventario/camara", labelKey: "camera.title", icon: ScanLine, permission: "inventory.view", section: "main", parent: "inventory", hidden: true },
   { id: "calendar", href: "/calendario", labelKey: "nav.routes.calendar", icon: CalendarDays, permission: "calendar.view", section: "main", width: "wide" },
   { id: "school", href: "/escuela", labelKey: "nav.routes.school", icon: GraduationCap, permission: "calendar.view", section: "main" },
@@ -80,6 +82,16 @@ export const cameraHref = (scope: string | { id?: string; space?: string } = {})
   const search = query.toString();
   return `/inventario/camara${search ? `?${search}` : ""}`;
 };
+/** Ordenar: escanear, foto, qué tiene y la siguiente. Puede arrancar en un lugar (`space`). */
+export const organizeHref = (space?: string) => `/inventario/ordenar${space ? `?space=${encodeURIComponent(space)}` : ""}`;
+/** Fotos de todas las cajas de la casa, de un lugar (`space`) o de un mueble con lo que tiene adentro (`id`). */
+export const photosHref = (scope: { id?: string; space?: string } = {}) => {
+  const query = new URLSearchParams();
+  if (scope.id) query.set("id", scope.id);
+  if (scope.space) query.set("space", scope.space);
+  const search = query.toString();
+  return `/inventario/fotos${search ? `?${search}` : ""}`;
+};
 export const recipeHref = (id: string) => `/recetas/ver?id=${encodeURIComponent(id)}`;
 export const schoolHref = (memberId: string) => `/escuela#${encodeURIComponent(memberId)}`;
 export const projectHref = (id: string) => `/proyectos/ver?id=${encodeURIComponent(id)}`;
@@ -94,7 +106,7 @@ export function legacyRedirect(pathname: string): string | null {
   const qr = pathname.match(/^\/c\/([^/]+)\/?$/);
   if (qr) return qrHref(decodeURIComponent(qr[1]));
   const container = pathname.match(/^\/inventario\/([^/]+)\/?$/);
-  if (container && !["ver", "lugar", "escanear", "camara"].includes(container[1])) return containerHref(decodeURIComponent(container[1]));
+  if (container && !["ver", "lugar", "escanear", "camara", "ordenar", "fotos"].includes(container[1])) return containerHref(decodeURIComponent(container[1]));
   if (pathname === "/alacena" || pathname === "/taller") return "/inventario";
   return null;
 }

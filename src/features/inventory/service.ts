@@ -169,6 +169,23 @@ export async function updateInventoryItem(actor: Actor | null, id: string, patch
   });
 }
 
+/** Mueve varios productos a otro contenedor de una vez (cada uno queda como "movido" en el historial). */
+export async function moveInventoryItems(actor: Actor | null, ids: string[], containerId: string) {
+  assertCan(actor, "inventory.create");
+  if (ids.length === 0) return;
+  await db.transaction("rw", QUANTITY_TABLES(), async () => {
+    if (!(await db.containers.get(containerId))) throw new NotFoundError("errors.notFound.container");
+    const place = await containerName(containerId);
+    const now = Date.now();
+    for (const id of ids) {
+      const item = await getItem(id);
+      if (item.containerId === containerId) continue;
+      await db.inventory.put({ ...item, containerId, updatedAt: now });
+      await recordActivity(actor, { module: "inventory", action: "move", entityId: id, entityName: item.name, containerId, place });
+    }
+  });
+}
+
 export async function deleteInventoryItem(actor: Actor | null, id: string) {
   assertCan(actor, "inventory.delete");
   await db.transaction("rw", [db.prices, ...QUANTITY_TABLES()], async () => {
