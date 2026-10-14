@@ -31,8 +31,8 @@ async function addItem(page: Page, container: string, name: string, quantity: nu
     await page.waitForURL(/inventario\/ver\?id=/);
   }
   // El alta va en un diálogo: la página muestra primero lo que hay.
-  await page.getByRole("button", { name: "Agregar producto", exact: true }).first().click();
-  const dialog = page.getByRole("dialog", { name: /^Agregar producto a / });
+  await page.getByRole("button", { name: "Agregar una cosa", exact: true }).first().click();
+  const dialog = page.getByRole("dialog", { name: /^Agregar una cosa a / });
   await dialog.getByPlaceholder("Ej. Leche, Taladro, Pilas AA").fill(name);
   await dialog.getByLabel("Cantidad").fill(String(quantity));
   await dialog.getByLabel("Mínimo").fill(String(min));

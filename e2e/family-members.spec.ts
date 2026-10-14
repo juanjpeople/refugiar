@@ -98,7 +98,7 @@ test("dos administradores y dos dispositivos infantiles ingresan con aprobación
       await kid.goto("http://localhost:4195/inventario");
       await kid.getByText("Heladera", { exact: true }).first().click();
       await expect(kid.getByRole("button", { name: "Ver detalle de Arroz del laboratorio", exact: true })).toBeVisible();
-      await expect(kid.getByRole("button", { name: "Agregar producto", exact: true })).toHaveCount(0);
+      await expect(kid.getByRole("button", { name: "Agregar una cosa", exact: true })).toHaveCount(0);
     }
     expect(new Set(userIds).size).toBe(4);
   } finally { await Promise.all(contexts.map((context) => context.close())); }

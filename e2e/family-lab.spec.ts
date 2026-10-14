@@ -34,8 +34,8 @@ test("API real local: alta, casa cifrada y segundo navegador recuperan el invent
   await page.getByRole("button", { name: "Ir a mi casa", exact: true }).click();
   await page.goto("/inventario");
   await page.getByText("Heladera", { exact: true }).first().click();
-  await page.getByRole("button", { name: "Agregar producto", exact: true }).first().click();
-  const dialog = page.getByRole("dialog", { name: /^Agregar producto a / });
+  await page.getByRole("button", { name: "Agregar una cosa", exact: true }).first().click();
+  const dialog = page.getByRole("dialog", { name: /^Agregar una cosa a / });
   await dialog.getByPlaceholder("Ej. Leche, Taladro, Pilas AA").fill("Arroz del laboratorio");
   await dialog.getByLabel("Cantidad").fill("3");
   await dialog.getByLabel("Mínimo").fill("1");

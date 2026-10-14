@@ -114,6 +114,11 @@ export function useContainerContents(containerId: string) {
  * Para selects con sangría, búsqueda y "mover a…".
  */
 /** ¿Es una etiqueta impresa en blanco que todavía no tiene caja? `undefined` mientras carga. */
+/** Todas las anotaciones de la casa (para la búsqueda de arriba). */
+export function useAllContainerContents() {
+  return useLiveQuery(() => db.containerContents.toArray());
+}
+
 export function useIsFreeLabel(code: string) {
   return useLiveQuery(async () => !!code && !!(await db.houseSettings.get(reservedLabelId(normalizeContainerCode(code)))), [code]);
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { Flex, Typography, theme } from "antd";
+import { Flex, Grid, Typography, theme } from "antd";
 import { createContext, useContext, type ReactNode } from "react";
 import { Reveal } from "@/components/motion/Reveal";
 
@@ -27,13 +27,15 @@ export interface PageHeaderProps {
 }
 
 /**
- * Encabezado estándar de toda página. Una sola por página. En modo compacto queda solo el título,
+ * Encabezado estándar de toda página. Una sola por página. En modo compacto (siempre en el celular) queda solo el título,
  * más chico, y las acciones: la bajada y el eyebrow ceden su lugar a los datos.
  */
 export function PageHeader({ title, description, eyebrow, crumbs, extra, leading, dense }: PageHeaderProps) {
   const { token } = theme.useToken();
   const density = useContext(HeaderDensityContext);
-  const compact = dense ?? density === "compact";
+  const screens = Grid.useBreakpoint();
+  // En el celular, siempre compacto: la pantalla es para los datos, no para la bajada.
+  const compact = dense ?? (density === "compact" || screens.md === false);
   if (compact) {
     description = undefined;
     eyebrow = undefined;

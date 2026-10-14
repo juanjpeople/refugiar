@@ -16,6 +16,12 @@ export type DataMode = "unset" | "local" | "cloud";
 interface DeviceState {
   mode: DataMode;
   setMode: (mode: DataMode) => void;
+  /** Último respaldo exportado desde este dispositivo (ms), para recordarlo en Inicio. */
+  lastBackupAt: number | null;
+  /** "Más tarde" en el recordatorio: no vuelve a aparecer hasta esta fecha (ms). */
+  backupSnoozedUntil: number | null;
+  markBackup: () => void;
+  snoozeBackup: (until: number) => void;
 }
 
 /** Quien ya usaba la app (tiene un perfil elegido) sigue en modo local: nadie pierde su casa. */
@@ -34,6 +40,10 @@ export const useDeviceStore = create<DeviceState>()(
     (set) => ({
       mode: initialMode(),
       setMode: (mode) => set({ mode }),
+      lastBackupAt: null,
+      backupSnoozedUntil: null,
+      markBackup: () => set({ lastBackupAt: Date.now(), backupSnoozedUntil: null }),
+      snoozeBackup: (until) => set({ backupSnoozedUntil: until }),
     }),
     { name: houseStorageKey("refugiar-device"), version: 1 },
   ),

@@ -13,14 +13,16 @@ const RULES = [
   ["Plurales siempre", "{ one, other } en el diccionario. Nunca '1 anotaciones'; si es cero y no importa, no se dice."],
   ["Cada opción dice qué implica", "Antes de elegir, la persona sabe qué crea, qué carga o qué cambia, con un ejemplo concreto. Si se puede deshacer, se dice dónde."],
   ["Errores que ayudan", "Qué pasó y qué hacer, en el mismo tono: 'Ingresá un nombre.' La misma frase para el mismo error en toda la app."],
+  ["Cuatro palabras para guardar", "Lugar (Taller) › Mueble (Armario) › Caja (todo lo que va adentro: caja, cajón, estante) › Cosa (lo guardado, con o sin cantidad). Si no se sabe el nivel: mueble o caja. Lo que se anota sin contar es una anotación."],
   ["Sin jerga técnica a la vista", "HTTPS, WebXR, IA, cifrado de extremo a extremo: en la ayuda o en Privacidad, no en el texto principal."],
 ] as const;
 
 const EXAMPLES = [
   { no: "Inventario registrado; no detección del contenido", yes: "Lo que anotaste que hay adentro. La cámara no mira el contenido." },
   { no: "Activar escuela: materias, mochila y tareas", yes: "Usar la agenda escolar. Con las materias cargadas, Inicio te muestra cada día qué clases hay y qué llevar." },
-  { no: "Compra completa · principio de mes (sin más)", yes: "Compra completa. Carga 9 artículos, por ejemplo Leche (3 litros)." },
+  { no: "Compra completa · principio de mes (sin más)", yes: "Compra completa. Carga 9 cosas, por ejemplo Leche (3 litros)." },
   { no: "1 anotaciones · 0 fotos", yes: "1 anotación" },
+  { no: "Ambiente · Contenedor · Compartimento · Producto · Artículo", yes: "Lugar · Mueble · Caja · Cosa" },
   { no: "El nombre es obligatorio. / Ingresá un nombre (según la pantalla)", yes: "Ingresá un nombre. (siempre la misma)" },
   { no: "No envía imágenes ni usa IA.", yes: "Todo pasa en este teléfono: las imágenes no salen de acá." },
   { no: "Requiere HTTPS en Chrome para Android con controles en AR.", yes: "La vista AR anda en Chrome para Android. Acá podés usar la cámara común." },

@@ -66,8 +66,8 @@ test("la vista elegida se recuerda y la búsqueda de un producto abre su ficha",
   await expect(page.getByRole("link", { name: "Heladera", exact: true })).toBeVisible();
   // Ctrl+K y el buscador llevan a la ficha del producto, no solo a su caja.
   await page.getByRole("link", { name: "Heladera", exact: true }).click();
-  await page.getByRole("button", { name: "Agregar producto", exact: true }).first().click();
-  const dialog = page.getByRole("dialog", { name: /^Agregar producto a / });
+  await page.getByRole("button", { name: "Agregar una cosa", exact: true }).first().click();
+  const dialog = page.getByRole("dialog", { name: /^Agregar una cosa a / });
   await dialog.getByPlaceholder("Ej. Leche, Taladro, Pilas AA").fill("Queso rallado");
   await dialog.getByRole("button", { name: "Agregar", exact: true }).click();
   await page.goto("/inventario");
