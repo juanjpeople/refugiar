@@ -12,7 +12,7 @@ Qué falta, cuánto sale y cuánto se gastó.
 
 ## Cómo se usa
 
-Compras → elegir lista → anotar con autocompletado. Los ítems se mueven entre listas y las listas se archivan sin perder su gasto.
+Compras → elegir lista → anotar con autocompletado. Pegar una lista (de WhatsApp, una nota) anota una cosa por renglón y vincula lo que ya está en el inventario. "Compartir" manda la lista como texto (o la copia si el teléfono no tiene compartir). En el celular la lista va primero y el resumen queda en una línea. Los ítems se mueven entre listas y las listas se archivan sin perder su gasto.
 
 ## Límites
 

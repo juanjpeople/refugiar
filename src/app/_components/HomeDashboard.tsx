@@ -13,6 +13,7 @@ import { NavCard, PulseDot } from "@/components/ui";
 import { ActivityList } from "@/features/activity/components/ActivityList";
 import { useOccurrences } from "@/features/calendar/hooks";
 import { SchoolToday } from "@/features/calendar/components/SchoolToday";
+import { BackupReminder } from "@/features/settings/components/BackupReminder";
 import { APPEARANCE_ICONS, tint } from "@/lib/appearance";
 import { useActivity } from "@/features/activity/hooks";
 import { useInventoryTotals } from "@/features/inventory/hooks";
@@ -55,6 +56,7 @@ export function HomeDashboard() {
         }
       />
 
+      <BackupReminder />
       <Can perform="calendar.view"><SchoolToday /></Can>
       <Stagger delay={0.15}>
         <Row gutter={[16, 16]}>

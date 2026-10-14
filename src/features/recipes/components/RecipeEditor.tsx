@@ -18,7 +18,7 @@ import { useI18n } from "@/i18n";
 import { SPRING } from "@/lib/motion";
 import type { Privacy } from "@/lib/sync/scope";
 import { usePageCrumbs } from "@/store/useBreadcrumbStore";
-import { RECIPE_LIMITS, RECIPE_TAGS, type Recipe, type RecipeTag } from "../domain";
+import { parseIngredientLine, parseStepLines, RECIPE_LIMITS, RECIPE_TAGS, type Recipe, type RecipeTag } from "../domain";
 import { useRecipe, useRecipeActions } from "../hooks";
 import { recipeHref } from "@/lib/navigation/routes";
 import { belowHeader } from "@/components/layout/constants";
@@ -79,6 +79,38 @@ function EditorForm({ recipe }: { recipe: Recipe | null }) {
       next.splice(index + delta, 0, step);
       return next;
     });
+
+  /**
+   * Una lista pegada en un ingrediente se reparte: uno por renglón, desde ese lugar. Lo que se llama
+   * igual que algo del inventario (con la misma unidad o sin unidad) queda vinculado.
+   */
+  function pasteIngredients(key: string, text: string) {
+    const byName = new Map((options ?? []).map(({ item }) => [item.name.toLowerCase(), item]));
+    const parsed = text.split(/\r?\n/).map(parseIngredientLine).filter((line) => line !== null);
+    const drafts: IngredientDraft[] = parsed.map((line) => {
+      const item = byName.get(line.name.toLowerCase());
+      const sameUnit = item && (line.unit === "" || line.unit === "unidades" || line.unit === item.unit);
+      return sameUnit
+        ? { key: nextKey(), itemId: item.id, name: item.name, quantity: Math.max(1, Math.round(line.quantity)), unit: item.unit }
+        : { key: nextKey(), name: line.name, quantity: line.quantity, unit: line.unit };
+    });
+    setIngredients((current) => {
+      const index = current.findIndex((ingredient) => ingredient.key === key);
+      const keep = current[index]?.name.trim() ? 1 : 0;
+      const next = [...current.slice(0, index + keep), ...drafts, ...current.slice(index + 1)];
+      return next.slice(0, RECIPE_LIMITS.maxIngredients);
+    });
+  }
+
+  /** La preparación pegada en un paso se reparte: un paso por renglón. */
+  function pasteSteps(key: string, text: string) {
+    const lines = parseStepLines(text);
+    setSteps((current) => {
+      const index = current.findIndex((step) => step.key === key);
+      const keep = current[index]?.text.trim() ? 1 : 0;
+      return [...current.slice(0, index + keep), ...lines.map((line) => ({ key: nextKey(), text: line })), ...current.slice(index + 1)].slice(0, RECIPE_LIMITS.maxSteps);
+    });
+  }
 
   async function save() {
     setSaving(true);
@@ -178,8 +210,10 @@ function EditorForm({ recipe }: { recipe: Recipe | null }) {
             </Reveal>
 
             <Reveal delay={0.1}>
-              <Card title={t("recipes.ingredients")} extra={<Typography.Text type="secondary" style={{ fontSize: token.fontSizeSM }}>{t("recipes.editor.ingredientsHint")}</Typography.Text>}>
+              <Card title={t("recipes.ingredients")}>
                 <Flex vertical gap={10}>
+                  {/* Debajo del título, no al lado: en el celular la ayuda no entra en la cabecera. */}
+                  <Typography.Text type="secondary" style={{ fontSize: token.fontSizeSM }}>{t("recipes.editor.ingredientsHint")}</Typography.Text>
                   <AnimatePresence initial={false}>
                     {ingredients.map((ingredient) => (
                       <motion.div key={ingredient.key} layout initial={{ opacity: 0, y: -6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, height: 0 }} transition={SPRING.snappy}>
@@ -187,6 +221,7 @@ function EditorForm({ recipe }: { recipe: Recipe | null }) {
                           ingredient={ingredient}
                           options={options ?? []}
                           onChange={(patch) => updateIngredient(ingredient.key, patch)}
+                          onPasteList={(text) => pasteIngredients(ingredient.key, text)}
                           onRemove={() => setIngredients((current) => current.filter((value) => value.key !== ingredient.key))}
                           stacked={!screens.sm}
                         />
@@ -208,6 +243,7 @@ function EditorForm({ recipe }: { recipe: Recipe | null }) {
             <Reveal delay={0.15}>
               <Card title={t("recipes.steps")}>
                 <Flex vertical gap={10}>
+                  <Typography.Text type="secondary" style={{ fontSize: token.fontSizeSM }}>{t("recipes.editor.stepsHint")}</Typography.Text>
                   <AnimatePresence initial={false}>
                     {steps.map((step, index) => (
                       <motion.div key={step.key} layout initial={{ opacity: 0, y: -6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, height: 0 }} transition={SPRING.snappy}>
@@ -222,6 +258,13 @@ function EditorForm({ recipe }: { recipe: Recipe | null }) {
                             autoSize={{ minRows: 1, maxRows: 8 }}
                             maxLength={RECIPE_LIMITS.stepMaxLength}
                             onChange={(event) => setSteps((current) => current.map((value) => (value.key === step.key ? { ...value, text: event.target.value } : value)))}
+                            onPaste={(event) => {
+                              const text = event.clipboardData.getData("text");
+                              // Un párrafo se pega como siempre; varios renglones son varios pasos.
+                              if (!/\r?\n/.test(text.trim())) return;
+                              event.preventDefault();
+                              pasteSteps(step.key, text);
+                            }}
                           />
                           <Flex vertical={screens.sm ? false : true} gap={2}>
                             <Button type="text" size="small" aria-label={t("recipes.editor.moveUp")} icon={<ArrowUp />} disabled={index === 0} onClick={() => moveStep(index, -1)} />
@@ -289,18 +332,21 @@ function EditorForm({ recipe }: { recipe: Recipe | null }) {
   );
 }
 
-/** Un ingrediente: si el nombre coincide con un producto de la casa, se vincula (y toma su unidad). */
+/** Un ingrediente: si el nombre coincide con algo del inventario, se vincula (y toma su unidad). */
 function IngredientField({
   ingredient,
   options,
   onChange,
   onRemove,
+  onPasteList,
   stacked,
 }: {
   ingredient: IngredientDraft;
   options: ItemPlace[];
   onChange: (patch: Partial<IngredientDraft>) => void;
   onRemove: () => void;
+  /** Se pegaron varios renglones en el nombre. */
+  onPasteList: (text: string) => void;
   stacked: boolean;
 }) {
   const { t } = useI18n();
@@ -311,7 +357,17 @@ function IngredientField({
   const unitOptions = UNITS.map((unit) => ({ value: unit, label: t(`inventory.units.${unit}`, { count: 2 }) }));
 
   return (
-    <Flex gap={8} align="center" wrap={stacked}>
+    <Flex
+      gap={8}
+      align="center"
+      wrap={stacked}
+      onPasteCapture={(event) => {
+        const text = event.clipboardData.getData("text");
+        if (!/\r?\n/.test(text.trim())) return;
+        event.preventDefault();
+        onPasteList(text);
+      }}
+    >
       <AutoComplete
         value={ingredient.name}
         placeholder={t("recipes.editor.ingredientPlaceholder")}

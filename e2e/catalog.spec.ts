@@ -4,7 +4,7 @@ test("el catálogo filtra, consulta referencias y espera la confirmación para g
   if (testInfo.project.name === "celular") await page.setViewportSize({ width: 320, height: 740 });
   await page.goto("/inventario");
   await page.getByRole("link", { name: /^Alacena/ }).click();
-  await page.getByRole("button", { name: "Agregar producto", exact: true }).first().click();
+  await page.getByRole("button", { name: "Agregar una cosa", exact: true }).first().click();
   await page.getByRole("button", { name: "Elegir del catálogo", exact: true }).click();
   const dialog = page.getByRole("dialog", { name: "Básicos de casa", exact: true });
   await expect(dialog).toBeVisible();
@@ -14,7 +14,7 @@ test("el catálogo filtra, consulta referencias y espera la confirmación para g
   await filters.getByRole("button", { name: "Almacén y cocina", exact: true }).press("Space");
   await expect(filters.getByRole("button", { name: "Almacén y cocina", exact: true })).toHaveAttribute("aria-pressed", "true");
   await dialog.getByRole("textbox").fill("arroz");
-  await expect(dialog.getByRole("status")).toHaveText("1 producto");
+  await expect(dialog.getByRole("status")).toHaveText("1 cosa");
   await dialog.getByRole("button", { name: "Precio de referencia de Arroz", exact: true }).click();
   const reference = page.getByRole("region", { name: "Precio de referencia", exact: true });
   await expect(reference).toContainText("Referencia publicada:");
@@ -45,13 +45,13 @@ test("el catálogo filtra, consulta referencias y espera la confirmación para g
   await expect(page.getByRole("button", { name: "Ver detalle de Arroz", exact: true })).toHaveCount(0);
   await page.getByRole("button", { name: "Agregar", exact: true }).click();
   await expect(page.getByRole("button", { name: "Ver detalle de Arroz", exact: true })).toBeVisible();
-  await page.getByRole("button", { name: "Agregar producto", exact: true }).first().click();
+  await page.getByRole("button", { name: "Agregar una cosa", exact: true }).first().click();
   await page.getByRole("button", { name: "Elegir del catálogo", exact: true }).click();
   // Cada alta empieza con el catálogo limpio.
   await expect(dialog.getByRole("textbox")).toHaveValue("");
   await dialog.getByRole("textbox").fill("arroz");
   await filters.getByRole("button", { name: "Herramientas", exact: true }).click();
-  await expect(dialog.getByRole("status")).toHaveText("0 productos");
+  await expect(dialog.getByRole("status")).toHaveText("0 cosas");
   await dialog.getByRole("button", { name: "Limpiar filtros", exact: true }).click();
   await expect(filters.getByRole("button", { name: "Todos los rubros", exact: true })).toHaveAttribute("aria-pressed", "true");
   await expect(dialog.getByRole("textbox")).toHaveValue("");

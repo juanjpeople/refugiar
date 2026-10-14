@@ -27,12 +27,12 @@ test("revisa un patrón, edita cantidades y excluye productos antes de guardarlo
   await page.getByRole("checkbox", { name: "Cocina", exact: true }).press("Space");
   await expect(page.getByRole("checkbox", { name: "Cocina", exact: true })).toBeChecked();
   // Ambientes y contenedores propios: entran seleccionados y vacíos.
-  await page.getByRole("textbox", { name: "Nombre de otro ambiente" }).fill("Altillo");
-  await page.getByRole("textbox", { name: "Nombre de otro ambiente" }).press("Enter");
+  await page.getByRole("textbox", { name: "Nombre de otro lugar" }).fill("Altillo");
+  await page.getByRole("textbox", { name: "Nombre de otro lugar" }).press("Enter");
   await expect(page.getByRole("checkbox", { name: "Altillo", exact: true })).toBeChecked();
   await nextSetupStep(page);
   await page.getByRole("checkbox", { name: "Heladera", exact: true }).check();
-  await page.getByRole("textbox", { name: "Nombre de otro contenedor" }).fill("Baúl");
+  await page.getByRole("textbox", { name: "Nombre de otro mueble" }).fill("Baúl");
   await page.getByRole("button", { name: "Agregar" }).click();
   await page.getByRole("combobox", { name: "Ubicación de Baúl" }).click();
   await page.getByTitle("Altillo").click();

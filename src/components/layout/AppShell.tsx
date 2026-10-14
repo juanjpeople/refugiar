@@ -11,6 +11,7 @@ import { useCallback, useEffect, useRef, type ReactNode } from "react";
 import { LockScreen } from "@/components/auth/LockScreen";
 import { MembersBridge } from "@/components/auth/MembersBridge";
 import { HouseMark } from "@/components/illustrations/HouseMark";
+import { BOTTOM_BAR_HEIGHT } from "@/components/ui";
 import { useHydrated } from "@/hooks/useHydrated";
 import { usePreferences } from "@/hooks/usePreferences";
 import { useT } from "@/i18n";
@@ -25,9 +26,10 @@ import { DataModeBadge } from "./DataModeBadge";
 import { HEADER_HEIGHT_VAR, SIDEBAR_WIDTH } from "./constants";
 import { HeaderActions, UserMenu } from "./HeaderActions";
 import { HeaderNavigation } from "./HeaderNavigation";
+import { MobileBar, useMobileBarVisible } from "./MobileBar";
 import { Navigation } from "./Navigation";
 import { ProfilePicker } from "./ProfilePicker";
-import { useAutoLock, useGlobalShortcuts, useNavigationTracking, useToggleSidebar } from "./useShell";
+import { useAutoLock, useGlobalShortcuts, useKeepLocalData, useNavigationTracking, useToggleSidebar } from "./useShell";
 
 const { Header, Content } = Layout;
 
@@ -154,8 +156,10 @@ function DefaultLayout({ children }: { children: ReactNode }) {
   useGlobalShortcuts();
   useNavigationTracking();
   useAutoLock();
+  useKeepLocalData();
 
   const isMobile = !screens.md;
+  const barVisible = useMobileBarVisible() && isMobile;
   const mode: SidebarMode = isMobile ? "hidden" : sidebar;
   const collapsed = mode === "collapsed";
 
@@ -261,7 +265,10 @@ function DefaultLayout({ children }: { children: ReactNode }) {
         {/* El mismo resplandor de marca que la landing: da profundidad sin costo (es un gradiente). */}
         <Content
           style={{
-            padding: isMobile ? "24px 16px" : screens.xl ? "32px 40px" : "32px 24px",
+            // Abajo, en el celular, el lugar de la barra (más el margen seguro del teléfono).
+            padding: barVisible
+              ? `24px 16px calc(${BOTTOM_BAR_HEIGHT + 24}px + env(safe-area-inset-bottom, 0px))`
+              : isMobile ? "24px 16px" : screens.xl ? "32px 40px" : "32px 24px",
             background: haloBackground(skin, `radial-gradient(ellipse 70% 40% at 60% -5%, ${token.colorPrimaryBg}, transparent 70%)`),
             // Del alto de la pantalla, no del contenido: si no, el halo se achica y crece al cambiar de página.
             backgroundSize: "100% 100vh",
@@ -270,6 +277,7 @@ function DefaultLayout({ children }: { children: ReactNode }) {
         >
           <div style={{ maxWidth: contentWidth, margin: "0 auto" }}>{children}</div>
         </Content>
+        {barVisible && <MobileBar />}
       </Layout>
 
       <CommandPalette />
