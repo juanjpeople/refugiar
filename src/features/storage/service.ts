@@ -95,6 +95,28 @@ export async function createContainer(actor: Actor | null, input: NewContainer) 
   return id;
 }
 
+/** Varias cajas de una vez en el mismo lugar (una por nombre), con su código para imprimir. */
+export async function createContainers(actor: Actor | null, base: Omit<NewContainer, "name">, names: string[]) {
+  assertCan(actor, "storage.manage");
+  const list = names.map((name) => name.trim()).filter(Boolean);
+  if (list.length === 0) throw new ValidationError("errors.validation.nameRequired");
+  if (list.length > STORAGE_LIMITS.maxBulk) throw new ValidationError("errors.storage.tooMany", { max: STORAGE_LIMITS.maxBulk });
+  const parsed = list.map((name) => parseContainer({ ...base, name }));
+  const now = Date.now();
+  const created: { id: string; name: string; code: string }[] = [];
+  await db.transaction("rw", db.spaces, db.containers, db.activity, async () => {
+    const placement = await resolvePlacement(parsed[0]);
+    for (const data of parsed) {
+      const id = createId();
+      const code = await uniqueCode();
+      await db.containers.add({ ...data, ...placement, id, code, createdAt: now, updatedAt: now });
+      await recordActivity(actor, { module: "storage", action: "create", entityId: id, entityName: data.name, containerId: id, place: data.name });
+      created.push({ id, name: data.name, code });
+    }
+  });
+  return created;
+}
+
 export async function updateContainer(actor: Actor | null, id: string, input: NewContainer) {
   assertCan(actor, "storage.manage");
   const data = parseContainer(input);

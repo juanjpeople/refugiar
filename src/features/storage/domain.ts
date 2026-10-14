@@ -134,7 +134,7 @@ export function parseContentText(input: string): string {
 export type NewContainer = Pick<Container, "name" | "kind" | "spaceId" | "parentId" | "color" | "icon">;
 
 /** `maxDepth`: niveles de anidamiento (1 = directo en el recinto; 3 = placard → puerta → cajón). */
-export const STORAGE_LIMITS = { nameMaxLength: 60, codeLength: 4, maxDepth: 3 } as const;
+export const STORAGE_LIMITS = { nameMaxLength: 60, codeLength: 4, maxDepth: 3, maxBulk: 50 } as const;
 
 // Sin 0/O, 1/I/L ni 5/S: se lee bien impreso chico y se tipea sin dudar.
 const CODE_ALPHABET = "ABCDEFGHJKMNPQRTUVWXYZ2346789";
