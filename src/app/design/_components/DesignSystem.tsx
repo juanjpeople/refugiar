@@ -4,6 +4,8 @@ import { Anchor, Col, Flex, Grid, Row, Select, Typography, theme } from "antd";
 import type { ReactNode } from "react";
 import { RequirePermission } from "@/components/auth/RequirePermission";
 import { PageHeader } from "@/components/ui";
+import { belowHeader } from "@/components/layout/constants";
+import { useUiStore } from "@/store/useNavigationStore";
 import { ActionsSection } from "./ActionsSection";
 import { DataSection } from "./DataSection";
 import { FormsSection } from "./FormsSection";
@@ -34,15 +36,15 @@ const TOC = [
     group: "Componentes propios",
     items: [["componentes-estructura", "Estructura"], ["componentes-estados", "Estados"], ["componentes-seleccion", "Selección"], ["componentes-datos", "Datos"], ["componentes-fichas", "Fichas"], ["componentes-espacios", "Espacios"], ["componentes-entrada", "Entrada"], ["componentes-paneles", "Paneles"], ["componentes-plantillas", "Plantillas"], ["componentes-plantillas-detalle", "Detalle"]],
   },
-  { group: "Flujos", items: [["flujo-almacenamiento", "Almacenamiento"], ["flujo-catalogo", "Catálogo"], ["flujo-recetas", "Recetas"], ["flujo-entrada", "Entrada"]] },
+  { group: "Flujos", items: [["flujo-almacenamiento", "Almacenamiento"], ["etiquetas", "Etiquetas QR"], ["flujo-catalogo", "Catálogo"], ["flujo-recetas", "Recetas"], ["flujo-entrada", "Entrada"]] },
   { group: "Calidad", items: [["revision", "Revisión antes de un PR"]] },
   { group: "Seguridad", items: [["permisos", "Matriz de permisos"], ["can", "<Can>"], ["servicios", "Servicios"]] },
 ] as const;
 
-/** La barra de arriba de la app es fija: el índice arranca debajo, nunca detrás de las migas. */
+/** La barra de arriba es fija y su alto cambia (las migas bajan de renglón): el índice frena debajo, medido. */
 const useHeaderOffset = () => {
   const { token } = theme.useToken();
-  return token.controlHeight * 2 + token.marginLG;
+  return useUiStore((s) => s.headerHeight) + token.marginSM;
 };
 
 export function DesignSystem() {
@@ -117,7 +119,7 @@ function JumpTo() {
     <div
       style={{
         position: "sticky",
-        top: token.controlHeight * 2 + token.marginXS,
+        top: belowHeader(token.marginXS),
         zIndex: 5,
         marginBottom: token.marginLG,
         padding: token.paddingXS,
@@ -137,7 +139,8 @@ function JumpTo() {
         onChange={(id: string) => {
           const target = document.getElementById(id);
           if (!target) return;
-          window.scrollTo({ top: target.getBoundingClientRect().top + window.scrollY - offset, behavior: "smooth" });
+          // Debajo de la barra y del propio "Ir a…", que también queda pegado arriba.
+          window.scrollTo({ top: target.getBoundingClientRect().top + window.scrollY - offset - token.controlHeightLG * 1.5, behavior: "smooth" });
           window.history.replaceState(null, "", `#${id}`);
         }}
       />

@@ -630,6 +630,19 @@ export const es = {
       created: "Producto agregado",
       saved: "Cambios guardados",
       deleted: "Producto eliminado",
+      moved: { one: "Producto movido", other: "{count} productos movidos" },
+    },
+    move: {
+      button: "Mover",
+      title: "Mover a otra caja",
+      what: "Qué movés",
+      whatHelp: "Marcá lo que sacás de esta caja.",
+      all: "Todo ({count})",
+      to: "Adónde",
+      toHelp: "Elegí la caja de la lista o escaneá su etiqueta. Queda en el historial y lo podés volver a mover cuando quieras.",
+      scan: "Escanear destino",
+      scanTitle: "Escaneá la caja de destino",
+      submit: { one: "Mover {count}", other: "Mover {count}" },
     },
   },
   storage: {
@@ -1036,6 +1049,8 @@ export const es = {
     manual: "¿Sin cámara? Escribí el código de la etiqueta",
     manualPlaceholder: "Ej. K7QM",
     go: "Abrir",
+    use: "Usar",
+    unknown: "Esa etiqueta no está en esta casa. Revisá la casa elegida o la sincronización.",
   },
   qr: {
     resolving: "Buscando el contenedor…",
