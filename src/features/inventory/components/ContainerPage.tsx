@@ -1,7 +1,7 @@
 "use client";
 
 import { App, Button, Card, Col, Dropdown, Flex, Row, Typography, theme } from "antd";
-import { Boxes, Camera, EllipsisVertical, Layers, NotebookPen, PackageOpen, PackageX, Pencil, Plus, Printer, QrCode, RotateCcwClock, Trash2 } from "lucide-react";
+import { Boxes, Camera, CopyPlus, EllipsisVertical, Layers, NotebookPen, PackageOpen, PackageX, Pencil, Plus, Printer, QrCode, RotateCcwClock, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useContext, useState, type CSSProperties } from "react";
@@ -17,7 +17,7 @@ import { ContainerScene } from "@/features/storage/components/ContainerScene";
 import type { LabelData } from "@/features/storage/components/ContainerLabel";
 import { NotesSection, PhotosSection } from "@/features/storage/components/ContainerContents";
 import { LabelModal } from "@/features/storage/components/LabelModal";
-import { ContainerModal } from "@/features/storage/components/StorageForms";
+import { BulkContainersModal, ContainerModal } from "@/features/storage/components/StorageForms";
 import { containerAppearance, spaceAppearance, STORAGE_LIMITS } from "@/features/storage/domain";
 import { useContainer, useContainerContents, useSpaces, useStorageActions } from "@/features/storage/hooks";
 import { useT } from "@/i18n";
@@ -56,7 +56,7 @@ export function ContainerPage() {
   // La ficha a la que se llegó (`?item=`) se abre sola una vez; cerrarla no la vuelve a abrir.
   const [closedArrival, setClosedArrival] = useState<string | null>(null);
   const shownItem = openItem ?? (arrivedItem && arrivedItem !== closedArrival ? arrivedItem : null);
-  const [dialog, setDialog] = useState<"edit" | "addChild" | "product" | null>(null);
+  const [dialog, setDialog] = useState<"edit" | "addChild" | "addMany" | "product" | null>(null);
   const [labels, setLabels] = useState<LabelData[] | null>(null);
   const [notesOpen, setNotesOpen] = useState(false);
   const canManage = usePermission("storage.manage");
@@ -145,6 +145,7 @@ export function ContainerPage() {
                     items: [
                       ...(canManage ? [{ key: "edit", icon: <Pencil />, label: t("storage.edit"), onClick: () => setDialog("edit") }] : []),
                       ...(canAddChild ? [{ key: "child", icon: <Layers />, label: t("storage.addSubcontainer"), onClick: () => setDialog("addChild") }] : []),
+                      ...(canAddChild ? [{ key: "many", icon: <CopyPlus />, label: t("storage.bulk.title"), onClick: () => setDialog("addMany") }] : []),
                       ...(canViewActivity ? [{ key: "activity", icon: <RotateCcwClock />, label: t("activity.button"), onClick: () => setActivityOpen(true) }] : []),
                       ...(canManage ? [{ type: "divider" as const }, { key: "delete", danger: true, icon: <Trash2 />, label: t("storage.delete"), onClick: confirmDelete }] : []),
                     ],
@@ -171,6 +172,7 @@ export function ContainerPage() {
                       <Can perform="inventory.create"><Button type="primary" icon={<Plus />} onClick={() => setDialog("product")}>{t("inventory.form.title")}</Button></Can>
                       <Can perform="storage.manage"><Button icon={<NotebookPen />} onClick={addNote}>{t("storage.contents.new")}</Button></Can>
                       {canAddChild && <Button icon={<Layers />} onClick={() => setDialog("addChild")}>{t("storage.addSubcontainer")}</Button>}
+                      {canAddChild && <Button icon={<CopyPlus />} onClick={() => setDialog("addMany")}>{t("storage.bulk.title")}</Button>}
                     </Flex>
                   }
                 />
@@ -187,6 +189,7 @@ export function ContainerPage() {
               extra: (
                 <>
                   <Button icon={<Printer />} onClick={() => setLabels(container.children.map((child) => labelOf(child, `${place} › ${container.name}`)))}>{t("storage.printLabels")}</Button>
+                  {canAddChild && <Button icon={<CopyPlus />} onClick={() => setDialog("addMany")}>{t("storage.addMany")}</Button>}
                   {canAddChild && <Button icon={<Plus />} onClick={() => setDialog("addChild")}>{t("storage.addSubcontainer")}</Button>}
                 </>
               ),
@@ -234,6 +237,12 @@ export function ContainerPage() {
         <ProductModal containerId={container.id} place={container.name} open={dialog === "product"} onClose={() => setDialog(null)} />
         <ContainerModal open={dialog === "edit"} container={container} onClose={() => setDialog(null)} />
         <ContainerModal open={dialog === "addChild"} parentId={container.id} onClose={() => setDialog(null)} />
+        <BulkContainersModal
+          open={dialog === "addMany"}
+          parentId={container.id}
+          onClose={() => setDialog(null)}
+          onCreated={(created, where) => setLabels(created.map((child) => labelOf(child, where)))}
+        />
         <LabelModal open={!!labels} labels={labels ?? []} onClose={() => setLabels(null)} />
       </DetailPage>
     </RequirePermission>

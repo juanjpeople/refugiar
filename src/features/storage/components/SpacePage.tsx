@@ -1,7 +1,7 @@
 "use client";
 
 import { Button, Dropdown, theme } from "antd";
-import { Boxes, Camera, EllipsisVertical, MapPinOff, Pencil, Plus, Printer, Trash2 } from "lucide-react";
+import { Boxes, Camera, CopyPlus, EllipsisVertical, MapPinOff, Pencil, Plus, Printer, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
@@ -17,6 +17,7 @@ import { useStorageOverview } from "../hooks";
 import { entryPath, flattenOverview, spaceTotals } from "../views";
 import { InventoryDisplayMenu } from "./InventoryDisplayMenu";
 import { StorageHighlights } from "./StorageHighlights";
+import { BulkContainersModal } from "./StorageForms";
 import { StorageDialogs, useStorageViewActions, type StorageDialog } from "./StoragePage";
 import { CardsView, labelOf, ListView, PlanView, useViewOptions, ViewStage } from "./StorageViews";
 
@@ -32,6 +33,7 @@ export function SpacePage() {
   const setPreference = useSetPreference();
   const options = useViewOptions();
   const [dialog, setDialog] = useState<StorageDialog>(null);
+  const [bulkOpen, setBulkOpen] = useState(false);
   const actions = useStorageViewActions(setDialog, () => router.push("/inventario"));
   useTrackVisit(space ? spaceHref(space.id) : null);
   usePageCrumbs(space ? [{ label: space.name }] : null);
@@ -44,6 +46,7 @@ export function SpacePage() {
   const totals = spaceTotals(space);
   const all = flattenOverview([space]);
   const menu = [
+    ...(actions.onAddContainer ? [{ key: "many", icon: <CopyPlus />, label: t("storage.bulk.title"), onClick: () => setBulkOpen(true) }] : []),
     ...(actions.onEditSpace ? [{ key: "edit", icon: <Pencil />, label: t("storage.editSpace"), onClick: () => actions.onEditSpace?.(space) }] : []),
     ...(actions.onDeleteSpace ? [{ type: "divider" as const }, { key: "delete", danger: true, icon: <Trash2 />, label: t("storage.delete"), onClick: () => actions.onDeleteSpace?.(space) }] : []),
   ];
@@ -112,6 +115,12 @@ export function SpacePage() {
         ]}
       >
         <StorageDialogs dialog={dialog} onClose={() => setDialog(null)} />
+        <BulkContainersModal
+          open={bulkOpen}
+          spaceId={space.id}
+          onClose={() => setBulkOpen(false)}
+          onCreated={(created, where) => setDialog({ kind: "labels", labels: created.map((container) => labelOf(container, where)) })}
+        />
       </DetailPage>
     </RequirePermission>
   );

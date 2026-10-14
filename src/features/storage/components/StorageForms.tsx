@@ -21,7 +21,7 @@ import {
   type SpaceKind,
 } from "../domain";
 import { useContainers, useSpaces, useStorageActions } from "../hooks";
-import { descendantIds, subtreeHeight } from "../tree";
+import { descendantIds, pathLabel, subtreeHeight } from "../tree";
 import { ContainerScene } from "./ContainerScene";
 
 /**
@@ -253,6 +253,100 @@ export function ContainerModal({
             {t("storage.code")}: <Typography.Text code>{container.code}</Typography.Text>
           </Typography.Text>
         )}
+      </Form>
+    </Modal>
+  );
+}
+
+/**
+ * Varias cajas de una vez, una por línea (la leyenda que ya tienen escrita). Al crearlas,
+ * `onCreated` recibe cada una con su código para imprimir las etiquetas.
+ */
+export function BulkContainersModal({
+  open,
+  spaceId,
+  parentId,
+  onClose,
+  onCreated,
+}: {
+  open: boolean;
+  spaceId?: string;
+  parentId?: string;
+  onClose: () => void;
+  /** `place`: dónde quedaron (recinto › contenedor), para la etiqueta. */
+  onCreated: (created: { id: string; name: string; code: string }[], place: string) => void;
+}) {
+  const t = useT();
+  const { token } = theme.useToken();
+  const [form] = Form.useForm<{ names: string; kind: ContainerKind; location: LocationValue }>();
+  const spaces = useSpaces();
+  const containers = useContainers();
+  const { createContainers } = useStorageActions();
+  const [saving, setSaving] = useState(false);
+  const treeData = useLocationTree();
+  const kind = (Form.useWatch("kind", form) as ContainerKind | undefined) ?? "box";
+  const names = ((Form.useWatch("names", form) as string | undefined) ?? "").split("\n").filter((line) => line.trim());
+
+  useEffect(() => {
+    if (!open) return;
+    const location: LocationValue | undefined = parentId
+      ? `container:${parentId}`
+      : spaceId || spaces?.[0]?.id
+        ? `space:${spaceId ?? spaces![0].id}`
+        : undefined;
+    form.setFieldsValue({ names: "", kind: "box", location });
+  }, [open, spaceId, parentId, spaces, form]);
+
+  async function onOk() {
+    const { names: text, kind, location } = await form.validateFields();
+    const [type, id] = location.split(":") as ["space" | "container", string];
+    const parent = type === "container" ? containers?.find((candidate) => candidate.id === id) : undefined;
+    setSaving(true);
+    const created = await createContainers({ kind, spaceId: parent?.spaceId ?? id, parentId: parent?.id }, text.split("\n"));
+    setSaving(false);
+    const spaceName = spaces?.find((space) => space.id === (parent?.spaceId ?? id))?.name ?? "";
+    const place = [spaceName, parent ? pathLabel(parent.id, new Map((containers ?? []).map((container) => [container.id, container]))) : ""].filter(Boolean).join(" › ");
+    if (created) {
+      onClose();
+      onCreated(created, place);
+    }
+  }
+
+  return (
+    <Modal
+      open={open}
+      onCancel={onClose}
+      onOk={onOk}
+      okText={t("storage.bulk.submit")}
+      okButtonProps={{ disabled: names.length === 0 || names.length > STORAGE_LIMITS.maxBulk }}
+      confirmLoading={saving}
+      title={t("storage.bulk.title")}
+      width={560}
+      destroyOnHidden
+    >
+      <Form form={form} name="bulk-containers" layout="vertical" requiredMark={false} disabled={saving}>
+        <Form.Item name="location" label={t("storage.fields.location")} rules={[{ required: true }]}>
+          <TreeSelect treeData={treeData} treeDefaultExpandAll showSearch={{ treeNodeFilterProp: "title" }} />
+        </Form.Item>
+        <Form.Item
+          name="names"
+          label={t("storage.bulk.names")}
+          extra={names.length > 0 ? `${t("storage.bulk.namesHelp")} ${t("storage.bulk.count", { count: names.length })}.` : t("storage.bulk.namesHelp")}
+          rules={[{ required: true, whitespace: true, message: t("errors.validation.nameRequired") }]}
+        >
+          <Input.TextArea autoSize={{ minRows: 5, maxRows: 12 }} placeholder={t("storage.bulk.namesPlaceholder")} autoFocus />
+        </Form.Item>
+        {names.length > STORAGE_LIMITS.maxBulk && (
+          <Typography.Text type="danger" style={{ display: "block", marginTop: -token.marginSM, marginBottom: token.margin }}>
+            {t("errors.storage.tooMany", { max: STORAGE_LIMITS.maxBulk })}
+          </Typography.Text>
+        )}
+        <Form.Item name="kind" label={t("storage.fields.kind")} extra={t("storage.bulk.kindHelp")}>
+          <ChoiceCards<ContainerKind> compact value={kind} aria-label={t("storage.fields.kind")} disabled={saving}
+            options={(["box", "drawer", "basket", "toolbox", "compartment", "other"] as const).map((value) => ({ value, title: t(`storage.containerKinds.${value}`), leading: <IconTile icon={CONTAINER_ICONS[value]} color={CONTAINER_DEFAULTS[value].color} size={token.controlHeight} /> }))}
+            onChange={(kind) => form.setFieldValue("kind", kind)}
+          />
+        </Form.Item>
       </Form>
     </Modal>
   );
