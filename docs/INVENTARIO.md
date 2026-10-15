@@ -13,6 +13,7 @@ que la app, con una casa de ejemplo en memoria.
 | Contenedor | `/inventario/ver?id=` | Ruta tocable, escena, compartimentos, productos, anotaciones y fotos. |
 | Ficha de un producto | `/inventario/ver?id=…&item=` | La misma página del contenedor, con la ficha abierta y la fila resaltada. |
 | Cámara | `/inventario/camara` (`?id=`, `?space=`) | Escanear QR, Buscar y AR espacial (experimental). |
+| Cargar con códigos | `/inventario/cargar?id=` | Códigos de barras de los envases, en ráfaga, hacia una caja. |
 
 - **Ruta tocable.** En el recinto, el contenedor y la ficha, `PathCrumbs` muestra
   Inventario › Recinto › Mueble › Cajón. Cada tramo abre su página y mide 44 px. En celular
@@ -97,6 +98,38 @@ de varias etiquetas requiere que el navegador ofrezca `BarcodeDetector` con sopo
   - sin `navigator.xr`;
   - sin `immersive-ar`;
   - o el nombre del error que devolvió el navegador.
+
+## Códigos de barras de los envases
+
+Para cargar la compra sin tipear. Desde una caja, "Escanear códigos":
+
+1. Se activa la cámara (la misma lente y resolución que el lector de QR).
+2. Cada envase que pasa frente a la cámara vibra y entra en la lista. Un mismo código se cuenta una
+   vez mientras sigue a la vista: para sumar otro, se aparta y se vuelve a pasar.
+3. El nombre se completa solo si ese código ya existe en la casa. Con "Buscar nombres en Open Food
+   Facts" activo y conexión, lo busca ahí. Si no, se escribe.
+4. "Guardar" crea las cosas nuevas o suma a las que ya tienen ese código en esa caja, todo junto.
+
+**Lectura.** Usa `BarcodeDetector` del navegador con EAN-13, EAN-8 y UPC-A. Cada código se valida con
+su dígito verificador: una lectura con un dígito cambiado no entra. UPC-E no se lee (su verificador se
+calcula distinto). Las imágenes no salen del dispositivo.
+
+**Sin lector.** Safari (iPhone) y Firefox no traen `BarcodeDetector`. La pantalla lo dice y ofrece
+escribir el número de abajo de las barras; el resto del flujo es igual.
+
+## Foto con punto
+
+En la ficha de una cosa, "Dónde está" muestra la foto de su mueble con un punto que late. Se marca con
+"Marcar dónde está en la foto": se elige la foto (si hay varias, también las de los muebles que la
+contienen) y se toca el lugar. Con el teclado, las flechas mueven el punto. El punto se guarda en la cosa
+(`spot`: foto y posición de 0 a 1) y se borra solo al moverla a otra caja.
+
+## Anotar rápido
+
+Inventario → "Anotar rápido". La frase se parte en el primer "en", "adentro de" o "dentro de" (en
+inglés, "in", "on", "at"). El lugar se compara palabra por palabra con los muebles y cajas de la casa,
+sin tildes: pesa más el nombre de la caja que el de su lugar, y "cajón" coincide con "cajones". Se puede
+corregir el lugar en la lista antes de guardar. No usa red ni modelos.
 
 ## Etiquetas
 

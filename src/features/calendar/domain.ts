@@ -37,6 +37,11 @@ export interface CalendarEvent {
   updatedAt: number;
 }
 
+/** Un chico ve lo de toda la casa y lo suyo; los grandes ven todo, porque organizan la agenda de todos. */
+export function isForViewer(event: Pick<CalendarEvent, "participantIds">, viewer: { id: string; role: string } | null | undefined): boolean {
+  return viewer?.role !== "kid" || !event.participantIds.length || event.participantIds.includes(viewer.id);
+}
+
 export type EventInput = Pick<CalendarEvent, "title" | "start" | "end" | "allDay" | "repeat" | "repeatUntil" | "eventKind" | "homeworkDone" | "teacher" | "participantIds" | "color" | "icon" | "notes"> & { privacy?: Privacy };
 
 export const EVENT_LIMITS = { titleMaxLength: 80, notesMaxLength: 1000, teacherMaxLength: 80 } as const;

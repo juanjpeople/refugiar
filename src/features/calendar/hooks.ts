@@ -9,7 +9,7 @@ import { useCurrentUser } from "@/lib/auth/session";
 import { db } from "@/lib/db";
 import { getErrorMessage } from "@/lib/errors";
 import { canSee } from "@/lib/sync/scope";
-import { applySchoolBreaks, birthdayOccurrences, compareOccurrences, expandEvents, type EventInput, type Occurrence } from "./domain";
+import { applySchoolBreaks, birthdayOccurrences, compareOccurrences, expandEvents, isForViewer, type EventInput, type Occurrence } from "./domain";
 import { holidayOccurrences } from "./holidays";
 import { DEFAULT_CALENDAR, readCalendarSettings } from "./settings";
 import { createEvent, deleteEvent, updateEvent } from "./service";
@@ -29,7 +29,7 @@ export function useOccurrences(from: number, to: number): Occurrence[] | undefin
       db.events.where("start").below(to).filter((event) => event.repeat === "none" && event.end + (event.allDay ? 86_400_000 : 0) > from).toArray(),
       db.events.where("repeat").notEqual("none").toArray(),
     ]);
-    return [...single, ...repeating].filter((event) => canSee(viewer, event));
+    return [...single, ...repeating].filter((event) => canSee(viewer, event) && isForViewer(event, viewer));
   }, [from, to, viewer?.id, viewer?.role]);
 
   return useMemo(() => {

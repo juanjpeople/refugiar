@@ -3,7 +3,7 @@
 import { haloBackground } from "@/skins/surface";
 import { useSkin } from "@/skins/useSkin";
 import { Card, Col, Flex, Grid, Row, Typography, theme } from "antd";
-import { Boxes, ShoppingCart } from "lucide-react";
+import { Boxes, CalendarDays, ChefHat, GraduationCap, ShoppingCart } from "lucide-react";
 import Link from "next/link";
 import { useState, type ComponentProps } from "react";
 import { Can } from "@/components/auth/Can";
@@ -32,7 +32,13 @@ function greetingKey(hour: number): MessageKey {
   return "home.greeting.evening";
 }
 
+/** Inicio: el de la casa para los grandes; el de su día para los chicos. */
 export function HomeDashboard() {
+  const user = useCurrentUser();
+  return user?.role === "kid" ? <KidHome /> : <HouseHome />;
+}
+
+function HouseHome() {
   const { t, format } = useI18n();
   const user = useCurrentUser();
   const totals = useInventoryTotals();
@@ -60,16 +66,19 @@ export function HomeDashboard() {
       <Can perform="calendar.view"><SchoolToday /></Can>
       <Stagger delay={0.15}>
         <Row gutter={[16, 16]}>
-          {spaces?.map((space) => (
-            <Col key={space.id} xs={24} sm={12} lg={8}>
-              <SpaceCard space={space} />
-            </Col>
-          ))}
+          <Can perform="inventory.view">
+            {spaces?.map((space) => (
+              <Col key={space.id} xs={24} sm={12} lg={8}>
+                <SpaceCard space={space} />
+              </Col>
+            ))}
+          </Can>
           <Can perform="shopping.view">
             <Col xs={24} sm={12} lg={8}>
               <ShoppingCard />
             </Col>
           </Can>
+          <Can perform="inventory.view">
           <Col xs={24} sm={12} lg={8}>
             <DashboardCard href="/inventario" icon={Boxes} title={t("nav.routes.inventory")}>
               <Typography.Text style={{ fontSize: "1.45rem", fontWeight: 600, letterSpacing: "-0.02em", lineHeight: 1.2 }}>
@@ -78,6 +87,7 @@ export function HomeDashboard() {
               <Typography.Text type="secondary">{t("storage.containerCount", { count: spaces?.reduce((sum, space) => sum + space.containers.length, 0) ?? 0 })}</Typography.Text>
             </DashboardCard>
           </Col>
+          </Can>
         </Row>
         {/* Fila aparte: la cantidad de recintos varía y no tiene que dejar huecos en la de abajo. */}
         <Row gutter={[16, 16]} style={{ marginTop: 16 }}>
@@ -91,6 +101,48 @@ export function HomeDashboard() {
               <RecentActivityCard />
             </Col>
           </Can>
+        </Row>
+      </Stagger>
+    </>
+  );
+}
+
+/**
+ * Inicio de un chico: su día. Escuela de hoy, lo que viene (solo lo suyo y lo de toda la casa) y
+ * las recetas para opinar. Nada del inventario ni de las compras (ver docs/CHICOS.md).
+ */
+function KidHome() {
+  const { t, format } = useI18n();
+  const user = useCurrentUser();
+  const now = useNow();
+  const shortcuts = [
+    { href: "/escuela", icon: GraduationCap, color: "geekblue", title: t("nav.routes.school"), text: t("home.kid.school") },
+    { href: "/calendario", icon: CalendarDays, color: "purple", title: t("nav.routes.calendar"), text: t("home.kid.calendar") },
+    { href: "/recetas", icon: ChefHat, color: "orange", title: t("nav.routes.recipes"), text: t("home.kid.recipes") },
+  ] as const;
+
+  return (
+    <>
+      <HomeHero
+        eyebrow={format.date(now, { weekday: "long", day: "numeric", month: "long" })}
+        title={t("home.hello", { greeting: t(greetingKey(new Date(now).getHours())), name: user?.name ?? "" })}
+        status={{ tone: "success", text: t("home.kid.status") }}
+      />
+      <SchoolToday />
+      <Stagger delay={0.15}>
+        <Row gutter={[16, 16]}>
+          {shortcuts.map((shortcut) => (
+            <Col key={shortcut.href} xs={24} sm={12} lg={8}>
+              <DashboardCard href={shortcut.href} icon={shortcut.icon} color={shortcut.color} title={shortcut.title}>
+                <Typography.Text style={{ fontSize: "1.25rem", fontWeight: 600, lineHeight: 1.3 }}>{shortcut.text}</Typography.Text>
+              </DashboardCard>
+            </Col>
+          ))}
+        </Row>
+        <Row gutter={[16, 16]} style={{ marginTop: 16 }}>
+          <Col xs={24}>
+            <UpcomingCard />
+          </Col>
         </Row>
       </Stagger>
     </>

@@ -44,6 +44,8 @@ export interface Preferences {
   hiddenWidgets: WidgetId[];
   /** Estilo completo de la app (colores de fondo, sombras, tipografía, ilustraciones). Ver `src/skins`. */
   skin: SkinId;
+  /** Al escanear envases, buscar el nombre en Open Food Facts. Apagado: solo sale si la persona lo pide. */
+  productLookup: boolean;
 }
 
 export const DEFAULT_PREFERENCES: Preferences = {
@@ -62,6 +64,7 @@ export const DEFAULT_PREFERENCES: Preferences = {
   showEmptyItems: false,
   hiddenWidgets: [],
   skin: "casa",
+  productLookup: false,
 };
 
 /** Opciones válidas por clave: lo que se lee de localStorage se valida contra esto (puede estar editado a mano). */
@@ -81,6 +84,7 @@ const VALID: { [K in keyof Preferences]: (value: unknown) => boolean } = {
   showEmptyItems: (v) => typeof v === "boolean",
   hiddenWidgets: (v) => Array.isArray(v) && v.every((id) => (WIDGET_IDS as readonly unknown[]).includes(id)),
   skin: (v) => (SKIN_IDS as readonly unknown[]).includes(v),
+  productLookup: (v) => typeof v === "boolean",
 };
 
 export function isValidPreference<K extends keyof Preferences>(key: K, value: unknown): value is Preferences[K] {

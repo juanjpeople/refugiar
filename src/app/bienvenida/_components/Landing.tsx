@@ -1,7 +1,7 @@
 "use client";
 import { DemoLauncher } from "@/features/demo/DemoLauncher";
 
-import { Button, Col, Flex, Grid, Row, Tag, Typography, theme } from "antd";
+import { Button, Col, Collapse, Flex, Grid, Row, Tag, Typography, theme } from "antd";
 import {
   AnimatePresence,
   motion,
@@ -10,9 +10,9 @@ import {
   useScroll,
   useSpring,
 } from "framer-motion";
-import { ArrowDown, ArrowRight, ExternalLink } from "lucide-react";
+import { ArrowDown, ArrowRight, ExternalLink, type LucideIcon } from "lucide-react";
 import Link from "next/link";
-import { useRef, useState, type ReactNode } from "react";
+import { useRef, useState, useSyncExternalStore, type ReactNode } from "react";
 import { House } from "@/components/illustrations/House";
 import { HouseMark } from "@/components/illustrations/HouseMark";
 import { AccountLinks } from "@/features/cloud/components/AccountLinks";
@@ -20,7 +20,10 @@ import { LanguageSwitch, ThemeModeSwitch } from "@/components/layout/HeaderActio
 import { Reveal } from "@/components/motion";
 import { IconTile, SectionTitle } from "@/components/ui";
 import { useT } from "@/i18n";
-import { GUIDELINES, ROADMAP, TRANSPARENCY_STAGES, TRUST_PROOFS, VALUES } from "./content";
+import { tint, type AppearanceColor } from "@/lib/appearance";
+import { HOVER_LIFT, SPRING } from "@/lib/motion";
+import { FAMILY_ROLES, GUIDELINES, HERO_VARIANTS, ROADMAP, SOLUTIONS, TRANSPARENCY_STAGES, TRUST_PROOFS, UPCOMING, VALUES, type HeroVariant, type SolutionKey } from "./content";
+import { SolutionScene } from "./Scenes";
 import { useHydrated } from "@/hooks/useHydrated";
 import { CLOUD_ENABLED } from "@/lib/cloud/api";
 import { useDeviceStore } from "@/store/useDeviceStore";
@@ -36,16 +39,17 @@ export function Landing() {
     <div style={{ background: token.colorBgLayout, color: token.colorText, minHeight: "100vh" }}>
       <LandingHeader />
       <Hero />
+      <SolutionsSection />
       <Container><Reveal inView style={{ paddingBlock: token.paddingXL }}>
         <SectionTitle eyebrow={t("demo.badge")} title={t("demo.title")} description={t("demo.description")} />
         <DemoLauncher />
       </Reveal></Container>
-      <ProjectIntroduction />
-      <AccountLinks editorial />
+      <FamilySection />
       <ValuesSection />
       <TransparencySection />
-      <GuidelinesSection />
       <RoadmapSection />
+      <ProjectIntroduction />
+      <AccountLinks editorial />
       <ProjectStats />
       <Closing />
     </div>
@@ -164,10 +168,18 @@ function LandingHeader() {
   );
 }
 
+/** Alternativa del título elegida con ?v= en la URL. En el prerender (sin URL) se usa la primera. */
+function useHeroVariant(): HeroVariant {
+  const search = useSyncExternalStore(() => () => {}, () => window.location.search, () => "");
+  const requested = new URLSearchParams(search).get("v");
+  return HERO_VARIANTS.find((variant) => variant === requested) ?? HERO_VARIANTS[0];
+}
+
 /** Título de sección con entrada al hacer scroll. */
 function Hero() {
   const { token } = theme.useToken();
   const t = useT();
+  const variant = useHeroVariant();
   const fadeUp = (delay: number) => ({
     initial: { opacity: 0, y: 24 },
     animate: { opacity: 1, y: 0 },
@@ -177,7 +189,7 @@ function Hero() {
   return (
     <section
       style={{
-        background: `radial-gradient(ellipse at 75% 45%, ${token.colorPrimaryBg}, transparent 60%)`,
+        background: `radial-gradient(ellipse at 75% 45%, ${token.colorPrimaryBg}, transparent 60%), radial-gradient(ellipse at 8% 95%, ${tint(token, "orange").bg}, transparent 50%)`,
         paddingBlock: "clamp(48px, 10vh, 120px)",
       }}
     >
@@ -186,8 +198,8 @@ function Hero() {
           <Col xs={24} md={13}>
             <motion.div {...fadeUp(0)}>
               <Flex gap={8} wrap>
-                {(["open", "offline", "hardware"] as const).map((tag) => (
-                  <Tag key={tag} color="processing" style={{ margin: 0 }}>
+                {([["open", "purple"], ["offline", "green"], ["hardware", "gold"]] as const).map(([tag, color]) => (
+                  <Tag key={tag} color={color} style={{ margin: 0 }}>
                     {t(`landing.hero.tags.${tag}`)}
                   </Tag>
                 ))}
@@ -202,7 +214,7 @@ function Hero() {
                   margin: "24px 0",
                 }}
               >
-                {t("landing.hero.titleA")} <span style={{ color: token.colorPrimary }}>{t("landing.hero.titleB")}</span>
+                {t(`landing.hero.variants.${variant}.titleA`)} <span style={{ color: token.colorPrimary }}>{t(`landing.hero.variants.${variant}.titleB`)}</span>
               </Typography.Title>
             </motion.div>
             <motion.div {...fadeUp(0.2)}>
@@ -213,7 +225,7 @@ function Hero() {
             <motion.div {...fadeUp(0.3)}>
               <Flex gap={12} wrap>
                 <EnterButton size="large" />
-                <Button size="large" href="#valores" icon={<ArrowDown />} iconPlacement="end">
+                <Button size="large" href="#soluciones" icon={<ArrowDown />} iconPlacement="end">
                   {t("landing.hero.secondary")}
                 </Button>
               </Flex>
@@ -225,6 +237,91 @@ function Hero() {
               <House intro particles />
             </div>
           </Col>
+        </Row>
+      </Container>
+    </section>
+  );
+}
+
+/** Lo que ya se puede usar, con su escena: primero lo de todos los días, después lo recién llegado. */
+function SolutionsSection() {
+  const { token } = theme.useToken();
+  const t = useT();
+
+  return (
+    <section id="soluciones" style={{ paddingBlock: 96, borderBottom: `1px solid ${token.colorBorderSecondary}`, scrollMarginTop: 64 }}>
+      <Container>
+        <SectionTitle
+          eyebrow={t("landing.solutions.eyebrow")}
+          title={t("landing.solutions.title")}
+          description={t("landing.solutions.description")}
+        />
+        <Row gutter={[24, 24]}>
+          {SOLUTIONS.filter((solution) => !solution.fresh).map((solution, index) => (
+            <Col key={solution.key} xs={24} sm={12} lg={6}>
+              <SceneCard kind={solution.key} icon={solution.icon} color={solution.color} index={index} />
+            </Col>
+          ))}
+        </Row>
+        <Flex align="center" gap={token.marginSM} style={{ marginTop: token.marginXXL, marginBottom: token.marginLG }}>
+          <Tag color="magenta" style={{ margin: 0 }}>{t("landing.solutions.freshTag")}</Tag>
+          <Typography.Title level={3} style={{ margin: 0, fontSize: token.fontSizeHeading4 }}>{t("landing.solutions.freshTitle")}</Typography.Title>
+        </Flex>
+        <Row gutter={[24, 24]}>
+          {SOLUTIONS.filter((solution) => solution.fresh).map((solution, index) => (
+            <Col key={solution.key} xs={24} sm={12} lg={8}>
+              <SceneCard kind={solution.key} icon={solution.icon} color={solution.color} index={index} />
+            </Col>
+          ))}
+        </Row>
+      </Container>
+    </section>
+  );
+}
+
+/** Perfiles adaptados para cada miembro de la casa. */
+function FamilySection() {
+  const { token } = theme.useToken();
+  const t = useT();
+
+  return (
+    <section id="familia" style={{ paddingBlock: 96, background: token.colorBgContainer, borderBottom: `1px solid ${token.colorBorderSecondary}`, scrollMarginTop: 64 }}>
+      <Container>
+        <SectionTitle
+          eyebrow={t("landing.family.eyebrow")}
+          title={t("landing.family.title")}
+          description={t("landing.family.description")}
+        />
+        <Row gutter={[24, 24]}>
+          {FAMILY_ROLES.map(({ key, icon, color }, index) => (
+            <Col key={key} xs={24} md={8}>
+              <motion.div
+                initial={{ opacity: 0, y: 24 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, amount: 0.3 }}
+                transition={{ duration: 0.45, delay: index * 0.1 }}
+                style={{
+                  height: "100%",
+                  padding: 28,
+                  borderRadius: token.borderRadiusLG * 1.5,
+                  border: `1px solid ${tint(token, color).border}`,
+                  background: `linear-gradient(160deg, ${tint(token, color).bg}, ${token.colorBgLayout} 70%)`,
+                  display: "flex",
+                  flexDirection: "column",
+                }}
+              >
+                <Flex align="center" gap={14} style={{ marginBottom: 18 }}>
+                  <IconTile icon={icon} color={color} solid size={44} />
+                  <Typography.Title level={4} style={{ margin: 0, fontSize: token.fontSizeLG }}>
+                    {t(`landing.family.items.${key}.title`)}
+                  </Typography.Title>
+                </Flex>
+                <Typography.Paragraph type="secondary" style={{ margin: 0, lineHeight: 1.6, flexGrow: 1 }}>
+                  {t(`landing.family.items.${key}.text`)}
+                </Typography.Paragraph>
+              </motion.div>
+            </Col>
+          ))}
         </Row>
       </Container>
     </section>
@@ -463,6 +560,11 @@ function TransparencySection() {
             {t("landing.transparency.auditNote")}
           </Typography.Paragraph>
         </div>
+        <Collapse
+          ghost
+          style={{ marginTop: token.marginXL, marginInline: -token.padding }}
+          items={[{ key: "guidelines", label: <Typography.Text strong>{t("landing.guidelines.toggle")}</Typography.Text>, children: <Guidelines /> }]}
+        />
       </Container>
     </section>
   );
@@ -485,51 +587,74 @@ function ShieldCheckMark() {
   );
 }
 
-function GuidelinesSection() {
+/** Los valores bajados a reglas: filas cortas, plegadas dentro de la transparencia. */
+function Guidelines() {
   const { token } = theme.useToken();
   const t = useT();
-  const reduceMotion = useReducedMotion();
 
   return (
-    <section id="lineamientos" style={{ paddingBlock: 96, background: token.colorBgContainer }}>
-      <Container>
-        <SectionTitle
-          eyebrow={t("landing.guidelines.eyebrow")}
-          title={t("landing.guidelines.title")}
-          description={t("landing.guidelines.description")}
-        />
-        <Row gutter={[16, 16]}>
-          {GUIDELINES.map(({ key, icon }, i) => (
-            <Col key={key} xs={24} sm={12} lg={6}>
-              <motion.div
-                initial={{ opacity: 0, y: 32 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                whileHover={reduceMotion ? undefined : { y: -6 }}
-                viewport={{ once: true, amount: 0.3 }}
-                transition={{ duration: 0.5, delay: (i % 4) * 0.08 }}
-                style={{
-                  height: "100%",
-                  padding: 24,
-                  borderRadius: token.borderRadiusLG * 1.5,
-                  border: `1px solid ${token.colorBorderSecondary}`,
-                  background: token.colorBgLayout,
-                }}
-              >
-                <div style={{ marginBottom: 16 }}>
-                  <IconTile icon={icon} size={44} />
-                </div>
-                <Typography.Title level={5} style={{ marginTop: 0 }}>
-                  {t(`landing.guidelines.items.${key}.title`)}
-                </Typography.Title>
-                <Typography.Paragraph type="secondary" style={{ margin: 0 }}>
-                  {t(`landing.guidelines.items.${key}.text`)}
-                </Typography.Paragraph>
-              </motion.div>
-            </Col>
-          ))}
-        </Row>
-      </Container>
-    </section>
+    <>
+      <Typography.Paragraph type="secondary" style={{ maxWidth: 720 }}>{t("landing.guidelines.description")}</Typography.Paragraph>
+      <Row gutter={[24, 16]}>
+        {GUIDELINES.map(({ key, icon }) => (
+          <Col key={key} xs={24} md={12}>
+            <Flex gap={token.marginSM} align="flex-start">
+              <IconTile icon={icon} size={token.controlHeight} />
+              <div>
+                <Typography.Text strong style={{ display: "block" }}>{t(`landing.guidelines.items.${key}.title`)}</Typography.Text>
+                <Typography.Text type="secondary">{t(`landing.guidelines.items.${key}.text`)}</Typography.Text>
+              </div>
+            </Flex>
+          </Col>
+        ))}
+      </Row>
+    </>
+  );
+}
+
+/**
+ * Una tarjeta de "Para qué sirve": arriba la escena con el color de la función, abajo qué hace.
+ * Sube al pasar el mouse, como toda tarjeta de la app.
+ */
+function SceneCard({ kind, icon, color, index }: { kind: SolutionKey; icon: LucideIcon; color: AppearanceColor; index: number }) {
+  const { token } = theme.useToken();
+  const t = useT();
+  const reduce = useReducedMotion();
+  const palette = tint(token, color);
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 24 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      whileHover={reduce ? undefined : { y: HOVER_LIFT.card }}
+      viewport={{ once: true, amount: 0.3 }}
+      transition={{ ...SPRING.snappy, opacity: { duration: 0.45, delay: index * 0.08 }, y: { duration: 0.45, delay: index * 0.08 } }}
+      style={{
+        height: "100%",
+        overflow: "hidden",
+        borderRadius: token.borderRadiusLG * 1.5,
+        border: `1px solid ${palette.border}`,
+        background: token.colorBgContainer,
+        boxShadow: token.boxShadowTertiary,
+        display: "flex",
+        flexDirection: "column",
+      }}
+    >
+      <div style={{ height: token.controlHeightLG * 3.5, background: `linear-gradient(150deg, ${palette.bg}, ${token.colorBgContainer})` }}>
+        <SolutionScene kind={kind} color={color} />
+      </div>
+      <Flex vertical gap={token.marginXS} style={{ padding: token.paddingLG, flexGrow: 1 }}>
+        <Flex align="center" gap={token.marginSM}>
+          <IconTile icon={icon} color={color} size={token.controlHeight} />
+          <Typography.Title level={4} style={{ margin: 0, fontSize: token.fontSizeLG, letterSpacing: "-0.01em" }}>
+            {t(`landing.solutions.items.${kind}.title`)}
+          </Typography.Title>
+        </Flex>
+        <Typography.Paragraph type="secondary" style={{ margin: 0, lineHeight: 1.6 }}>
+          {t(`landing.solutions.items.${kind}.text`)}
+        </Typography.Paragraph>
+      </Flex>
+    </motion.div>
   );
 }
 
@@ -546,6 +671,38 @@ function RoadmapSection() {
   return (
     <section id="hoja-de-ruta" style={{ paddingBlock: 96 }}>
       <Container>
+        <SectionTitle
+          id="en-camino"
+          eyebrow={t("landing.upcoming.eyebrow")}
+          title={t("landing.upcoming.title")}
+          description={t("landing.upcoming.description")}
+        />
+        <Row gutter={[16, 16]} style={{ marginBottom: token.marginXXL * 2 }}>
+          {UPCOMING.map(({ key, icon, color }, index) => (
+            <Col key={key} xs={24} sm={12} lg={8}>
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, amount: 0.3 }}
+                transition={{ duration: 0.45, delay: (index % 3) * 0.08 }}
+                style={{
+                  height: "100%",
+                  padding: token.paddingLG,
+                  borderRadius: token.borderRadiusLG * 1.5,
+                  border: `1px dashed ${tint(token, color).border}`,
+                  background: token.colorBgContainer,
+                }}
+              >
+                <Flex align="center" justify="space-between" gap={token.marginSM} style={{ marginBottom: token.marginSM }}>
+                  <IconTile icon={icon} color={color} size={token.controlHeight} />
+                  <Tag style={{ margin: 0 }}>{t("landing.upcoming.tag")}</Tag>
+                </Flex>
+                <Typography.Title level={5} style={{ margin: `0 0 ${token.marginXXS}px` }}>{t(`landing.upcoming.items.${key}.title`)}</Typography.Title>
+                <Typography.Paragraph type="secondary" style={{ margin: 0 }}>{t(`landing.upcoming.items.${key}.text`)}</Typography.Paragraph>
+              </motion.div>
+            </Col>
+          ))}
+        </Row>
         <SectionTitle
           eyebrow={t("landing.roadmap.eyebrow")}
           title={t("landing.roadmap.title")}
