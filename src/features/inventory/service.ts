@@ -15,6 +15,7 @@ import { createId } from "@/lib/id";
 import {
   getStockStatus,
   INVENTORY_LIMITS,
+  isBarcode,
   parseInventoryPatch,
   parseNewInventoryItem,
   planConsumption,
@@ -154,7 +155,11 @@ export async function updateInventoryItem(actor: Actor | null, id: string, patch
     const item = await getItem(id);
     const containerId = data.containerId ?? item.containerId;
     const place = await containerName(containerId);
-    const updated: InventoryItem = { ...item, ...data, updatedAt: Date.now() };
+    const { spot, ...fields } = data;
+    const updated: InventoryItem = { ...item, ...fields, updatedAt: Date.now() };
+    if (spot) updated.spot = spot;
+    // El punto es de una foto de su mueble: borrado a pedido o al moverlo a otro lado.
+    if (spot === null || (containerId !== item.containerId && !spot)) delete updated.spot;
     await db.inventory.put(updated);
     await recordActivity(actor, {
       module: "inventory",
@@ -180,10 +185,57 @@ export async function moveInventoryItems(actor: Actor | null, ids: string[], con
     for (const id of ids) {
       const item = await getItem(id);
       if (item.containerId === containerId) continue;
-      await db.inventory.put({ ...item, containerId, updatedAt: now });
+      const moved: InventoryItem = { ...item, containerId, updatedAt: now };
+      // El punto en la foto era de su mueble anterior.
+      delete moved.spot;
+      await db.inventory.put(moved);
       await recordActivity(actor, { module: "inventory", action: "move", entityId: id, entityName: item.name, containerId, place });
     }
   });
+}
+
+/** Lo leído en una tanda de códigos de barras: el código, el nombre que va a tener y cuántas veces pasó. */
+export interface ScannedEntry {
+  barcode: string;
+  name: string;
+  count: number;
+}
+
+/**
+ * Guarda una tanda de códigos de barras en un contenedor. Si ahí ya hay una cosa con ese código,
+ * suma a su cantidad; si no, la crea. Todo junto: o se guarda la tanda entera o nada.
+ */
+export async function addScannedItems(actor: Actor | null, containerId: string, entries: ScannedEntry[]) {
+  assertCan(actor, "inventory.create");
+  assertCan(actor, "inventory.adjust");
+  const checked = entries.map((entry) => {
+    if (!isBarcode(entry.barcode)) throw new ValidationError("errors.validation.barcodeInvalid");
+    if (!Number.isInteger(entry.count) || entry.count < 1 || entry.count > INVENTORY_LIMITS.maxQuantity) throw new ValidationError("errors.validation.quantityInvalid");
+    return { ...entry, ...parseNewInventoryItem({ name: entry.name, quantity: entry.count, unit: "unidades", minThreshold: 0, barcode: entry.barcode }) };
+  });
+  await db.transaction("rw", QUANTITY_TABLES(), async () => {
+    const place = await containerName(containerId);
+    const here = await db.inventory.where("containerId").equals(containerId).toArray();
+    for (const entry of checked) {
+      const existing = here.find((item) => item.barcode === entry.barcode);
+      if (existing) {
+        await writeQuantity(actor, existing, existing.quantity + entry.count, "restock");
+        continue;
+      }
+      const now = Date.now();
+      const item: InventoryItem = { id: createId(), name: entry.name, quantity: entry.count, unit: "unidades", minThreshold: 0, barcode: entry.barcode, containerId, createdAt: now, updatedAt: now };
+      await db.inventory.add(item);
+      here.push(item);
+      await recordActivity(actor, { module: "inventory", action: "create", entityId: item.id, entityName: item.name, containerId, place, to: item.quantity, unit: item.unit });
+    }
+  });
+  await pruneActivity();
+}
+
+/** El nombre que ya tiene en la casa una cosa con este código (en cualquier lugar), si hay. */
+export async function knownBarcodeName(barcode: string): Promise<string | null> {
+  const item = await db.inventory.filter((entry) => entry.barcode === barcode).first();
+  return item?.name ?? null;
 }
 
 export async function deleteInventoryItem(actor: Actor | null, id: string) {

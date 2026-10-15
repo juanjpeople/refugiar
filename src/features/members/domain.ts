@@ -72,6 +72,32 @@ export function isSecured(member: Pick<Member, "pin" | "credentials">): boolean 
   return !!member.pin || (member.credentials?.length ?? 0) > 0;
 }
 
+/**
+ * Grandes que pueden desbloquear por otro: los que tienen PIN o huella en este dispositivo.
+ * `profiles`: los perfiles que se pueden elegir acá (ver `pickableProfiles`).
+ */
+export function guardians<T extends Pick<Member, "role" | "pin" | "credentials">>(profiles: T[]): T[] {
+  return profiles.filter((member) => member.role !== "kid" && isSecured(member));
+}
+
+/**
+ * Un chico entra a su perfil solo si algún grande de este dispositivo tiene PIN o huella. Si no,
+ * desde su perfil podría pasar a uno de grande sin que nadie se entere (ver docs/CHICOS.md). En el
+ * celular propio de un chico no hay perfiles de grandes para elegir: ahí entra siempre.
+ */
+export function canEnterKid(profiles: Pick<Member, "role" | "pin" | "credentials">[]): boolean {
+  return !profiles.some((profile) => profile.role !== "kid") || guardians(profiles).length > 0;
+}
+
+/**
+ * Si entrar a este perfil pide desbloqueo. Con PIN o huella propios, siempre. Un grande sin PIN, si
+ * en este dispositivo hay chicos y algún grande protegido: lo desbloquea ese grande.
+ */
+export function needsUnlock(member: Pick<Member, "role" | "pin" | "credentials">, profiles: Pick<Member, "role" | "pin" | "credentials">[]): boolean {
+  if (isSecured(member)) return true;
+  return member.role !== "kid" && profiles.some((profile) => profile.role === "kid") && canEnterKid(profiles);
+}
+
 export function isValidPin(pin: string): boolean {
   return new RegExp(`^\\d{${MEMBER_LIMITS.pinMin},${MEMBER_LIMITS.pinMax}}$`).test(pin);
 }

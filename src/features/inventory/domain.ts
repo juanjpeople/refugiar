@@ -12,6 +12,13 @@ export function isUnit(value: string): value is Unit {
   return (UNITS as readonly string[]).includes(value);
 }
 
+/** Dónde está en una foto de su mueble o caja: un punto, de 0 a 1 desde arriba a la izquierda. */
+export interface PhotoSpot {
+  photoId: string;
+  x: number;
+  y: number;
+}
+
 export interface InventoryItem {
   id: string;
   name: string;
@@ -25,14 +32,18 @@ export interface InventoryItem {
   autoSuggest?: boolean;
   /** Herramientas y equipos: usarlos no descuenta unidades. Ausente = consumible. */
   reusable?: boolean;
+  /** Código de barras del envase (EAN o UPC): al escanearlo otra vez, se suma a este. */
+  barcode?: string;
+  /** El punto en la foto del mueble donde está guardado. Se borra al moverlo a otro lugar. */
+  spot?: PhotoSpot;
   createdAt: number;
   updatedAt: number;
 }
 
-export type NewInventoryItem = Pick<InventoryItem, "name" | "quantity" | "unit" | "minThreshold" | "autoSuggest" | "reusable">;
+export type NewInventoryItem = Pick<InventoryItem, "name" | "quantity" | "unit" | "minThreshold" | "autoSuggest" | "reusable" | "barcode">;
 
-/** Campos editables de un producto. Cambiar `containerId` es moverlo de lugar. */
-export type InventoryItemPatch = Partial<Pick<InventoryItem, "name" | "unit" | "minThreshold" | "containerId" | "autoSuggest" | "reusable">>;
+/** Campos editables de un producto. Cambiar `containerId` es moverlo de lugar. `spot: null` borra el punto. */
+export type InventoryItemPatch = Partial<Pick<InventoryItem, "name" | "unit" | "minThreshold" | "containerId" | "autoSuggest" | "reusable" | "barcode">> & { spot?: PhotoSpot | null };
 
 export const INVENTORY_LIMITS = {
   nameMaxLength: 80,
@@ -143,6 +154,32 @@ function parseName(input: string | undefined) {
   return name;
 }
 
+/**
+ * Código de barras de un envase: EAN-8, UPC-A (12), EAN-13 o GTIN-14, con su dígito verificador.
+ * Una lectura con un dígito cambiado no pasa: así un escaneo dudoso no crea una cosa con otro código.
+ */
+export function isBarcode(value: unknown): value is string {
+  if (typeof value !== "string" || !/^(\d{8}|\d{12,14})$/.test(value)) return false;
+  const digits = [...value].map(Number);
+  const check = digits.pop()!;
+  const sum = digits.reverse().reduce((total, digit, index) => total + digit * (index % 2 === 0 ? 3 : 1), 0);
+  return (10 - (sum % 10)) % 10 === check;
+}
+
+function parseBarcode(value: string | undefined): string | undefined {
+  const code = value?.trim();
+  if (!code) return undefined;
+  if (!isBarcode(code)) throw new ValidationError("errors.validation.barcodeInvalid");
+  return code;
+}
+
+export function parseSpot(spot: PhotoSpot): PhotoSpot {
+  const inside = (value: unknown) => typeof value === "number" && Number.isFinite(value) && value >= 0 && value <= 1;
+  if (!spot || typeof spot.photoId !== "string" || !spot.photoId || !inside(spot.x) || !inside(spot.y)) throw new ValidationError("errors.validation.spotInvalid");
+  // Tres decimales alcanzan: es un punto en una foto, no una medida.
+  return { photoId: spot.photoId, x: Math.round(spot.x * 1000) / 1000, y: Math.round(spot.y * 1000) / 1000 };
+}
+
 /** Normaliza y valida la entrada. Los formularios validan para UX; esto es lo que vale. */
 export function parseNewInventoryItem(input: NewInventoryItem): NewInventoryItem {
   const name = parseName(input.name);
@@ -151,7 +188,8 @@ export function parseNewInventoryItem(input: NewInventoryItem): NewInventoryItem
   if (!isUnit(input.unit)) throw new ValidationError("errors.validation.unitInvalid");
   return { name, quantity: input.quantity, unit: input.unit, minThreshold: input.minThreshold,
     ...(input.autoSuggest === undefined ? {} : { autoSuggest: !!input.autoSuggest }),
-    ...(input.reusable === undefined ? {} : { reusable: !!input.reusable }) };
+    ...(input.reusable === undefined ? {} : { reusable: !!input.reusable }),
+    ...(parseBarcode(input.barcode) ? { barcode: parseBarcode(input.barcode) } : {}) };
 }
 
 export function parseInventoryPatch(patch: InventoryItemPatch): InventoryItemPatch {
@@ -168,6 +206,8 @@ export function parseInventoryPatch(patch: InventoryItemPatch): InventoryItemPat
   if (patch.containerId !== undefined) out.containerId = patch.containerId;
   if (patch.autoSuggest !== undefined) out.autoSuggest = !!patch.autoSuggest;
   if (patch.reusable !== undefined) out.reusable = !!patch.reusable;
+  if (patch.barcode !== undefined) out.barcode = parseBarcode(patch.barcode);
+  if (patch.spot !== undefined) out.spot = patch.spot === null ? null : parseSpot(patch.spot);
   return out;
 }
 

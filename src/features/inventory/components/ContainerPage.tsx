@@ -1,7 +1,7 @@
 "use client";
 
 import { App, Button, Card, Col, Dropdown, Flex, Row, Typography, theme } from "antd";
-import { ArrowRightLeft, Boxes, Camera, CopyPlus, EllipsisVertical, Images, Layers, NotebookPen, PackageOpen, PackageX, Pencil, Plus, Printer, QrCode, RotateCcwClock, Trash2 } from "lucide-react";
+import { ArrowRightLeft, Boxes, Camera, CopyPlus, EllipsisVertical, Images, Layers, NotebookPen, PackageOpen, PackageX, Pencil, Plus, Printer, QrCode, RotateCcwClock, ScanBarcode, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useContext, useState, type CSSProperties } from "react";
@@ -24,7 +24,7 @@ import { useT } from "@/i18n";
 import { tint } from "@/lib/appearance";
 import { usePermission } from "@/lib/auth/hooks";
 import { useTrackVisit } from "@/components/layout/useShell";
-import { cameraHref, containerHref, photosHref, spaceHref } from "@/lib/navigation/routes";
+import { cameraHref, containerHref, loadHref, photosHref, spaceHref } from "@/lib/navigation/routes";
 import { usePageCrumbs } from "@/store/useBreadcrumbStore";
 import { getStockStatus, type StockStatus } from "../domain";
 import { useInventoryItems } from "../hooks";
@@ -172,6 +172,7 @@ export function ContainerPage() {
                   action={
                     <Flex gap={token.marginXS} wrap justify="center">
                       <Can perform="inventory.create"><Button type="primary" icon={<Plus />} onClick={() => setDialog("product")}>{t("inventory.form.title")}</Button></Can>
+                      <Can perform="inventory.create"><Link href={loadHref(container.id)}><Button icon={<ScanBarcode />}>{t("inventory.scanned.button")}</Button></Link></Can>
                       <Can perform="storage.manage"><Button icon={<NotebookPen />} onClick={addNote}>{t("storage.contents.new")}</Button></Can>
                       {canAddChild && <Button icon={<Layers />} onClick={() => setDialog("addChild")}>{t("storage.addSubcontainer")}</Button>}
                       {canAddChild && <Button icon={<CopyPlus />} onClick={() => setDialog("addMany")}>{t("storage.bulk.title")}</Button>}
@@ -221,6 +222,7 @@ export function ContainerPage() {
               extra: canCreate && (
                 <>
                   {counts.items > 0 && <Button icon={<ArrowRightLeft />} onClick={() => setDialog("move")}>{t("inventory.move.button")}</Button>}
+                  <Link href={loadHref(container.id)}><Button icon={<ScanBarcode />}>{t("inventory.scanned.button")}</Button></Link>
                   <Button type="primary" icon={<Plus />} onClick={() => setDialog("product")}>{t("inventory.form.title")}</Button>
                 </>
               ),
