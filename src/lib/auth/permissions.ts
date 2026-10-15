@@ -66,8 +66,9 @@ const ROLE_PERMISSIONS: Record<Role, ReadonlySet<Permission>> = {
     "calendar.view",
     "calendar.manage",
   ]),
-  // Los chicos también opinan: ven las recetas y comentan o puntúan (con caritas).
-  kid: new Set(["inventory.view", "shopping.view", "calendar.view", "recipes.view", "comments.create", "projects.view"]),
+  // Los chicos ven su día (escuela y calendario) y opinan sobre las recetas (con caritas).
+  // Inventario, compras y proyectos son de los grandes (ver docs/CHICOS.md).
+  kid: new Set(["calendar.view", "recipes.view", "comments.create"]),
 };
 
 /** Quien ejecuta una acción. Mínimo necesario para decidir permisos. */

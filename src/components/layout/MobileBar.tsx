@@ -9,7 +9,7 @@ import { useVisibleRoutes } from "./Navigation";
 /** Lo de todos los días, en el orden de la barra. Escanear va en el centro. */
 const BAR_ROUTES = ["home", "inventory", "compras", "calendar"];
 /** Pantallas de cámara: ocupan todo y tienen sus propios botones abajo. */
-const HIDDEN_ON = new Set(["scan", "camera"]);
+const HIDDEN_ON = new Set(["scan", "camera", "load"]);
 
 /** Barra de abajo del celular (solo < md, fuera de la cámara). Respeta los permisos de cada perfil. */
 export function MobileBar() {

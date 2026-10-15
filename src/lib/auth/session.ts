@@ -1,10 +1,25 @@
 "use client";
 
-import { houseStorageKey } from "@/lib/demo";
+import { DEMO_ENABLED, houseStorageKey } from "@/lib/demo";
+import { getSyncLink } from "@/lib/sync/middleware";
 
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
-import { isSecured, type Member } from "@/features/members/domain";
+import { canEnterKid, isSecured, needsUnlock, pickableProfiles, type Member } from "@/features/members/domain";
+
+/** Perfiles que se pueden elegir en este dispositivo (con la casa en la nube, ver `pickableProfiles`). */
+export function deviceProfiles(members: Member[]): Member[] {
+  const link = getSyncLink();
+  return pickableProfiles(members, link?.userId ?? null, link?.device);
+}
+
+/**
+ * Si un chico puede entrar a su perfil en este dispositivo. En la casa demo y en la de pruebas
+ * los datos son ficticios: no hace falta que un grande ponga su PIN para probar el modo chicos.
+ */
+export function kidEntryAllowed(members: Member[]): boolean {
+  return DEMO_ENABLED || canEnterKid(deviceProfiles(members));
+}
 
 /**
  * Miembros de la casa en memoria. Los llena `MembersBridge` (una sola suscripción a la base),
@@ -33,13 +48,23 @@ interface SessionState {
 
 export const useSessionStore = create<SessionState>()(
   persist(
-    (set) => ({
+    (set, get) => ({
       currentProfileId: null,
       signIn: (profileId) => {
         const members = useMembersStore.getState().members;
-        if (!members?.some((member) => member.id === profileId)) return;
+        const target = members?.find((member) => member.id === profileId);
+        if (!members || !target) return;
+        // Un chico entra solo si un grande de este dispositivo protegió su perfil (ver `canEnterKid`).
+        if (target.role === "kid" && !kidEntryAllowed(members)) return;
+        const lock = useLockStore.getState();
+        const profiles = deviceProfiles(members);
+        const current = members.find((member) => member.id === get().currentProfileId);
+        // Un grande que ya está adentro le pasa el dispositivo a otro grande sin PIN: está presente,
+        // así que no hace falta pedirle el PIN a nadie. Desde un chico o sin sesión, sí.
+        const grownUpPresent = !!current && current.role !== "kid" && (lock.unlockedProfileId === current.id || !needsUnlock(current, profiles));
         // Cambiar de perfil siempre vuelve a bloquear: un desbloqueo anterior no vale para volver después.
-        if (useLockStore.getState().unlockedProfileId !== profileId) useLockStore.getState().lock();
+        if (lock.unlockedProfileId !== profileId) lock.lock();
+        if (grownUpPresent && target.role !== "kid" && !isSecured(target)) lock.unlock(profileId);
         set({ currentProfileId: profileId });
       },
       signOut: () => {
@@ -81,9 +106,13 @@ export function useCurrentUser(): Member | null {
   return members?.find((member) => member.id === profileId) ?? null;
 }
 
-/** El perfil actual está protegido (PIN o biometría) y todavía no se desbloqueó en esta pestaña. */
+/**
+ * El perfil actual pide desbloqueo y todavía no se desbloqueó en esta pestaña: tiene PIN o huella,
+ * o es un grande sin PIN en un dispositivo con chicos (ver `needsUnlock`).
+ */
 export function useIsLocked(): boolean {
   const user = useCurrentUser();
+  const members = useMembersStore((s) => s.members);
   const unlockedProfileId = useLockStore((s) => s.unlockedProfileId);
-  return !!user && isSecured(user) && unlockedProfileId !== user.id;
+  return !!user && unlockedProfileId !== user.id && needsUnlock(user, deviceProfiles(members ?? []));
 }

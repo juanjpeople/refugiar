@@ -6,15 +6,16 @@ import { Card, Col, Flex, Row, Typography, theme } from "antd";
 import { motion } from "framer-motion";
 import { ArrowRight, Lock } from "lucide-react";
 import Link from "next/link";
+import { useState } from "react";
 import { HouseMark } from "@/components/illustrations/HouseMark";
 import { House } from "@/components/illustrations/House";
 import { Reveal, Stagger, StaggerItem } from "@/components/motion";
 import { useT } from "@/i18n";
+import { Callout } from "@/components/ui";
 import { MemberAvatar } from "@/components/ui/MemberAvatar";
-import { isSecured, pickableProfiles } from "@/features/members/domain";
-import { useMembersStore, useSessionStore } from "@/lib/auth/session";
+import { isSecured } from "@/features/members/domain";
+import { deviceProfiles, kidEntryAllowed, useMembersStore, useSessionStore } from "@/lib/auth/session";
 import { SPRING } from "@/lib/motion";
-import { getSyncLink } from "@/lib/sync/middleware";
 import { DataModeBadge } from "./DataModeBadge";
 import { LanguageSwitch, ThemeModeSwitch } from "./HeaderActions";
 
@@ -25,7 +26,11 @@ export function ProfilePicker() {
   const t = useT();
   const signIn = useSessionStore((s) => s.signIn);
   // Con la casa en la nube, solo el perfil propio y los que no tienen cuenta (ver `pickableProfiles`).
-  const members = pickableProfiles(useMembersStore((s) => s.members) ?? [], getSyncLink()?.userId ?? null, getSyncLink()?.device);
+  const all = useMembersStore((s) => s.members) ?? [];
+  const members = deviceProfiles(all);
+  // Un chico entra solo si un grande de este dispositivo tiene PIN o huella (ver `canEnterKid`).
+  const kidsAllowed = kidEntryAllowed(all);
+  const [waiting, setWaiting] = useState<string | null>(null);
 
   return (
     <Flex
@@ -79,8 +84,8 @@ export function ProfilePicker() {
                 <motion.div whileHover={{ y: -6 }} whileTap={{ scale: 0.97 }} transition={SPRING.snappy} style={{ height: "100%" }}>
                   <Card
                     hoverable
-                    onClick={() => signIn(profile.id)}
-                    style={{ height: "100%" }}
+                    onClick={() => (profile.role === "kid" && !kidsAllowed ? setWaiting(profile.name) : signIn(profile.id))}
+                    style={{ height: "100%", opacity: profile.role === "kid" && !kidsAllowed ? 0.6 : 1 }}
                     styles={{ body: { textAlign: "center", padding: 28 } }}
                   >
                     <div style={{ position: "relative", display: "inline-flex", marginBottom: 12 }}>
@@ -114,6 +119,12 @@ export function ProfilePicker() {
           ))}
         </Row>
       </Stagger>
+
+      {waiting && (
+        <div style={{ maxWidth: 640, width: "100%", marginTop: 16 }}>
+          <Callout tone="warning" title={t("kidGate.title", { name: waiting })}>{t("kidGate.picker")}</Callout>
+        </div>
+      )}
 
       <Reveal delay={1}>
         <Link href="/bienvenida" style={{ display: "inline-flex", alignItems: "center", gap: 6, marginTop: 32, color: token.colorPrimary }}>

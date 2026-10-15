@@ -18,6 +18,10 @@ Qué hay en la casa y dónde está.
 - Cada cosa puede llevar cantidad, mínimo, precios y fotos. Las **herramientas** van aparte y no se consumen.
 - **"Usé"** descuenta con deshacer. Lo que baja del mínimo aparece en "Para reponer".
 - Los agotados se ocultan por defecto; el menú **Vista** cambia entre plano, lista y tarjetas.
+- **Foto con punto**: en la ficha de una cosa, "Marcar dónde está en la foto" abre las fotos de su mueble (y de los que lo contienen). Se toca la foto donde está y queda un punto que late. Al moverla a otra caja, el punto se borra.
+- **Códigos de barras** (`/inventario/cargar?id=`): en una caja, "Escanear códigos" abre la cámara. Cada envase que pasa vibra y se suma a la lista; al final se revisan los nombres y se guarda todo junto. Si ese código ya estaba en esa caja, suma a su cantidad. El código también se ve y se corrige en la ficha (Datos).
+- **Nombres por código**: el interruptor "Buscar nombres en Open Food Facts" (apagado por defecto) completa el nombre del envase. Primero busca en la casa; solo si no lo encuentra consulta Open Food Facts, que recibe el número del código y nada más.
+- **Anotar rápido**: Inventario → "Anotar rápido". Una frase como "cinta aisladora en el cajón del medio del lavadero" se parte en qué y dónde, y propone el mueble que mejor coincide. Se guarda como cosa, como anotación o, si esa cosa ya estaba en otro lado, se mueve. Se puede dictar con el micrófono del teclado.
 
 ## Cómo se usa
 
@@ -28,6 +32,9 @@ Para etiquetar un mueble: abrilo → ⋮ → "Agregar varias cajas" → escribí
 ## Límites
 
 - La búsqueda AR espacial es experimental.
+- Los códigos de barras con la cámara se leen en Chrome y en la app de Android. Safari y Firefox no traen el lector: ahí la pantalla lo avisa y el número se escribe a mano.
+- Open Food Facts es una base abierta: no todos los productos están y algunos nombres vienen en otro idioma. Su API pública admite unas 100 consultas por minuto; la app consulta una vez por código nuevo y no reintenta.
+- "Anotar rápido" entiende frases con "en", "adentro de" o "dentro de" (y "in", "on", "at" en inglés). Si no reconoce el lugar, se elige de la lista.
 - Sin nube, cada dispositivo tiene su propio inventario.
 
 Detalle de navegación y cámara: [INVENTARIO.md](../INVENTARIO.md).

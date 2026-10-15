@@ -17,6 +17,7 @@ import {
   MemberAvatar,
   PageHeader,
   PathCrumbs,
+  PhotoSpot,
   PlaceCard,
   PlaceChip,
   PrivacyBadge,
@@ -31,6 +32,7 @@ import {
   VisualTile,
   type CameraDetection,
   type FloorPattern,
+  type SpotPoint,
 } from "@/components/ui";
 import { getStockStatus, isUnit } from "@/features/inventory/domain";
 import { ContainerScene } from "@/features/storage/components/ContainerScene";
@@ -523,6 +525,35 @@ function SpacesBlock() {
   );
 }
 
+/** Dónde está en la foto: el punto que late sobre la foto de un mueble. Acá, sobre una silueta. */
+function PhotoSpotBlock() {
+  const [point, setPoint] = useState<SpotPoint>({ x: 0.36, y: 0.32 });
+  return (
+    <DemoBlock
+      id="foto-con-punto"
+      title="Foto con punto"
+      description="La ficha de una cosa muestra la foto de su mueble con un punto que late donde está. Al marcarlo, tocar la foto mueve el punto (y con el teclado, las flechas). Con «reducir movimiento», el punto queda quieto. Probalo: tocá la alacena."
+      code={`<PhotoSpot src={url} alt="Foto de la alacena con un punto donde está la yerba" point={item.spot} />
+<PhotoSpot src={url} alt="…" point={point} onPick={setPoint} pickLabel="Marcar en la foto dónde está la yerba" />`}
+    >
+      <Row gutter={[16, 16]}>
+        <Col xs={24} md={12}>
+          <DemoLabel>Ver</DemoLabel>
+          <PhotoSpot alt="Alacena con un punto donde está la yerba" point={{ x: 0.62, y: 0.7 }}>
+            <ContainerScene container={{ kind: "pantry", color: "orange" }} />
+          </PhotoSpot>
+        </Col>
+        <Col xs={24} md={12}>
+          <DemoLabel>Marcar</DemoLabel>
+          <PhotoSpot alt="Alacena" point={point} onPick={setPoint} pickLabel="Marcar en la foto dónde está la yerba">
+            <ContainerScene container={{ kind: "pantry", color: "orange" }} />
+          </PhotoSpot>
+        </Col>
+      </Row>
+    </DemoBlock>
+  );
+}
+
 export function PrimitivesSection() {
   return (
     <>
@@ -531,6 +562,7 @@ export function PrimitivesSection() {
       <SelectionBlock />
       <DataBlock />
       <SpacesBlock />
+      <PhotoSpotBlock />
     </>
   );
 }

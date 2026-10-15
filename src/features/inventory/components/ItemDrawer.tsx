@@ -21,9 +21,10 @@ import { usePermission } from "@/lib/auth/hooks";
 import { containerHref, spaceHref } from "@/lib/navigation/routes";
 import { findCatalogProduct } from "../catalog";
 import { CATEGORY_APPEARANCE } from "../catalog-appearance";
-import { getStockStatus, INVENTORY_LIMITS, UNITS, type InventoryItem, type InventoryItemPatch } from "../domain";
+import { getStockStatus, INVENTORY_LIMITS, isBarcode, UNITS, type InventoryItem, type InventoryItemPatch } from "../domain";
 import { useConsumption, useInventoryActions, useInventoryItem } from "../hooks";
 import { useConsumeWithUndo } from "./ConsumeButton";
+import { ItemSpot } from "./ItemSpot";
 
 /**
  * Ficha de un producto: primero cuánto hay y las acciones de todos los días; después dónde está,
@@ -176,6 +177,7 @@ function LocationPanel({ item }: { item: InventoryItem }) {
           ]}
         />
       )}
+      {container && <ItemSpot item={item} containerIds={[container.id, ...container.ancestors.map((ancestor) => ancestor.id)]} />}
       {canEdit && (
         <Flex gap={token.marginXS}>
         <Select
@@ -219,7 +221,7 @@ function ItemForm({ item }: { item: InventoryItem }) {
     <Form
       layout="vertical"
       name={`item-${item.id}`}
-      initialValues={{ name: item.name, minThreshold: item.minThreshold, unit: item.unit, autoSuggest: item.autoSuggest !== false, reusable: item.reusable === true }}
+      initialValues={{ name: item.name, minThreshold: item.minThreshold, unit: item.unit, autoSuggest: item.autoSuggest !== false, reusable: item.reusable === true, barcode: item.barcode ?? "" }}
       onFinish={onFinish}
       disabled={!canEdit}
       requiredMark={false}
@@ -248,6 +250,14 @@ function ItemForm({ item }: { item: InventoryItem }) {
       </Form.Item>
       <Form.Item name="reusable" valuePropName="checked" label={t("inventory.item.reusable")} tooltip={t("inventory.item.reusableHint")}>
         <Switch />
+      </Form.Item>
+      <Form.Item
+        name="barcode"
+        label={t("inventory.item.barcode")}
+        tooltip={t("inventory.item.barcodeHint")}
+        rules={[{ validator: (_, value?: string) => (!value?.trim() || isBarcode(value.trim()) ? Promise.resolve() : Promise.reject(new Error(t("errors.validation.barcodeInvalid")))) }]}
+      >
+        <Input inputMode="numeric" maxLength={14} style={{ fontFamily: "var(--font-geist-mono)" }} />
       </Form.Item>
       {canEdit && (
         <Button type="primary" htmlType="submit" icon={<Save />} loading={saving}>

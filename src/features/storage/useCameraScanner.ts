@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { backCameras, pickBackCamera, type LensInfo } from "./camera-lens";
-import { createQrDetector, type QrDetection } from "./qr-reader";
+import { createProductCodeDetector, createQrDetector, type QrDetection } from "./qr-reader";
 
 export type CameraStatus = "idle" | "starting" | "scanning" | "denied" | "failed";
 
@@ -32,8 +32,9 @@ const track = (capture: MediaStream | null) => capture?.getVideoTracks?.()[0];
 /**
  * Una cámara por pantalla. Elige la lente trasera principal, pide resolución alta, enfoque continuo
  * y zoom si el equipo los ofrece. Cancela permisos tardíos, timers y tracks al salir o ir a segundo plano.
+ * `codes`: "qr" para las etiquetas de la casa, "product" para los códigos de barras de los envases.
  */
-export function useCameraScanner(onFrame: (detections: QrDetection[], stop: () => void, flash: () => Promise<void>) => void) {
+export function useCameraScanner(onFrame: (detections: QrDetection[], stop: () => void, flash: () => Promise<void>) => void, codes: "qr" | "product" = "qr") {
   const videoRef = useRef<HTMLVideoElement>(null);
   const stream = useRef<MediaStream | null>(null);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -118,7 +119,7 @@ export function useCameraScanner(onFrame: (detections: QrDetection[], stop: () =
       pending.current = false;
       setStatus("scanning");
       void tune(capture).then((range) => { if (active()) setZoom(range); });
-      const detector = createQrDetector();
+      const detector = codes === "product" ? createProductCodeDetector() : createQrDetector();
       const tick = async () => {
         if (!active()) return;
         try {

@@ -61,6 +61,7 @@ test("el catálogo filtra, consulta referencias y espera la confirmación para g
   await expect(reference).toContainText("Sin precio de referencia verificado.");
   await reference.getByRole("button", { name: "Cerrar", exact: true }).click();
   await dialog.getByRole("button", { name: /^Taladro unidades/ }).click();
+  await page.getByText("Cantidad, mínimo y reposición (opcional)", { exact: true }).click();
   await expect(page.getByRole("switch", { name: /^Herramienta o equipo reutilizable/ })).toBeChecked();
   await expect(page.getByRole("switch", { name: /^Sugerir en la lista/ })).not.toBeChecked();
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(page.viewportSize()!.width);
