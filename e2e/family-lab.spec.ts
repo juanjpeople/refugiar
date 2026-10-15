@@ -37,6 +37,7 @@ test("API real local: alta, casa cifrada y segundo navegador recuperan el invent
   await page.getByRole("button", { name: "Agregar una cosa", exact: true }).first().click();
   const dialog = page.getByRole("dialog", { name: /^Agregar una cosa a / });
   await dialog.getByPlaceholder("Ej. Leche, Taladro, Pilas AA").fill("Arroz del laboratorio");
+  await dialog.getByText("Cantidad, mínimo y reposición (opcional)", { exact: true }).click();
   await dialog.getByLabel("Cantidad").fill("3");
   await dialog.getByLabel("Mínimo").fill("1");
   const itemUploaded = page.waitForResponse((response) => response.url().endsWith("/ops") && response.request().method() === "POST" && response.ok());

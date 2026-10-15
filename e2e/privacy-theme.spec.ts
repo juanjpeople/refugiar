@@ -1,4 +1,4 @@
-import { expect, switchToKid, test } from "./fixtures";
+import { expect, protectProfile, switchToKid, test } from "./fixtures";
 
 function contrast(foreground: string, background: string) {
   const parse = (color: string) => color.match(/[\d.]+/g)!.map(Number);
@@ -45,6 +45,7 @@ for (const theme of ["light", "dark"] as const) {
     expect(contrast(eyebrow, colors.background)).toBeGreaterThanOrEqual(4.5);
     expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(page.viewportSize()!.width);
     await page.screenshot({ path: testInfo.outputPath(`privacidad-${theme}.png`), fullPage: true, animations: "disabled" });
+    await protectProfile(page);
     await switchToKid(page, /Explorador/);
     await page.goto("/privacidad");
     await expect(page.getByRole("link", { name: /Presupuesto familiar de adultos/ })).toHaveCount(0);

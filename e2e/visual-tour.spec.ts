@@ -44,7 +44,7 @@ for (const colorScheme of ["light", "dark"] as const) {
     await providers.getByRole("checkbox", { name: "Simular espera" }).uncheck();
     await providers.getByRole("button", { name: "Reiniciar ejemplo" }).click();
     const storage = page.locator("#flujo-almacenamiento");
-    await storage.getByText("2 · Recinto", { exact: true }).click();
+    await storage.getByText("2 · Lugar", { exact: true }).click();
     await expect(storage.getByRole("heading", { name: "Taller", exact: true })).toBeVisible();
     await settleCapture(page, storage);
     await storage.screenshot({ path: testInfo.outputPath(`${colorScheme}-design-recinto.png`), animations: "disabled", style: "header { visibility: hidden !important; }" });
