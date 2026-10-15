@@ -53,7 +53,8 @@ test("los QR impresos (/c/<código>) y las URLs viejas llevan al contenedor", as
 test("el idioma se cambia desde el header", async ({ home: page }, testInfo) => {
   test.skip(testInfo.project.name === "celular", "En el celular va en el menú del perfil");
   await page.goto("/inventario");
-  await page.getByRole("button", { name: "Idioma" }).click();
-  await page.getByText("English", { exact: true }).click();
+  await page.getByRole("button", { name: "Idioma", exact: true }).click();
+  await page.getByRole("menuitem", { name: "English", exact: true }).click();
+  await expect(page.locator("html")).toHaveAttribute("lang", "en");
   await expect(page.getByRole("heading", { level: 2 }).first()).toHaveText("Inventory");
 });

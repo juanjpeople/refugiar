@@ -17,6 +17,8 @@ Orden, dependencias, estados y criterios de aceptación: [Cimientos del MVP](doc
 ## ⏭️ Después
 
 - **Cifrado local y recuperación**: dos adultos administradores con recuperación independiente.
+- **Cada celular, lo suyo**: que el celular de un chico reciba solo su calendario, su escuela y las recetas, no la casa entera. Necesita claves por persona. → [chicos](docs/CHICOS.md#plan-cada-celular-lo-suyo)
+- **Chicos que cumplen 16 o 18**: la app sugiere un perfil intermedio a los 16 y Adulto a los 18; siempre decide un adulto. → [chicos](docs/CHICOS.md#plan-16-y-18-años)
 - **Base ESP32 local**: el prototipo está en [firmware/esp32-relay](firmware/esp32-relay/README.md); medirlo en la placa real y, con esos números, conectarlo desde la app de Android.
 - **Validación familiar completa**: variante cloud, alacena/compras y sincronización Android/web en teléfonos reales.
 - **Correos verificables**: entrega real, plantillas y límites gratuitos.
@@ -48,6 +50,7 @@ Lo último arriba. El PR que termina algo lo agrega acá.
 
 | Cuándo | Qué | PR |
 | --- | --- | --- |
+| 2026-10 | Chicos con su día: Inicio propio con escuela, calendario (solo lo suyo y lo de toda la casa) y recetas para opinar, sin Inventario, Compras ni Proyectos; un chico entra solo si un grande del dispositivo tiene PIN o huella, y un grande sin PIN se abre con el PIN de un grande. Foto con punto en la ficha de cada cosa; cargar envases con códigos de barras en ráfaga (nombres de Open Food Facts, opcional); "Anotar rápido" en una frase; landing con color, escenas reales y "En camino"; tests de navegador al día con las palabras nuevas | #86 |
 | 2026-10 | Uso diario en el celular: barra de abajo con Inicio, Inventario, Compras, Calendario y escanear en el centro; la búsqueda de arriba encuentra anotaciones y códigos; casas solo en el dispositivo piden no borrarse y recuerdan el respaldo; Lugar › Mueble › Caja › Cosa en toda la app; Compras con la lista primero, pegar varias cosas y compartir; encabezados compactos en el celular; pegar ingredientes y pasos en Recetas | #85 |
 | 2026-10 | Etiquetas QR a medida: siete medidas y una propia en mm, diseño según la forma, medidas mezcladas en hojas A4 con línea de corte, rollo con una por página, empezar en una hoja usada y "Agregar varias" cajas de una vez; "Mover" varios productos a otra caja eligiéndola o escaneando su etiqueta; índices y paneles pegajosos que frenan debajo de la barra real (sin quedar tapados por las migas) y pasos de `/design` que entran en tableta; etiquetas en blanco que se asignan al escanearlas, modo Ordenar (foto y qué tiene, caja por caja), fotos de las cajas por lugar, Buscar con sonido, vibración y destello con pantalla negra, "lugar" en vez de "recinto" y alta de producto solo con el nombre | #84 |
 | 2026-10 | Jerarquía visual y ancho por página: Escuela por niveles (hoy, horario, viaje, materias por semana), carril de listas en Compras, calendario más legible con la hora actual, contenido que aprovecha pantallas anchas e índice de `/design` arreglado | #83 |

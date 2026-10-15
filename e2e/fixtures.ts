@@ -34,6 +34,8 @@ async function addItem(page: Page, container: string, name: string, quantity: nu
   await page.getByRole("button", { name: "Agregar una cosa", exact: true }).first().click();
   const dialog = page.getByRole("dialog", { name: /^Agregar una cosa a / });
   await dialog.getByPlaceholder("Ej. Leche, Taladro, Pilas AA").fill(name);
+  // Cantidad y mínimo van plegados: para guardar algo alcanza el nombre.
+  await dialog.getByText("Cantidad, mínimo y reposición (opcional)", { exact: true }).click();
   await dialog.getByLabel("Cantidad").fill(String(quantity));
   await dialog.getByLabel("Mínimo").fill(String(min));
   await dialog.getByRole("button", { name: "Agregar", exact: true }).click();
@@ -53,6 +55,24 @@ export async function addNote(page: Page, text: string) {
 /** Cambia la vista de Inventario (se guarda por perfil). En celular el selector muestra solo íconos: se toca por su title. */
 export async function chooseView(page: Page, view: "Lugares" | "Plano" | "Lista" | "Tarjetas") {
   await page.getByTitle(view, { exact: true }).click();
+}
+
+/**
+ * Pone el PIN 1234 al perfil actual (Ajustes → Desbloqueo). En una casa real, un chico entra a su
+ * perfil solo si algún grande del dispositivo tiene PIN o huella.
+ */
+export async function protectProfile(page: Page) {
+  await page.goto("/ajustes#desbloqueo");
+  await page.getByRole("button", { name: "Configurar mi bloqueo", exact: true }).click();
+  const drawer = page.getByRole("dialog");
+  await drawer.getByRole("button", { name: "Crear PIN", exact: true }).click();
+  for (let round = 0; round < 2; round++) {
+    for (const digit of ["1", "2", "3", "4"]) await drawer.getByRole("button", { name: digit, exact: true }).click();
+    await drawer.getByRole("button", { name: "OK", exact: true }).click();
+  }
+  await expect(drawer.getByRole("button", { name: "Cambiar PIN", exact: true })).toBeVisible();
+  await page.keyboard.press("Escape");
+  await expect(drawer).toBeHidden();
 }
 
 /**

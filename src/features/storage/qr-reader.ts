@@ -85,6 +85,42 @@ export function createQrDetector(): Detector {
   };
 }
 
+/** Códigos de los envases. UPC-E queda afuera: su dígito verificador se calcula distinto y no se valida. */
+const PRODUCT_FORMATS = ["ean_13", "ean_8", "upc_a"];
+
+/**
+ * Si este navegador lee códigos de barras de envases con la cámara. Chrome y la app de Android sí;
+ * Safari y Firefox no lo traen. Ahí el código se escribe a mano (ver docs/INVENTARIO.md).
+ */
+export async function productCodesSupported(): Promise<boolean> {
+  const Native = (globalThis as { BarcodeDetector?: NativeDetectorClass }).BarcodeDetector;
+  if (!Native) return false;
+  const formats = (await Native.getSupportedFormats?.().catch(() => [] as string[])) ?? [];
+  return PRODUCT_FORMATS.some((format) => formats.includes(format));
+}
+
+/** Lector de códigos de barras de envases (EAN y UPC), solo con el lector del navegador. */
+export function createProductCodeDetector(): Detector {
+  const Native = (globalThis as { BarcodeDetector?: NativeDetectorClass }).BarcodeDetector;
+  let native: Promise<InstanceType<NativeDetectorClass> | null> | null = null;
+  const load = async () => {
+    if (!Native) return null;
+    const formats = (await Native.getSupportedFormats?.().catch(() => [] as string[])) ?? [];
+    const usable = PRODUCT_FORMATS.filter((format) => formats.includes(format));
+    return usable.length ? new Native({ formats: usable }) : null;
+  };
+  return {
+    async detect(video) {
+      if (!video.videoWidth || !video.videoHeight) return [];
+      native ??= load().catch(() => null);
+      const detector = await native;
+      if (!detector) return [];
+      const codes = await detector.detect(video);
+      return codes.map((code) => ({ rawValue: code.rawValue, ...locate(code.cornerPoints, video.videoWidth, video.videoHeight) }));
+    },
+  };
+}
+
 function createJsQrDetector(): Detector {
   const canvas = document.createElement("canvas");
   const context = canvas.getContext("2d", { willReadFrequently: true });

@@ -139,7 +139,7 @@ function MatrixBlock() {
 const ROLE_PERMISSIONS: Record<Role, ReadonlySet<Permission>> = {
   admin: new Set(ALL_PERMISSIONS),
   adult: new Set(["inventory.view", "inventory.create", ...]),
-  kid:   new Set(["inventory.view", "shopping.view"]),
+  kid:   new Set(["calendar.view", "recipes.view", "comments.create"]),
 };
 
 can(user, "inventory.delete");   // boolean

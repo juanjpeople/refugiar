@@ -1,7 +1,7 @@
 "use client";
 
 import { App, Button, Card, Dropdown, theme } from "antd";
-import { Camera, EllipsisVertical, Images, ListChecks, MapPin, Plus, Tags } from "lucide-react";
+import { Camera, EllipsisVertical, Images, ListChecks, MapPin, NotebookPen, Plus, Tags } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -19,6 +19,7 @@ import { flattenOverview } from "../views";
 import type { LabelData } from "./ContainerLabel";
 import { BlankLabelsModal } from "./BlankLabelsModal";
 import { LabelModal } from "./LabelModal";
+import { QuickNoteModal } from "./QuickNoteModal";
 import { InventoryDisplayMenu } from "./InventoryDisplayMenu";
 import { StorageHighlights } from "./StorageHighlights";
 import { ContainerModal, SpaceModal } from "./StorageForms";
@@ -89,7 +90,9 @@ export function StoragePage() {
   const actions = useStorageViewActions(setDialog);
   const close = () => setDialog(null);
   const [blankOpen, setBlankOpen] = useState(false);
+  const [quickOpen, setQuickOpen] = useState(false);
   const canManage = usePermission("storage.manage");
+  const canCreate = usePermission("inventory.create");
 
   // Antes cada recinto era una sección de esta página (`#recinto-<id>`): los enlaces viejos abren su página.
   useEffect(() => {
@@ -107,6 +110,7 @@ export function StoragePage() {
         description={t("storage.description")}
         extra={
           <>
+            {(canManage || canCreate) && containerCount > 0 && <Button icon={<NotebookPen />} onClick={() => setQuickOpen(true)}>{t("quickNote.button")}</Button>}
             {canManage && <Link href={organizeHref()}><Button icon={<ListChecks />}>{t("organize.button")}</Button></Link>}
             <Link href={cameraHref()}><Button icon={<Camera />}>{t("camera.openMode")}</Button></Link>
             <Can perform="storage.manage">
@@ -170,6 +174,7 @@ export function StoragePage() {
       )}
 
       <StorageDialogs dialog={dialog} onClose={close} onSpaceCreated={(id) => router.push(spaceHref(id))} />
+      <QuickNoteModal open={quickOpen} onClose={() => setQuickOpen(false)} />
       <BlankLabelsModal open={blankOpen} onClose={() => setBlankOpen(false)} onReady={(labels) => setDialog({ kind: "labels", labels })} />
     </RequirePermission>
   );

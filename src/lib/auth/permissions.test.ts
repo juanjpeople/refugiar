@@ -18,12 +18,12 @@ describe("permisos", () => {
     for (const permission of PERMISSIONS) assert.equal(can(actor("admin"), permission), true);
   });
 
-  test("un chico ve, pero no cambia nada", () => {
+  test("un chico ve su día y las recetas; nada de la casa ni cambios", () => {
     const kid = actor("kid");
-    assert.equal(can(kid, "inventory.view"), true);
-    assert.equal(can(kid, "shopping.view"), true);
     assert.equal(can(kid, "calendar.view"), true);
-    for (const permission of ["inventory.adjust", "inventory.consume", "inventory.delete", "shopping.manage", "members.manage", "settings.data"] as const) {
+    assert.equal(can(kid, "recipes.view"), true);
+    assert.equal(can(kid, "comments.create"), true);
+    for (const permission of ["inventory.view", "shopping.view", "projects.view", "inventory.adjust", "inventory.consume", "inventory.delete", "shopping.manage", "members.manage", "settings.data"] as const) {
       assert.equal(can(kid, permission), false, permission);
     }
   });

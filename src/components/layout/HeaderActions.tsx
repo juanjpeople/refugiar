@@ -1,6 +1,6 @@
 "use client";
 
-import { Button, Dropdown, Flex, Grid, Popover, Segmented, Tooltip, Typography, theme } from "antd";
+import { App, Button, Dropdown, Flex, Grid, Popover, Segmented, Tooltip, Typography, theme } from "antd";
 import { Check, ChevronDown, Languages, Lock, LogOut, Monitor, Moon, Paintbrush, Search, Settings, Sun } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -12,7 +12,7 @@ import { QuickAppearance } from "@/features/settings/components/QuickAppearance"
 import { OfflineBadge } from "@/components/pwa/OfflineBadge";
 import { isSecured, pickableProfiles } from "@/features/members/domain";
 import { getSyncLink } from "@/lib/sync/middleware";
-import { useCurrentUser, useLockStore, useMembersStore, useSessionStore } from "@/lib/auth/session";
+import { kidEntryAllowed, useCurrentUser, useLockStore, useMembersStore, useSessionStore } from "@/lib/auth/session";
 import { useUiStore } from "@/store/useNavigationStore";
 import type { ThemeMode } from "@/store/usePreferencesStore";
 
@@ -158,6 +158,7 @@ export function UserMenu({ labeled = false, onSelect }: { labeled?: boolean; onS
   const members = useMembersStore((s) => s.members);
   const screens = Grid.useBreakpoint();
   const languageItems = useLanguageItems();
+  const { modal } = App.useApp();
   const [quickOpen, setQuickOpen] = useState(false);
   const closeQuick = useCallback(() => setQuickOpen(false), []);
   useQuickDismiss(quickOpen, closeQuick);
@@ -176,7 +177,16 @@ export function UserMenu({ labeled = false, onSelect }: { labeled?: boolean; onS
           key: member.id,
           icon: <MemberAvatar member={member} size={20} />,
           label: `${member.name} · ${t(`roles.${member.role}`)}`,
-          onClick: () => signIn(member.id),
+          // Para pasarle el dispositivo a un chico, primero un grande protege su perfil (ver `canEnterKid`).
+          onClick: () => member.role === "kid" && !kidEntryAllowed(members ?? [])
+            ? modal.confirm({
+              title: t("kidGate.title", { name: member.name }),
+              content: t("kidGate.menu"),
+              okText: t("kidGate.configure"),
+              cancelText: t("common.cancel"),
+              onOk: () => router.push("/ajustes#desbloqueo"),
+            })
+            : signIn(member.id),
         })),
     },
     { type: "divider" as const },

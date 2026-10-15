@@ -95,9 +95,9 @@ test("dos administradores y dos dispositivos infantiles ingresan con aprobación
       expect(forbidden.status()).toBe(403);
       await kid.goto("http://localhost:4195/familia");
       await expect(kid.getByRole("button", { name: "Agregar miembro", exact: true })).toHaveCount(0);
+      // Inventario, compras y proyectos son de los grandes: un chico ve su día y las recetas.
       await kid.goto("http://localhost:4195/inventario");
-      await kid.getByText("Heladera", { exact: true }).first().click();
-      await expect(kid.getByRole("button", { name: "Ver detalle de Arroz del laboratorio", exact: true })).toBeVisible();
+      await expect(kid.getByText("Sin acceso", { exact: true })).toBeVisible();
       await expect(kid.getByRole("button", { name: "Agregar una cosa", exact: true })).toHaveCount(0);
     }
     expect(new Set(userIds).size).toBe(4);
