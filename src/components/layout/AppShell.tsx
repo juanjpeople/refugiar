@@ -5,17 +5,19 @@ import { useSkin } from "@/skins/useSkin";
 import { DEMO_ENABLED } from "@/lib/demo";
 import { Alert, Button, ConfigProvider, Drawer, Flex, Grid, Layout, Tooltip, Typography, theme } from "antd";
 import { motion } from "framer-motion";
-import { Menu, PanelLeftClose, PanelLeftOpen } from "lucide-react";
+import { House, Menu, PanelLeftClose, PanelLeftOpen } from "lucide-react";
+import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, type ReactNode } from "react";
 import { LockScreen } from "@/components/auth/LockScreen";
 import { MembersBridge } from "@/components/auth/MembersBridge";
 import { HouseMark } from "@/components/illustrations/HouseMark";
-import { BOTTOM_BAR_HEIGHT } from "@/components/ui";
+import { BOTTOM_BAR_HEIGHT, Callout } from "@/components/ui";
+import { guardians } from "@/features/members/domain";
 import { useHydrated } from "@/hooks/useHydrated";
 import { usePreferences } from "@/hooks/usePreferences";
 import { useT } from "@/i18n";
-import { useCurrentUser, useIsLocked, useLockStore, useMembersStore, useSessionStore } from "@/lib/auth/session";
+import { deviceProfiles, kidEntryAllowed, useCurrentUser, useIsLocked, useLockStore, useMembersStore, useSessionStore } from "@/lib/auth/session";
 import { FONT_SIZES } from "@/lib/theme";
 import { APP_ROUTES, CONTENT_WIDTH, findRoute } from "@/lib/navigation/routes";
 import { useDeviceStore } from "@/store/useDeviceStore";
@@ -48,6 +50,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   const user = useCurrentUser();
   const membersLoaded = useMembersStore((s) => s.members !== null);
   const membersLoadFailed = useMembersStore((s) => s.loadFailed);
+  const members = useMembersStore((s) => s.members);
   const locked = useIsLocked();
   const unlock = useLockStore((s) => s.unlock);
   const signOut = useSessionStore((s) => s.signOut);
@@ -99,7 +102,22 @@ export function AppShell({ children }: { children: ReactNode }) {
     return (
       <>
         <MembersBridge />
-        <LockScreen key={user.id} member={user} onUnlock={() => unlock(user.id)} onSwitchProfile={signOut} />
+        <LockScreen key={user.id} member={user} guardians={guardians(deviceProfiles(members ?? []))} onUnlock={() => unlock(user.id)} onSwitchProfile={signOut} />
+      </>
+    );
+  }
+
+  // Un chico sin ningún grande protegido en el dispositivo espera a que uno ponga su PIN (ver `canEnterKid`).
+  if (user.role === "kid" && !kidEntryAllowed(members ?? [])) {
+    return (
+      <>
+        <MembersBridge />
+        <Flex vertical align="center" justify="center" gap={16} style={{ minHeight: "100vh", padding: 24 }}>
+          <div style={{ maxWidth: 440 }}>
+            <Callout tone="warning" title={t("kidGate.waitTitle")}>{t("kidGate.waitText")}</Callout>
+          </div>
+          <Button type="primary" onClick={signOut}>{t("lock.switchProfile")}</Button>
+        </Flex>
       </>
     );
   }
@@ -298,7 +316,9 @@ function KidsLayout({ children }: { children: ReactNode }) {
   return (
     <ConfigProvider componentSize="large" theme={{ token: { fontSize: FONT_SIZES.xl, borderRadius: 16 } }}>
       <Layout style={{ minHeight: "100vh", background: token.colorWarningBg }}>
-        <Header style={{ display: "flex", justifyContent: "flex-end", alignItems: "center", background: "transparent" }}>
+        <Header style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, background: "transparent", paddingInline: 16 }}>
+          {/* Sin menú lateral: Inicio es el mapa de un chico (su día, la escuela, el calendario y las recetas). */}
+          <Link href="/"><Button icon={<House />}>{t("nav.routes.home")}</Button></Link>
           <HeaderActions />
         </Header>
         <Content style={{ padding: 16 }}>

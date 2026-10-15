@@ -2,7 +2,7 @@ import { expect, test } from "./fixtures";
 
 test("los tipos se eligen con teclado sin perder el nombre y conservan una sola vista previa", async ({ home: page }, testInfo) => {
   await page.goto("/inventario");
-  await page.getByRole("button", { name: "Nuevo recinto", exact: true }).click();
+  await page.getByRole("button", { name: "Nuevo lugar", exact: true }).click();
   const dialog = page.getByRole("dialog");
   await dialog.getByLabel("Nombre", { exact: true }).fill("Patio chico");
   await dialog.getByRole("radio", { name: "Jardín", exact: true }).check();

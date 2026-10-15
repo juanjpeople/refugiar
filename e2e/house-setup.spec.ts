@@ -37,11 +37,11 @@ test("revisa un patrón, edita cantidades y excluye productos antes de guardarlo
   await page.getByRole("combobox", { name: "Ubicación de Baúl" }).click();
   await page.getByTitle("Altillo").click();
   await nextSetupStep(page);
-  await expect(page.getByRole("radio", { name: "Básicos a mano · mediados de mes" })).toHaveAccessibleDescription(/^Lo justo para el día a día\. Carga 9 artículos/);
-  await page.getByRole("radio", { name: "Solo espacios, sin artículos", exact: true }).press("ArrowDown");
+  await expect(page.getByRole("radio", { name: "Básicos a mano · mediados de mes" })).toHaveAccessibleDescription(/^Lo justo para el día a día\. Carga 9 cosas/);
+  await page.getByRole("radio", { name: "Solo lugares, sin cosas", exact: true }).press("ArrowDown");
   await page.getByRole("radio", { name: "Compra completa · principio de mes", exact: true }).press("ArrowDown");
   await expect(page.getByRole("radio", { name: "Básicos a mano · mediados de mes" })).toBeChecked();
-  await expect(page.getByRole("button", { name: /^Heladera/ })).toContainText("9 artículos: Leche, Huevos, Queso");
+  await expect(page.getByRole("button", { name: /^Heladera/ })).toContainText("9 cosas: Leche, Huevos, Queso");
   await page.getByRole("button", { name: /^Heladera/ }).click();
   const eggs = page.getByRole("group", { name: "Cantidad de Huevos", exact: true });
   await eggs.getByRole("spinbutton").fill("0");
