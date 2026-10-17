@@ -10,16 +10,23 @@ El detalle de cada funcionalidad está en [docs/features](docs/features/).
 - ✅ Hecho: CI completo (escritorio, celular, demo y paquete local) y Android corren en el PR antes de integrar.
 - ✅ Hecho: el recorrido de Privacidad espera el contenido de destino antes de medir contraste; el de anotaciones centra el botón antes de enviarlo para evitar la barra móvil. Se mantienen las aserciones de contraste, guardado y búsqueda.
 
+## ✅ Cocina guiada y continuidad en Android
+
+- ✅ Implementado: tiempo opcional por paso, sugerencias de tiempos explícitos y temporizadores simultáneos persistidos por casa/perfil/receta. Avisos locales Android optativos; sin IA ni servicios pagos.
+- ✅ Implementado: deshacer una cocinada completa desde la confirmación o el historial durante 24 horas, sin devolver dos veces consumos ya deshechos. Confirmaciones repetidas con el mismo identificador no vuelven a descontar.
+- ✅ Implementado: Atrás cierra primero el teclado; pantalla encendida nativa en modo cocina; reloj actualizado al volver y reconexión del motor. La limpieza de una sesión anterior no detiene la nueva.
+- Validación física pendiente del dueño: teclado, segundo plano, actualización sobre la versión 16 y entrega de avisos con ahorro de batería. Los checks de CI no sustituyen estas pruebas.
+
 ## 🔨 Ahora
 
 - **Costos de builds**: apagar builds de ramas no productivas en el panel de Cloudflare. URLs preview ya apagadas; acceso a Builds pendiente. → [instructivo](docs/SIN_PREVIEW.md)
-- **Publicación después de checks completos**: configurar el disparador productivo para esperar CI; requiere acceso a Builds. No se habilitó otro deploy.
+- **Publicación después de checks completos**: #91 exige CI completo y Android antes del merge en main. Cloudflare publica ese merge; cambiar su disparador independiente sigue requiriendo acceso a Builds.
 
 
 - **Android autónomo**: recursos dentro del APK, datos propios, arranque y desbloqueo sin internet; conservar sincronización web. Ya pasó en emulador; falta probarlo en un teléfono real antes de publicar.
 - **Resiliencia**: conservar pendientes y reintentos sin duplicar cambios al reconectar.
 - **Familia en cuatro ventanas**: cerrar el laboratorio local existente con dos admins y dos chicos.
-- **Cierre para integración**: revisar el conjunto, comprobar compilación, registrar evidencia y preparar PR; sin publicación en Play.
+- **Distribución Android**: versión 16 publicada en Prueba interna de Play. Conservar los pendientes de validación física antes de promover a producción.
 
 Orden, dependencias, estados y criterios de aceptación: [Cimientos del MVP](docs/CIMIENTOS_MVP.md).
 
@@ -55,7 +62,7 @@ Anotadas para no perderlas. Pasan a ⏭️ cuando se decide hacerlas.
 
 ## ✅ Hecho
 
-- **Correcciones de CI posteriores a #89 (locales, pendientes de publicar)**: estado offline también en casa local; código de caja visible en encabezado compacto; popover de demo con desplazamiento horizontal; prueba de cambio de casa sincronizada y plazo total del recorrido visual ajustado. E2E pendientes de revalidación.
+- **Correcciones de CI posteriores a #89 (publicadas en #90 y #91)**: estado offline también en casa local; código de caja visible en encabezado compacto; popover de demo con desplazamiento horizontal; prueba de cambio de casa sincronizada y plazo total del recorrido visual ajustado. E2E de main verificados: 70 aprobados, sin reintentos.
 
 
 - **Navegación móvil**: Inicio, Inventario, Compras, Recetas y Más; cabecera contextual sin menú duplicado, escáner en Inventario y cierre de diálogos con Atrás en Android. Implementado; revisión visual en teléfono pendiente. → [Android](docs/ANDROID.md)

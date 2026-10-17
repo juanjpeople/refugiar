@@ -32,6 +32,8 @@ export interface Recipe {
   /** Los ingredientes viven dentro de la receta: se guardan y se exportan juntos, siempre coherentes. */
   ingredients: RecipeIngredient[];
   steps: string[];
+  /** Duración explícita por paso, en segundos. Cero significa sin temporizador. */
+  stepSeconds?: number[];
   tags: RecipeTag[];
   /** Foto principal (las demás son la galería, ver `features/media`). */
   coverPhotoId?: string;
@@ -40,7 +42,7 @@ export interface Recipe {
   updatedAt: number;
 }
 
-export type RecipeInput = Pick<Recipe, "name" | "servings" | "minutes" | "ingredients" | "steps" | "tags"> & { privacy?: Privacy };
+export type RecipeInput = Pick<Recipe, "name" | "servings" | "minutes" | "ingredients" | "steps" | "tags"> & { privacy?: Privacy; stepSeconds?: number[] };
 
 export const RECIPE_LIMITS = {
   nameMaxLength: 80,
@@ -145,13 +147,16 @@ export function parseRecipe(input: RecipeInput): RecipeInput & { privacy: Privac
   }
   const ingredients = (input.ingredients ?? []).map(parseIngredient);
   if (ingredients.length > RECIPE_LIMITS.maxIngredients) throw new ValidationError("errors.validation.tooMany", { max: RECIPE_LIMITS.maxIngredients });
-  const steps = (input.steps ?? []).map((step) => step.trim()).filter(Boolean);
+  const prepared = (input.steps ?? []).map((step, index) => ({ text: step.trim(), seconds: input.stepSeconds?.[index] ?? 0 })).filter(step => step.text);
+  if (prepared.some(step => !Number.isInteger(step.seconds) || step.seconds < 0 || step.seconds > 86400)) throw new ValidationError("errors.validation.minutesInvalid");
+  const steps = prepared.map(step => step.text);
+  const stepSeconds = prepared.map(step => step.seconds);
   if (steps.length > RECIPE_LIMITS.maxSteps) throw new ValidationError("errors.validation.tooMany", { max: RECIPE_LIMITS.maxSteps });
   if (steps.some((step) => step.length > RECIPE_LIMITS.stepMaxLength)) {
     throw new ValidationError("errors.validation.nameTooLong", { max: RECIPE_LIMITS.stepMaxLength });
   }
   const tags = [...new Set((input.tags ?? []).filter(isTag))];
-  return { name, privacy, servings: input.servings, minutes: input.minutes, ingredients, steps, tags };
+  return { name, privacy, servings: input.servings, minutes: input.minutes, ingredients, steps, ...(input.stepSeconds ? { stepSeconds } : {}), tags };
 }
 
 // --- Porciones y disponibilidad -------------------------------------------------

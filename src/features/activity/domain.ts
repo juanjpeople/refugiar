@@ -57,6 +57,8 @@ export interface ActivityEntry {
   currency?: string;
   store?: string;
   /** Si se deshizo: cuándo y quién (la entrada queda, tachada, para que el historial no mienta). */
+  /** Consumos que forman una cocinada; se revierten juntos. */
+  consumptionIds?: string[];
   undoneAt?: number;
   undoneBy?: string;
 }
@@ -75,6 +77,7 @@ const UNDOABLE: ReadonlySet<ActivityAction> = new Set(["consume", "adjust", "res
 
 /** ¿Se puede deshacer? Solo cambios de cantidad recientes y que no se hayan deshecho ya. */
 export function isUndoable(entry: ActivityEntry, now: number): boolean {
+  if (entry.module === "recipes" && entry.action === "cooked") return Array.isArray(entry.consumptionIds) && entry.undoneAt === undefined && now - entry.at < ACTIVITY_LIMITS.undoWindowMs;
   return (
     entry.module === "inventory" &&
     UNDOABLE.has(entry.action) &&
