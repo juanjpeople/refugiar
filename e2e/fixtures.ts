@@ -48,7 +48,11 @@ export async function addNote(page: Page, text: string) {
   const input = page.getByRole("textbox", { name: "Contenido guardado", exact: true });
   if (!(await input.isVisible())) await page.getByRole("button", { name: "Nueva anotación", exact: true }).first().click();
   await input.fill(text);
-  await page.getByRole("button", { name: "Anotar", exact: true }).click();
+  const submit = page.getByRole("button", { name: "Anotar", exact: true });
+  // El scroll automático del campo puede dejar el botón bajo la barra fija del celular.
+  // Llevarlo al centro antes del clic conserva la prueba del envío real del formulario.
+  await submit.evaluate(element => element.scrollIntoView({ block: "center", behavior: "instant" }));
+  await submit.click();
   await expect(page.getByText(text, { exact: true })).toBeVisible();
 }
 
