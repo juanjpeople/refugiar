@@ -56,3 +56,6 @@ export { SyncIndicator } from "./SyncIndicator";
 export { WeeklyMenu } from "./WeeklyMenu";
 
 export { ReminderPreferences } from "./ReminderPreferences";
+
+export { StepTime } from "./StepTime";
+export { KitchenTimers } from "./KitchenTimers";

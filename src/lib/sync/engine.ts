@@ -426,7 +426,7 @@ class Engine {
       this.schedule(0);
     };
     const offline = () => useSyncStatus.getState().update({ phase: "offline" });
-    const visible = () => document.visibilityState === "visible" && this.schedule(0);
+    const visible = () => { if (document.visibilityState === "visible") { this.connect(); this.schedule(0); } };
     window.addEventListener("online", online);
     window.addEventListener("offline", offline);
     document.addEventListener("visibilitychange", visible);
@@ -465,6 +465,7 @@ class Engine {
   }
 
   private async run() {
+    if (this.stopped) return;
     if (this.running) {
       this.again = true;
       return;
@@ -482,6 +483,7 @@ class Engine {
   }
 
   private async cycle() {
+    if (this.stopped) return;
     const status = useSyncStatus.getState();
     if (!navigator.onLine) {
       status.update({ phase: "offline" });
@@ -565,12 +567,12 @@ let engine: Engine | null = null;
 /** Arranca la sincronización continua (una por pestaña; el lock evita pisarse entre pestañas). */
 export function startSync(ctx: SyncContext) {
   engine?.stop();
-  engine = new Engine(ctx);
-  engine.start();
+  const current = new Engine(ctx);
+  engine = current;
+  current.start();
   return () => {
-    engine?.stop();
-    engine = null;
-    useSyncStatus.getState().update({ phase: "off" });
+    current.stop();
+    if (engine === current) { engine = null; useSyncStatus.getState().update({ phase: "off" }); }
   };
 }
 

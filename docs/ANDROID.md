@@ -394,3 +394,11 @@ Los recordatorios usan `@capacitor/local-notifications` 8.2.1 (compatible con Ca
 El modo cocina intenta Screen Wake Lock y avisa si el WebView no lo admite. No se promete mantener encendida la pantalla en todos los Android. Instalar un APK nuevo es necesario para incorporar el plugin nativo; un despliegue web no actualiza por sí solo la app instalada.
 
 Verificación local de esta tanda: `npm run check` (245 tests existentes), build web, recorrido API contra D1 local (3/3), `npm run android:build` y Gradle `lintDebug`. No se ejecutaron navegadores ni se probó en un teléfono; los E2E del merge anterior siguen fallidos en GitHub. El APK compilado valida la integración nativa del plugin, no la entrega real de alarmas por el sistema operativo.
+
+## Cocina y continuidad de esta tanda
+
+Atrás oculta primero el teclado antes de cerrar un diálogo o navegar. Modo cocina usa FLAG_KEEP_SCREEN_ON mediante un plugin local; sólo mantiene encendida la ventana visible, sin bloqueo de CPU en segundo plano. Se libera al salir o apagar la opción.
+
+Los temporizadores conservan su hora de finalización y refrescan al volver del fondo. Los avisos usan el plugin de notificaciones ya instalado, canal kitchen y IDs separados de Calendario. No se cambian el identificador de la app, su origen ni la base local: la actualización conserva el almacenamiento; falta comprobarla en teléfono sobre la versión 16.
+
+Revisión del dueño: actualizar sin desinstalar, comprobar datos; abrir un paso, iniciar dos timers, bloquear y reabrir; cancelar uno; comprobar permiso denegado; abrir teclado y tocar Atrás; cocinar sin conexión, reconectar y verificar el stock en otro dispositivo.
