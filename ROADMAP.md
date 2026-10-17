@@ -46,6 +46,8 @@ Anotadas para no perderlas. Pasan a ⏭️ cuando se decide hacerlas.
 
 ## ✅ Hecho
 
+- **Navegación móvil**: Inicio, Inventario, Compras, Recetas y Más; cabecera contextual sin menú duplicado, escáner en Inventario y cierre de diálogos con Atrás en Android. Implementado; revisión visual en teléfono pendiente. → [Android](docs/ANDROID.md)
+
 Lo último arriba. El PR que termina algo lo agrega acá.
 
 | Cuándo | Qué | PR |

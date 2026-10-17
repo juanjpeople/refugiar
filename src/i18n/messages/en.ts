@@ -439,6 +439,8 @@ export const en: Messages = {
     },
   },
   nav: {
+    more: "More",
+    moreDescription: "Calendar, family and home settings.",
     primary: "Main",
     path: "Where you are",
     bottomBar: "Quick access",

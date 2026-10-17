@@ -444,6 +444,8 @@ export const es = {
     },
   },
   nav: {
+    more: "Más",
+    moreDescription: "Calendario, familia y opciones de tu casa.",
     primary: "Principal",
     bottomBar: "Accesos rápidos",
     breadcrumb: "Ubicación",

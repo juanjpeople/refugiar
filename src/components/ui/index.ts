@@ -45,3 +45,4 @@ export { PhotoSpot, type SpotPoint } from "./PhotoSpot";
 
 export { IngredientPicker } from "./IngredientPicker";
 export { ReviewChecklist } from "./ReviewChecklist";
+export { MobileHeader } from "./MobileHeader";

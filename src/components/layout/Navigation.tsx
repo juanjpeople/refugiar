@@ -22,6 +22,7 @@ export function useVisibleRoutes() {
 }
 
 interface NavigationProps {
+  omitRoutes?: string[];
   /** Solo íconos (con tooltip). */
   collapsed?: boolean;
   onNavigate?: () => void;
@@ -33,7 +34,7 @@ interface NavigationProps {
  * Menú principal, generado desde el registro de rutas. El fondo del ítem activo es un solo
  * elemento que se desliza entre ítems al navegar (`layoutId`).
  */
-export function Navigation({ collapsed = false, onNavigate, layoutGroup = "sidebar" }: NavigationProps) {
+export function Navigation({ collapsed = false, onNavigate, layoutGroup = "sidebar", omitRoutes = [] }: NavigationProps) {
   const { token } = theme.useToken();
   const t = useT();
   const pathname = usePathname();
@@ -44,7 +45,7 @@ export function Navigation({ collapsed = false, onNavigate, layoutGroup = "sideb
     <nav aria-label={t("nav.primary")}>
       <Flex vertical gap={2} style={{ padding: "4px 8px" }}>
         {SECTIONS.map((section, index) => {
-          const items = routes.filter((route) => route.section === section && !route.hidden);
+          const items = routes.filter((route) => route.section === section && !route.hidden && !omitRoutes.includes(route.id) && (layoutGroup !== "more" || !route.external));
           if (items.length === 0) return null;
           return (
             <Fragment key={section}>

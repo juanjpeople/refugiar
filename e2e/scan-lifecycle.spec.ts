@@ -17,9 +17,9 @@ test("cámara: libera un permiso que llega después de salir de la pantalla", as
   await page.goto("/inventario/escanear");
   await page.getByRole("button", { name: "Activar cámara" }).click();
   await expect(page.getByRole("button", { name: "Detener", exact: true })).toBeVisible();
-  const menu = page.getByRole("button", { name: "Abrir menú", exact: true });
-  if (await menu.isVisible()) await menu.click();
-  await page.locator('a[href="/inventario"]:visible').first().click();
+  await page.keyboard.press("Control+k");
+  await page.getByPlaceholder("Buscá páginas o acciones…").fill("Inventario");
+  await page.getByRole("option", { name: "Inventario", exact: true }).click();
   await expect(page).toHaveURL(/\/inventario$/);
   await page.evaluate(() => (window as unknown as { cameraTest: { grant(): void } }).cameraTest.grant());
   await expect.poll(() => page.evaluate(() => (window as unknown as { cameraTest: { stopped: number } }).cameraTest.stopped)).toBe(1);
