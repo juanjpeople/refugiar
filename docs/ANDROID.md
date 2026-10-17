@@ -8,6 +8,21 @@ incluidos. La nube sigue habilitada como opción: el build no usa `--local`.
 [Cimientos del MVP](CIMIENTOS_MVP.md). Falta certificar autenticación cloud completa,
 migración de datos y teléfonos físicos. Un APK compilado no prueba todo esto.
 
+## Navegación móvil
+
+La barra inferior ofrece Inicio, Inventario, Compras, Recetas y Más según permisos.
+Más reúne calendario, familia, ajustes y las demás secciones. La cabecera muestra
+título, búsqueda y perfil; Atrás aparece en detalles, sin hamburguesa ni Adelante.
+Escanear QR está en Inventario. La barra se oculta en cámara y al editar campos.
+
+Android cierra menús o diálogos antes de volver en el historial. En la raíz pasa
+la app al fondo. Capacitor administra los márgenes del sistema; la web usa áreas
+seguras, sin agregar otro margen nativo.
+
+Pendiente de revisión del dueño en teléfono: teclado, Atrás en diálogos y cámara,
+texto grande, rotación y navegación por gestos o tres botones. Reinstalar el APK
+para recibir esta interfaz.
+
 ## Interfaz local y API remota
 
 - `npm run android:sync` genera `android-dist/` con `native: true` y copia los recursos.

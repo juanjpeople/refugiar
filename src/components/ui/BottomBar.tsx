@@ -19,7 +19,7 @@ export interface BottomBarItem {
 }
 
 interface BottomBarProps {
-  /** Dos a cuatro destinos; con una acción, la mitad va a cada lado. */
+  /** Hasta cinco destinos; con una acción, la mitad va a cada lado. */
   items: BottomBarItem[];
   /** Ítem activo (o ninguno). */
   activeId?: string;
@@ -36,7 +36,7 @@ interface BottomBarProps {
 
 /**
  * Barra de abajo del celular: lo de todos los días a un toque, con el pulgar. El resto de las
- * secciones sigue en el menú ☰. El indicador del ítem activo se desliza entre ítems.
+ * secciones vive en Más. El indicador del ítem activo se desliza entre ítems.
  */
 export function BottomBar({ items, activeId, action, position = "fixed", layoutId = "bottom-bar-active", onSelect, "aria-label": ariaLabel }: BottomBarProps) {
   const { token } = theme.useToken();
@@ -118,7 +118,7 @@ export function BottomBar({ items, activeId, action, position = "fixed", layoutI
               <motion.span
                 layoutId={layoutId}
                 transition={SPRING.snappy}
-                style={{ position: "absolute", top: 6, width: 52, height: 28, borderRadius: 14, background: token.colorPrimaryBg }}
+                style={{ position: "absolute", top: 6, width: "80%", height: token.controlHeightSM, borderRadius: token.borderRadiusLG, background: token.colorPrimaryBg }}
               />
             )}
             <span style={{ position: "relative", display: "inline-flex", fontSize: token.fontSizeXL, paddingTop: 4 }}>

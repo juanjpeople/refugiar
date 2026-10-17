@@ -1,16 +1,17 @@
 "use client";
 
-import { App, Button, Card, Col, Flex, Row, Segmented, Tag, Tooltip, Typography, theme } from "antd";
+import { App, Button, Card, Col, Flex, Modal, Row, Segmented, Tag, Tooltip, Typography, theme } from "antd";
 import { motion } from "framer-motion";
 import { ChefHat, Clock, ListPlus, Pencil, Plus, Users } from "lucide-react";
 import { useState } from "react";
 import { Reveal, Stagger } from "@/components/motion";
-import { ListPage, QuantityStepper } from "@/components/ui";
+import { IngredientPicker, ReviewChecklist, ListPage, QuantityStepper } from "@/components/ui";
 import type { InventoryItem } from "@/features/inventory/domain";
 import { AvailabilityTag, RatingBadge, RecipeCover } from "@/features/recipes/components/RecipeBits";
+import { CookForm } from "@/features/recipes/components/CookModal";
 import { RecipeCard } from "@/features/recipes/components/RecipesPage";
 import { IngredientRow, RecipeSteps } from "@/features/recipes/components/RecipeView";
-import { checkAvailability, RECIPE_LIMITS, RECIPE_TAGS, type Recipe, type RecipeTag } from "@/features/recipes/domain";
+import { checkAvailability, ingredientCheckKey, rankRecipes, RECIPE_LIMITS, RECIPE_TAGS, type Recipe, type RecipeTag } from "@/features/recipes/domain";
 import type { RecipeSummary } from "@/features/recipes/hooks";
 import { useI18n } from "@/i18n";
 import { SPRING } from "@/lib/motion";
@@ -111,9 +112,11 @@ function ListScreen({ onOpen }: { onOpen: (id: string) => void }) {
   const [show, setShow] = useState<"all" | "ready">("all");
   const [tags, setTags] = useState<RecipeTag[]>([]);
   const [query, setQuery] = useState("");
+  const [wanted, setWanted] = useState<string[]>([]);
+  const [reviewing, setReviewing] = useState(false);
 
   const words = normalize(query).split(/\s+/).filter(Boolean);
-  const visible = SUMMARIES.filter((entry) => {
+  const visible = rankRecipes(SUMMARIES, wanted).filter((entry) => {
     if (show === "ready" && entry.report.availability !== "ready") return false;
     if (!tags.every((tag) => entry.tags.includes(tag))) return false;
     const haystack = normalize(`${entry.name} ${entry.ingredients.map((ingredient) => ingredient.name).join(" ")}`);
@@ -138,7 +141,7 @@ function ListScreen({ onOpen }: { onOpen: (id: string) => void }) {
         items={SUMMARIES}
         visible={visible}
         getKey={(entry) => entry.id}
-        renderItem={(entry) => <RecipeCard recipe={entry} />}
+        renderItem={(entry) => <RecipeCard recipe={entry} wanted={wanted} />}
         empty={{ icon: ChefHat, title: t("recipes.emptyTitle"), description: t("recipes.emptyText") }}
         noMatch={{ title: t("recipes.noMatchTitle"), description: t("recipes.noMatchText") }}
         search={{ value: query, onChange: setQuery, placeholder: t("recipes.search") }}
@@ -153,7 +156,10 @@ function ListScreen({ onOpen }: { onOpen: (id: string) => void }) {
           />
         }
         below={
-          <Flex gap={6} wrap>
+          <Flex vertical gap={token.margin}>
+            <IngredientPicker options={[...PANTRY.values()].filter((item) => item.quantity > 0).map((item) => ({ value: item.name, label: item.name }))} value={wanted} onChange={setWanted} />
+            <Button onClick={() => setReviewing(true)}>{t("recipes.review.title")}</Button>
+            {reviewing && <ReviewChecklist title={t("recipes.review.title")} description={t("recipes.review.hint")} options={RECIPES[0].ingredients.map((ingredient, index) => ({ value: String(index), label: ingredient.name, checked: false }))} onConfirm={async () => true} onClose={() => setReviewing(false)} />}
             {usedTags.map((tag) => (
               <Tag.CheckableTag
                 key={tag}
@@ -179,10 +185,30 @@ function DetailScreen({ id }: { id: string }) {
   const current = RECIPES.find((entry) => entry.id === id) ?? RECIPES[0];
   const [portions, setPortions] = useState(current.servings);
   const [done, setDone] = useState<Set<number>>(new Set());
-  const report = checkAvailability(current, PANTRY, portions);
+  const [pantry, setPantry] = useState(PANTRY);
+  const [reviewing, setReviewing] = useState(false);
+  const [shopping, setShopping] = useState<Set<string>>(new Set());
+  const [cooking, setCooking] = useState(false);
+  const report = checkAvailability(current, pantry, portions);
 
   return (
     <>
+      {reviewing && <ReviewChecklist title={t("recipes.review.title")} description={t("recipes.review.hint")} options={report.checks.filter((check) => check.state !== "ok").map((check) => ({ value: ingredientCheckKey(check), label: check.ingredient.name, checked: check.state !== "unlinked" }))} onConfirm={async (selected) => {
+        message.success(t("recipes.missingAdded", { count: selected.filter((key) => !shopping.has(key)).length }));
+        setShopping(new Set([...shopping, ...selected]));
+        return true;
+      }} onClose={() => setReviewing(false)} />}
+      <Modal open={cooking} onCancel={() => setCooking(false)} footer={null} destroyOnHidden>
+        {cooking && <CookForm recipe={current} items={pantry} initialServings={portions} onClose={() => setCooking(false)} onCook={async (_id, _servings, consumptions) => {
+          const next = new Map(pantry);
+          for (const { itemId, amount } of consumptions) {
+            const item = next.get(itemId);
+            if (item) next.set(itemId, { ...item, quantity: Math.max(0, item.quantity - amount) });
+          }
+          setPantry(next);
+          return [];
+        }} />}
+      </Modal>
       <Reveal>
         <Row gutter={[32, 24]} align="middle" style={{ marginBottom: 32 }}>
           <Col xs={24} md={11}>
@@ -211,12 +237,12 @@ function DetailScreen({ id }: { id: string }) {
                 <RatingBadge rating={RATINGS[current.id] ?? null} />
               </Flex>
               <Flex gap={8} wrap style={{ marginTop: 8 }}>
-                <Button type="primary" size="large" icon={<ChefHat />} onClick={() => message.info("Acá se abre “Cociné esto”: descuenta lo usado del inventario.")}>
+                <Button type="primary" size="large" icon={<ChefHat />} onClick={() => setCooking(true)}>
                   {t("recipes.cook.button")}
                 </Button>
-                <Tooltip title={report.lacking.length === 0 ? t("recipes.nothingMissing") : undefined}>
-                  <Button size="large" icon={<ListPlus />} disabled={report.lacking.length === 0} onClick={() => message.success(t("recipes.missingAdded", { count: report.lacking.length }))}>
-                    {t("recipes.addMissing", { count: report.lacking.length })}
+                <Tooltip title={report.checks.filter((check) => check.state !== "ok").length === 0 ? t("recipes.nothingMissing") : undefined}>
+                  <Button size="large" icon={<ListPlus />} disabled={report.checks.filter((check) => check.state !== "ok").length === 0} onClick={() => setReviewing(true)}>
+                    {t("recipes.addMissing", { count: report.checks.filter((check) => check.state !== "ok").length })}
                   </Button>
                 </Tooltip>
                 <Tooltip title={t("recipes.edit")}>

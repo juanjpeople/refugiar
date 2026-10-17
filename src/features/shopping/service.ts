@@ -3,6 +3,7 @@
  * Comprar algo vinculado al inventario lo repone en la misma transacción (vía el servicio
  * de inventario), así la lista y el stock nunca quedan desfasados.
  */
+import { roundQuantity } from "@/features/inventory/quantity";
 import { pruneActivity, recordActivity, setActivityPrivacy } from "@/features/activity/service";
 import { QUANTITY_TABLES, restockWithin } from "@/features/inventory/service";
 import { CURRENCIES, type Currency } from "@/features/prices/domain";
@@ -50,7 +51,7 @@ export async function addToListWithin(actor: Actor, raw: NewShoppingItem) {
     : undefined;
 
   if (existing) {
-    await db.shoppingList.update(existing.id, { quantity: Math.min(existing.quantity + input.quantity, SHOPPING_LIMITS.maxQuantity) });
+    await db.shoppingList.update(existing.id, { quantity: roundQuantity(Math.min(existing.quantity + input.quantity, SHOPPING_LIMITS.maxQuantity)) });
   } else {
     await db.shoppingList.add({ ...input, listId, estimateCents: parseMoney(estimate), id: createId(), status: "pending", createdBy: actor.id, createdAt: Date.now() });
     await recordActivity(actor, { module: "shopping", action: "create", entityId: input.inventoryItemId ?? input.name, entityName: input.name, listId, privacy: list.privacy ?? "family", createdBy: list.createdBy });
@@ -179,7 +180,7 @@ export async function recordPaid(actor: Actor | null, id: string, input: PaidInp
   await db.transaction("rw", [db.shoppingList, ...PRICE_TABLES()], async () => {
     const entry = await db.shoppingList.get(id);
     if (!entry) throw new NotFoundError("errors.notFound.item");
-    await db.shoppingList.update(id, { paidCents: unitCents * entry.quantity, paidCurrency: input.currency, store: input.store.trim() || undefined });
+    await db.shoppingList.update(id, { paidCents: Math.round(unitCents * entry.quantity), paidCurrency: input.currency, store: input.store.trim() || undefined });
     if (entry.inventoryItemId && can(actor, "prices.manage") && (await db.inventory.get(entry.inventoryItemId))) {
       await addPriceWithin(actor, { itemId: entry.inventoryItemId, amount: unitCents / 100, currency: input.currency, store: input.store, at: Date.now() });
     }

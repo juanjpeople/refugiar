@@ -514,3 +514,12 @@ Para que una función nueva no rehaga su página de lista ni su página de detal
    - 320px de ancho (sin scroll horizontal);
    - claro y oscuro.
 5. Cámara y AR: en un Android real (WebXR no se prueba en Playwright).
+
+## Recetas y alacena (octubre de 2026)
+
+`IngredientPicker` y `ReviewChecklist` se exportan desde UI y se muestran en el DemoBlock de Recetas. El recorrido usa el formulario real de consumo sobre datos en memoria. Mantiene ListPage, tokens y textos ES/EN. La revisión visual en celular, teclado y temas queda a cargo del dueño, según AGENTS.md; el agente no ejecuta navegadores.
+### Navegación móvil
+
+✅ MobileHeader y la barra de cinco destinos están documentados en /design
+(PanesSection). Más reutiliza Navigation con permisos. Queda la revisión visual
+del dueño en el teléfono.

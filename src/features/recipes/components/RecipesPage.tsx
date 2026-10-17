@@ -4,12 +4,15 @@ import { Button, Card, Flex, Segmented, Tag, Typography, theme } from "antd";
 import { motion } from "framer-motion";
 import { ChefHat, Clock, Plus, Users } from "lucide-react";
 import Link from "next/link";
-import { useState } from "react";
+import { useSearchParams } from "next/navigation";
+import { useInventoryOptions } from "@/features/shopping/hooks";
+import { usePermission } from "@/lib/auth/hooks";
+import { formatQuantity } from "@/features/inventory/format";
 import { Can } from "@/components/auth/Can";
 import { RequirePermission } from "@/components/auth/RequirePermission";
-import { ListPage, PrivacyBadge } from "@/components/ui";
+import { IngredientPicker, ListPage, PrivacyBadge } from "@/components/ui";
 import { useI18n } from "@/i18n";
-import { RECIPE_TAGS, type RecipeTag } from "../domain";
+import { normalizeIngredient, rankRecipes, recipeMatches, RECIPE_TAGS, type RecipeTag } from "../domain";
 import { useRecipes, type RecipeSummary } from "../hooks";
 import { AvailabilityTag, RatingBadge, RecipeCover } from "./RecipeBits";
 import { recipeHref } from "@/lib/navigation/routes";
@@ -22,15 +25,36 @@ function normalize(text: string) {
 }
 
 export function RecipesPage() {
-  const { t } = useI18n();
+  const { t, format } = useI18n();
   const { token } = theme.useToken();
   const recipes = useRecipes();
-  const [show, setShow] = useState<Show>("all");
-  const [tags, setTags] = useState<RecipeTag[]>([]);
-  const [query, setQuery] = useState("");
+  const params = useSearchParams();
+  const show: Show = params.get("show") === "ready" ? "ready" : "all";
+  const tags = params.getAll("tag").filter((tag): tag is RecipeTag => RECIPE_TAGS.includes(tag as RecipeTag));
+  const query = params.get("q") ?? "";
+  const wanted = params.getAll("use");
+  function setFilter(key: string, values: string[]) {
+    const next = new URL(window.location.href);
+    next.searchParams.delete(key);
+    for (const value of values.filter(Boolean)) next.searchParams.append(key, value);
+    window.history.replaceState(null, "", `${next.pathname}${next.search}${next.hash}`);
+  }
+  const setShow = (value: Show) => setFilter("show", value === "all" ? [] : [value]);
+  const setQuery = (value: string) => setFilter("q", [value]);
+  const setWanted = (values: string[]) => setFilter("use", [...new Map(values.map((value) => [normalizeIngredient(value), value.trim()])).values()]);
+  const canViewInventory = usePermission("inventory.view");
+  const inventory = useInventoryOptions(canViewInventory);
+  const pantry = canViewInventory ? (inventory ?? []).filter(({ item }) => !item.reusable && item.quantity > 0) : [];
+  const names = new Map((recipes ?? []).flatMap((recipe) => recipe.ingredients.map((ingredient) => [normalizeIngredient(ingredient.name), ingredient.name] as const)));
+  for (const { item } of pantry) names.set(normalizeIngredient(item.name), item.name);
+  const options = [...names.values()].map((name) => {
+    const matches = pantry.filter(({ item }) => normalizeIngredient(item.name) === normalizeIngredient(name));
+    const stock = matches.map(({ item, place }) => `${formatQuantity(t, item.quantity, item.unit, format.number)} · ${place}`).join("; ");
+    return { value: name, label: stock ? `${name} — ${stock}` : name, available: matches.length > 0 };
+  }).sort((a, b) => Number(b.available) - Number(a.available) || a.value.localeCompare(b.value));
 
   const words = normalize(query).split(/\s+/).filter(Boolean);
-  const visible = (recipes ?? []).filter((recipe) => {
+  const visible = rankRecipes(recipes ?? [], wanted).filter((recipe) => {
     if (show === "ready" && recipe.report.availability !== "ready") return false;
     if (!tags.every((tag) => recipe.tags.includes(tag))) return false;
     const haystack = normalize(`${recipe.name} ${recipe.ingredients.map((ingredient) => ingredient.name).join(" ")}`);
@@ -56,7 +80,7 @@ export function RecipesPage() {
         items={recipes}
         visible={visible}
         getKey={(recipe) => recipe.id}
-        renderItem={(recipe) => <RecipeCard recipe={recipe} />}
+        renderItem={(recipe) => <RecipeCard recipe={recipe} wanted={wanted} />}
         empty={{ icon: ChefHat, title: t("recipes.emptyTitle"), description: t("recipes.emptyText"), action: newButton }}
         noMatch={{ title: t("recipes.noMatchTitle"), description: t("recipes.noMatchText") }}
         search={{ value: query, onChange: setQuery, placeholder: t("recipes.search") }}
@@ -71,20 +95,23 @@ export function RecipesPage() {
           />
         }
         below={
-          usedTags.length > 0 && (
+          <Flex vertical gap={token.margin}>
+            <IngredientPicker options={options} value={wanted} onChange={setWanted} />
+            {usedTags.length > 0 && (
             <Flex gap={6} wrap>
               {usedTags.map((tag) => (
                 <Tag.CheckableTag
                   key={tag}
                   checked={tags.includes(tag)}
-                  onChange={(checked) => setTags((current) => (checked ? [...current, tag] : current.filter((value) => value !== tag)))}
+                  onChange={(checked) => setFilter("tag", checked ? [...tags, tag] : tags.filter((value) => value !== tag))}
                   style={{ margin: 0, paddingBlock: 2, border: `1px solid ${tags.includes(tag) ? "transparent" : token.colorBorderSecondary}` }}
                 >
                   {t(`recipes.tags.${tag}`)}
                 </Tag.CheckableTag>
               ))}
             </Flex>
-          )
+            )}
+          </Flex>
         }
         minItemWidth={260}
       />
@@ -93,7 +120,7 @@ export function RecipesPage() {
 }
 
 /** Tarjeta del recetario: portada que se acerca, disponibilidad, tiempo, porciones y lo que falta. */
-export function RecipeCard({ recipe }: { recipe: RecipeSummary }) {
+export function RecipeCard({ recipe, wanted = [] }: { recipe: RecipeSummary; wanted?: string[] }) {
   const { t } = useI18n();
   const { token } = theme.useToken();
 
@@ -129,6 +156,7 @@ export function RecipeCard({ recipe }: { recipe: RecipeSummary }) {
             </span>
             <RatingBadge rating={recipe.rating} />
           </Flex>
+          {wanted.length > 0 && <Typography.Text type="secondary">{t("recipes.want.matches", { count: recipeMatches(recipe, wanted), total: wanted.length })}</Typography.Text>}
           {recipe.report.lacking.length > 0 && (
             <Typography.Text type="secondary" style={{ fontSize: token.fontSizeSM }} ellipsis>
               {t("recipes.lacking", { list: recipe.report.lacking.map((check) => check.ingredient.name).join(", ") })}

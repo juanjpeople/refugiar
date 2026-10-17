@@ -35,12 +35,14 @@ for (const theme of ["light", "dark"] as const) {
     await project.press("Enter");
     await expect(page).toHaveURL(/proyectos\/ver/);
     await page.goto("/privacidad");
-    if (testInfo.project.name === "celular") await page.getByRole("button", { name: "Abrir menú", exact: true }).click();
-    const selected = page.getByRole("navigation", { name: "Principal", exact: true }).getByRole("link", { name: "Privacidad", exact: true });
+    const selected = testInfo.project.name === "celular" ? page.getByRole("link", { name: "Más", exact: true }) : page.getByRole("navigation", { name: "Principal", exact: true }).getByRole("link", { name: "Privacidad", exact: true });
     await expect(selected).toHaveAttribute("aria-current", "page");
     const colors = await selected.evaluate(element => ({ foreground: getComputedStyle(element).color, background: getComputedStyle(element.querySelector("span")!).backgroundColor }));
     expect(contrast(colors.foreground, colors.background)).toBeGreaterThanOrEqual(4.5);
-    if (testInfo.project.name === "celular") await selected.click();
+    if (testInfo.project.name === "celular") {
+      await selected.click();
+      await page.getByRole("main").getByRole("link", { name: "Privacidad", exact: true }).click();
+    }
     const eyebrow = await page.getByRole("main").locator("strong").first().evaluate(element => getComputedStyle(element).color);
     expect(contrast(eyebrow, colors.background)).toBeGreaterThanOrEqual(4.5);
     expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(page.viewportSize()!.width);

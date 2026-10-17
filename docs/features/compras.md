@@ -4,6 +4,8 @@ Qué falta, cuánto sale y cuánto se gastó.
 
 ## Qué hace
 
+- Desde Recetas se revisan los faltantes, incluidos ingredientes sin vínculo. Se descuentan las cantidades ya pendientes de compra; repetir la acción no vuelve a sumar el mismo faltante. Las cantidades admiten tres decimales y los ítems sueltos conservan medidas de cocina como tazas.
+
 - **Para revisar**: lo que cruza el mínimo del inventario se sugiere solo. Se suma o se descarta.
 - **Varias listas**, cada una con presupuesto opcional. La lista de la casa recibe las sugerencias.
 - Al marcar algo vinculado al inventario, se **repone** y se puede anotar cuánto salió.

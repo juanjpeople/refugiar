@@ -63,8 +63,9 @@ describe("consumo", () => {
     assert.deepEqual(planConsumption(0, 1), { quantity: 0, consumed: 0, missing: 1 });
   });
 
-  test("solo cantidades enteras positivas", () => {
-    for (const amount of [0, -1, 1.5, Number.NaN, 1_000_000]) {
+  test("cantidades positivas finitas, incluidos decimales", () => {
+    assert.deepEqual(planConsumption(1, 0.25), { quantity: 0.75, consumed: 0.25, missing: 0 });
+    for (const amount of [0, -1, Number.POSITIVE_INFINITY, Number.NaN, 1_000_000]) {
       assert.throws(() => planConsumption(5, amount), ValidationError, String(amount));
     }
   });

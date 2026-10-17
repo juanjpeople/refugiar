@@ -3,6 +3,7 @@
  * sugerencias automáticas que aparecen cuando algo del inventario queda bajo o se agota.
  * Sin React ni base de datos.
  */
+import { roundQuantity } from "@/features/inventory/quantity";
 import { getStockStatus, INVENTORY_LIMITS, isUnit, type InventoryItem, type StockStatus } from "@/features/inventory/domain";
 import { CURRENCIES, type Currency, type PriceSummary } from "@/features/prices/domain";
 import { isAppearanceColor, isAppearanceIcon, type AppearanceColor, type AppearanceIcon } from "@/lib/appearance";
@@ -131,10 +132,10 @@ export function parseNewShoppingItem(input: NewShoppingItem): NewShoppingItem {
   if (!name) throw new ValidationError("errors.validation.nameRequired");
   if (name.length > SHOPPING_LIMITS.nameMaxLength) throw new ValidationError("errors.validation.nameTooLong", { max: SHOPPING_LIMITS.nameMaxLength });
   parseShoppingQuantity(input.quantity);
-  if (!isUnit(input.unit)) throw new ValidationError("errors.validation.unitInvalid");
+  if (input.inventoryItemId ? !isUnit(input.unit) : typeof input.unit !== "string" || input.unit.length > 20) throw new ValidationError("errors.validation.unitInvalid");
   return {
     name,
-    quantity: input.quantity,
+    quantity: roundQuantity(input.quantity),
     unit: input.unit,
     inventoryItemId: input.inventoryItemId || undefined,
     listId: input.listId || HOME_LIST_ID,
@@ -143,10 +144,10 @@ export function parseNewShoppingItem(input: NewShoppingItem): NewShoppingItem {
 }
 
 export function parseShoppingQuantity(quantity: number): number {
-  if (!Number.isInteger(quantity) || quantity < 1 || quantity > SHOPPING_LIMITS.maxQuantity) {
+  if (!Number.isFinite(quantity) || quantity < 0.001 || quantity > SHOPPING_LIMITS.maxQuantity) {
     throw new ValidationError("errors.validation.quantityInvalid");
   }
-  return quantity;
+  return roundQuantity(quantity);
 }
 
 /** Cuánto comprar para volver al mínimo (al menos 1). */

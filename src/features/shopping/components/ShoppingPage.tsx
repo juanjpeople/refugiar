@@ -456,7 +456,7 @@ function RowItem({ row, currency, targets }: { row: ShoppingRow; currency: Curre
               <QuickPrice row={row} currency={currency} />
             ) : (
               <>
-                <QuantityStepper value={row.quantity} unit={unit(row.quantity)} min={1} onStep={(delta) => setQuantity(row.id, row.quantity + delta)} />
+                <QuantityStepper value={row.quantity} unit={unit(row.quantity)} min={0.001} precision={3} onChange={(value) => setQuantity(row.id, value)} onStep={(delta) => setQuantity(row.id, Math.max(0.001, row.quantity + delta))} />
                 <Dropdown
                   trigger={["click"]}
                   placement="bottomRight"

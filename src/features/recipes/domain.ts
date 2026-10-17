@@ -3,6 +3,7 @@
  * y porciones. Sin React ni base de datos.
  */
 import { INVENTORY_LIMITS, isUnit, type InventoryItem, type Unit } from "@/features/inventory/domain";
+import { convertQuantity, isMeasuredUnit, normalizeUnit, roundQuantity } from "@/features/inventory/quantity";
 import { ValidationError } from "@/lib/errors";
 import { isPrivacy, type Privacy } from "@/lib/sync/scope";
 
@@ -15,7 +16,7 @@ export interface RecipeIngredient {
   itemId?: string;
   /** Nombre visible. Si está vinculado, se guarda igual (por si el producto se borra). */
   name: string;
-  /** Para la cantidad de porciones de la receta. Vinculado: entero, en la unidad del producto. */
+  /** Para la cantidad de porciones de la receta. Medidas compatibles con el producto vinculado; admite decimales. */
   quantity: number;
   unit: string;
 }
@@ -59,12 +60,12 @@ function parseIngredient(input: RecipeIngredient): RecipeIngredient {
   if (!name) throw new ValidationError("errors.validation.ingredientName");
   if (name.length > INVENTORY_LIMITS.nameMaxLength) throw new ValidationError("errors.validation.nameTooLong", { max: INVENTORY_LIMITS.nameMaxLength });
   const linked = !!input.itemId;
-  // Vinculado: entero (como el inventario). Suelto: se permite "0,5 taza".
-  const validQuantity = typeof input.quantity === "number" && Number.isFinite(input.quantity) && input.quantity > 0 && input.quantity <= INVENTORY_LIMITS.maxQuantity;
-  if (!validQuantity || (linked && !Number.isInteger(input.quantity))) throw new ValidationError("errors.validation.quantityInvalid");
-  const unit = input.unit?.trim() ?? "";
-  if (linked && !isUnit(unit)) throw new ValidationError("errors.validation.unitInvalid");
-  return { itemId: input.itemId || undefined, name, quantity: input.quantity, unit: unit.slice(0, 20) };
+  // Las medidas admiten decimales; las unidades contables vinculadas siguen siendo enteras.
+  const validQuantity = typeof input.quantity === "number" && Number.isFinite(input.quantity) && input.quantity >= 0.001 && input.quantity <= INVENTORY_LIMITS.maxQuantity;
+  if (!validQuantity || (linked && !isMeasuredUnit(input.unit) && !Number.isInteger(input.quantity))) throw new ValidationError("errors.validation.quantityInvalid");
+  const unit = normalizeUnit(input.unit ?? "");
+  if (linked && !isUnit(unit) && unit !== "ml") throw new ValidationError("errors.validation.unitInvalid");
+  return { itemId: input.itemId || undefined, name, quantity: roundQuantity(input.quantity), unit: unit.slice(0, 20) };
 }
 
 // --- Pegar una receta --------------------------------------------------------------
@@ -155,11 +156,11 @@ export function parseRecipe(input: RecipeInput): RecipeInput & { privacy: Privac
 
 // --- Porciones y disponibilidad -------------------------------------------------
 
-/** Cantidad de un ingrediente para otra cantidad de porciones. Lo vinculado se redondea para arriba (no se cocina con media lata). */
-export function scaleQuantity(ingredient: Pick<RecipeIngredient, "quantity" | "itemId">, from: number, to: number): number {
+/** Cantidad de un ingrediente para otra cantidad de porciones. Las unidades contables se redondean hacia arriba; las medidas conservan tres decimales. */
+export function scaleQuantity(ingredient: Pick<RecipeIngredient, "quantity" | "itemId"> & { unit?: string }, from: number, to: number): number {
   const scaled = (ingredient.quantity * to) / from;
-  if (ingredient.itemId) return Math.max(1, Math.ceil(scaled - 1e-9));
-  return Math.round(scaled * 100) / 100;
+  if (ingredient.itemId && !isMeasuredUnit(ingredient.unit ?? "unidades")) return Math.max(1, Math.ceil(scaled - 1e-9));
+  return Math.max(0.001, roundQuantity(scaled));
 }
 
 export type IngredientState = "ok" | "short" | "missing" | "unlinked";
@@ -189,18 +190,44 @@ export interface AvailabilityReport {
  * (de los sueltos no se sabe). "Falta poco" = falta uno, o hasta un cuarto de lo vinculado.
  */
 export function checkAvailability(recipe: Pick<Recipe, "ingredients" | "servings">, items: Map<string, InventoryItem>, servings = recipe.servings): AvailabilityReport {
-  const checks = recipe.ingredients.map((ingredient): IngredientCheck => {
+  // Agrupar antes de comparar: masa y relleno comparten el mismo stock.
+  const grouped = new Map<string, RecipeIngredient>();
+  for (const ingredient of recipe.ingredients) {
+    const item = ingredient.itemId ? items.get(ingredient.itemId) : undefined;
+    const converted = item && !item.reusable ? convertQuantity(ingredient.quantity, ingredient.unit, item.unit) : null;
+    const resolved = converted !== null && item ? { ...ingredient, quantity: converted, unit: item.unit } : ingredient;
+    const key = converted !== null ? `item:${ingredient.itemId}` : `free:${normalizeIngredient(ingredient.name)}:${normalizeUnit(ingredient.unit)}`;
+    const previous = grouped.get(key);
+    grouped.set(key, previous ? { ...previous, quantity: roundQuantity(previous.quantity + resolved.quantity) } : { ...resolved });
+  }
+  const checks = [...grouped.values()].map((ingredient): IngredientCheck => {
     const needed = scaleQuantity(ingredient, recipe.servings, servings);
     const item = ingredient.itemId ? items.get(ingredient.itemId) : undefined;
-    if (!item) return { ingredient, needed, state: "unlinked" };
-    const state: IngredientState = item.quantity >= needed ? "ok" : item.quantity > 0 ? "short" : "missing";
-    return { ingredient, needed, have: item.quantity, state, item };
+    if (!item || item.reusable || convertQuantity(needed, ingredient.unit, item.unit) === null) return { ingredient, needed, state: "unlinked" };
+    const have = roundQuantity(item.quantity);
+    const state: IngredientState = have >= needed ? "ok" : have > 0 ? "short" : "missing";
+    return { ingredient, needed, have, state, item };
   });
   const linked = checks.filter((check) => check.state !== "unlinked");
   const lacking = linked.filter((check) => check.state !== "ok");
   const availability: Availability =
-    linked.length === 0 ? "unknown" : lacking.length === 0 ? "ready" : lacking.length <= Math.max(1, Math.floor(linked.length / 4)) ? "almost" : "missing";
+    linked.length === 0 ? "unknown" : lacking.length === 0 ? (checks.some((check) => check.state === "unlinked") ? "unknown" : "ready") : lacking.length <= Math.max(1, Math.floor(linked.length / 4)) ? "almost" : "missing";
   return { availability, checks, lacking };
+}
+
+export const normalizeIngredient = (text: string) => text.normalize("NFD").replace(/\p{Diacritic}/gu, "").trim().toLowerCase();
+
+/** Coincidencia por nombre completo; nunca inventa recetas. */
+export function recipeMatches(recipe: Pick<Recipe, "ingredients">, names: string[]): number {
+  const ingredients = new Set(recipe.ingredients.map((ingredient) => normalizeIngredient(ingredient.name)));
+  return new Set(names.map(normalizeIngredient).filter((name) => ingredients.has(name))).size;
+}
+
+export function rankRecipes<T extends Recipe & { report: AvailabilityReport }>(recipes: T[], names: string[]): T[] {
+  if (!names.length) return recipes;
+  const order: Record<Availability, number> = { ready: 0, almost: 1, unknown: 2, missing: 3 };
+  return recipes.filter((recipe) => recipeMatches(recipe, names) > 0).sort((a, b) =>
+    recipeMatches(b, names) - recipeMatches(a, names) || order[a.report.availability] - order[b.report.availability] || a.report.lacking.length - b.report.lacking.length || a.minutes - b.minutes || a.name.localeCompare(b.name));
 }
 
 /** Puntaje promedio (1 a 5), o `null` si nadie puntuó. */
@@ -209,3 +236,6 @@ export function averageRating(ratings: (number | undefined)[]): { average: numbe
   if (valid.length === 0) return null;
   return { average: valid.reduce((sum, rating) => sum + rating, 0) / valid.length, count: valid.length };
 }
+
+/** Identidad estable durante la revisión, aunque cambie el orden de la receta. */
+export const ingredientCheckKey = (check: IngredientCheck) => JSON.stringify([check.ingredient.itemId ?? "", check.ingredient.name, check.ingredient.unit]);
