@@ -906,6 +906,129 @@
         "containerId": "71d7a7c8-fee2-47de-8c64-6bbc25faecd7",
         "createdAt": 1791164618643,
         "updatedAt": 1791164618643
+      },
+      {
+        "id": "b49e8e4d-f987-5dd8-b1a9-bc4fe56b0d6b",
+        "name": "Azúcar Plus DIA común tipo A · 1 kg",
+        "quantity": 2,
+        "unit": "unidades",
+        "minThreshold": 1,
+        "autoSuggest": false,
+        "containerId": "71d7a7c8-fee2-47de-8c64-6bbc25faecd7",
+        "createdAt": 1791164618645,
+        "updatedAt": 1791164618645,
+        "barcode": "8480017298515"
+      },
+      {
+        "id": "dffd6ec7-c5de-539c-9519-4e8760d77b0e",
+        "name": "Azúcar común tipo A Domino · 1 kg",
+        "quantity": 1,
+        "unit": "unidades",
+        "minThreshold": 1,
+        "autoSuggest": false,
+        "containerId": "71d7a7c8-fee2-47de-8c64-6bbc25faecd7",
+        "createdAt": 1791164618645,
+        "updatedAt": 1791164618645,
+        "barcode": "7799086000389"
+      },
+      {
+        "id": "d5159d92-779d-5a85-ab5c-4216bf13d9b8",
+        "name": "Arroz largo fino DIA · 1 kg",
+        "quantity": 3,
+        "unit": "unidades",
+        "minThreshold": 1,
+        "autoSuggest": false,
+        "containerId": "71d7a7c8-fee2-47de-8c64-6bbc25faecd7",
+        "createdAt": 1791164618645,
+        "updatedAt": 1791164618645
+      },
+      {
+        "id": "21dbd28a-7e93-59f4-8247-24442c9ae25b",
+        "name": "Fideos codito DIA · 500 g",
+        "quantity": 4,
+        "unit": "unidades",
+        "minThreshold": 1,
+        "autoSuggest": false,
+        "containerId": "71d7a7c8-fee2-47de-8c64-6bbc25faecd7",
+        "createdAt": 1791164618645,
+        "updatedAt": 1791164618645
+      },
+      {
+        "id": "f83079e7-8994-5256-9708-78d575e0d13c",
+        "name": "Harina para cocinar",
+        "quantity": 1500,
+        "unit": "gr",
+        "minThreshold": 1,
+        "autoSuggest": false,
+        "containerId": "71d7a7c8-fee2-47de-8c64-6bbc25faecd7",
+        "createdAt": 1791164618645,
+        "updatedAt": 1791164618645
+      },
+      {
+        "id": "b7c9c1e6-afd7-5833-8b42-a707595b5478",
+        "name": "Leche para cocinar",
+        "quantity": 2,
+        "unit": "litros",
+        "minThreshold": 1,
+        "autoSuggest": false,
+        "containerId": "71d7a7c8-fee2-47de-8c64-6bbc25faecd7",
+        "createdAt": 1791164618645,
+        "updatedAt": 1791164618645
+      },
+      {
+        "id": "82e50dc9-e7e2-5cee-aaa0-a3e41a5f141c",
+        "name": "Queso para cocinar",
+        "quantity": 20,
+        "unit": "gr",
+        "minThreshold": 1,
+        "autoSuggest": false,
+        "containerId": "71d7a7c8-fee2-47de-8c64-6bbc25faecd7",
+        "createdAt": 1791164618645,
+        "updatedAt": 1791164618645
+      },
+      {
+        "id": "f58706cc-13ed-5f07-998c-229a0a716854",
+        "name": "Levadura seca para cocinar",
+        "quantity": 0,
+        "unit": "gr",
+        "minThreshold": 1,
+        "autoSuggest": false,
+        "containerId": "71d7a7c8-fee2-47de-8c64-6bbc25faecd7",
+        "createdAt": 1791164618645,
+        "updatedAt": 1791164618645
+      },
+      {
+        "id": "3e1bbd5d-078f-58de-a837-4a68d9e2373c",
+        "name": "Avena para cocinar",
+        "quantity": 300,
+        "unit": "gr",
+        "minThreshold": 1,
+        "autoSuggest": false,
+        "containerId": "71d7a7c8-fee2-47de-8c64-6bbc25faecd7",
+        "createdAt": 1791164618645,
+        "updatedAt": 1791164618645
+      },
+      {
+        "id": "2becf4e9-0114-5da4-999c-8910e08daec5",
+        "name": "Banana",
+        "quantity": 2,
+        "unit": "unidades",
+        "minThreshold": 1,
+        "autoSuggest": false,
+        "containerId": "71d7a7c8-fee2-47de-8c64-6bbc25faecd7",
+        "createdAt": 1791164618645,
+        "updatedAt": 1791164618645
+      },
+      {
+        "id": "5ff7b0e9-2eeb-593e-90fb-f7f811f95c47",
+        "name": "Pasas para cocinar",
+        "quantity": 25,
+        "unit": "gr",
+        "minThreshold": 1,
+        "autoSuggest": false,
+        "containerId": "71d7a7c8-fee2-47de-8c64-6bbc25faecd7",
+        "createdAt": 1791164618645,
+        "updatedAt": 1791164618645
       }
     ],
     "shoppingList": [
@@ -1128,6 +1251,21 @@
         "status": "pending",
         "createdBy": "profile-admin",
         "createdAt": 1791163188883
+      },
+      {
+        "id": "demo-bought-flour",
+        "listId": "list-home",
+        "name": "Harina 000 1 kg",
+        "quantity": 1,
+        "unit": "paquetes",
+        "status": "bought",
+        "paidCents": 105000,
+        "paidCurrency": "ARS",
+        "store": "Comercio de ejemplo",
+        "createdBy": "profile-admin",
+        "createdAt": 1791164618645,
+        "boughtAt": 1791164618645,
+        "boughtBy": "profile-admin"
       }
     ],
     "activity": [
@@ -9915,6 +10053,42 @@
         "createdBy": "4fa276ae-dfbf-4c14-af72-e999e458dfa0",
         "createdAt": 1791164618679,
         "updatedAt": 1791164618679
+      },
+      {
+        "id": "demo-meal-be96cab3-e5f7-4292-b4e3-583d614d03df",
+        "title": "Pizza de la familia",
+        "start": 1791164618645,
+        "end": 1791164618645,
+        "allDay": true,
+        "repeat": "none",
+        "participantIds": [],
+        "color": "orange",
+        "privacy": "family",
+        "meal": {
+          "recipeId": "be96cab3-e5f7-4292-b4e3-583d614d03df",
+          "servings": 4
+        },
+        "createdBy": "profile-admin",
+        "createdAt": 1791164618645,
+        "updatedAt": 1791164618645
+      },
+      {
+        "id": "demo-meal-f64a28c1-f5df-43f1-8eb2-0e7872de7ef9",
+        "title": "Panqueques caseros",
+        "start": 1791251018645,
+        "end": 1791251018645,
+        "allDay": true,
+        "repeat": "none",
+        "participantIds": [],
+        "color": "orange",
+        "privacy": "family",
+        "meal": {
+          "recipeId": "f64a28c1-f5df-43f1-8eb2-0e7872de7ef9",
+          "servings": 4
+        },
+        "createdBy": "profile-admin",
+        "createdAt": 1791164618645,
+        "updatedAt": 1791164618645
       }
     ],
     "shoppingCandidates": [
@@ -10062,9 +10236,9 @@
           }
         ],
         "steps": [
-          "Retirar el centro de las manzanas.",
-          "Espolvorear con azúcar y canela.",
-          "Hornear a 180 °C con un poco de agua en la fuente hasta tiernas."
+          "Retirá el centro de las manzanas y ponelas en una fuente.",
+          "Espolvoreá con azúcar y canela. Agregá un poco de agua en la fuente.",
+          "Horneá a 180 °C unos 30 minutos. Comprobá que estén tiernas; el tiempo depende del tamaño."
         ],
         "tags": [
           "dessert"
@@ -10072,7 +10246,12 @@
         "id": "2c52e157-a016-4a53-8a30-7b922edd666c",
         "createdBy": "4fa276ae-dfbf-4c14-af72-e999e458dfa0",
         "createdAt": 1791164618655,
-        "updatedAt": 1791164618655
+        "updatedAt": 1791164618655,
+        "stepSeconds": [
+          0,
+          0,
+          1800
+        ]
       },
       {
         "name": "Galletitas de avena",
@@ -10083,23 +10262,26 @@
           {
             "name": "Avena",
             "quantity": 200,
-            "unit": "g"
+            "unit": "gr",
+            "itemId": "3e1bbd5d-078f-58de-a837-4a68d9e2373c"
           },
           {
             "name": "Banana",
             "quantity": 2,
-            "unit": "unidades"
+            "unit": "unidades",
+            "itemId": "2becf4e9-0114-5da4-999c-8910e08daec5"
           },
           {
             "name": "Pasas",
             "quantity": 50,
-            "unit": "g"
+            "unit": "gr",
+            "itemId": "5ff7b0e9-2eeb-593e-90fb-f7f811f95c47"
           }
         ],
         "steps": [
-          "Pisar las bananas y mezclar con avena y pasas.",
-          "Formar galletitas sobre una placa.",
-          "Hornear a 180 °C hasta que estén firmes y doradas."
+          "Pisá las bananas y mezclalas con la avena y las pasas.",
+          "Formá galletitas sobre una placa.",
+          "Horneá a 180 °C unos 15 minutos. Revisá que estén firmes y doradas."
         ],
         "tags": [
           "dessert",
@@ -10108,7 +10290,12 @@
         "id": "53b9f67b-7b44-45bd-89a1-bd32154e8aa1",
         "createdBy": "profile-admin",
         "createdAt": 1791164618653,
-        "updatedAt": 1791164618653
+        "updatedAt": 1791164618653,
+        "stepSeconds": [
+          0,
+          0,
+          900
+        ]
       },
       {
         "name": "Ensalada de lentejas",
@@ -10134,15 +10321,20 @@
           }
         ],
         "steps": [
-          "Cocinar las lentejas hasta que estén tiernas.",
-          "Dejar enfriar y mezclar con las verduras cortadas.",
-          "Condimentar a gusto."
+          "Enjuagá las lentejas. Cocinalas en agua unos 25 minutos; comprobá que estén tiernas y seguí las indicaciones del envase.",
+          "Escurrí, dejá enfriar y mezclá con las verduras cortadas.",
+          "Condimentá a gusto y serví."
         ],
         "tags": [],
         "id": "55b0d7cd-8fde-4488-9c73-274f9af57a2d",
         "createdBy": "profile-adult",
         "createdAt": 1791163188965,
-        "updatedAt": 1791163188965
+        "updatedAt": 1791163188965,
+        "stepSeconds": [
+          1500,
+          0,
+          0
+        ]
       },
       {
         "name": "Budín de limón",
@@ -10153,7 +10345,8 @@
           {
             "name": "Harina",
             "quantity": 250,
-            "unit": "g"
+            "unit": "gr",
+            "itemId": "f83079e7-8994-5256-9708-78d575e0d13c"
           },
           {
             "name": "Azúcar",
@@ -10163,12 +10356,14 @@
           {
             "name": "Huevos",
             "quantity": 2,
-            "unit": "unidades"
+            "unit": "unidades",
+            "itemId": "9f6d6950-2b69-40a0-998a-23bdf0a52fd7"
           },
           {
             "name": "Leche",
             "quantity": 100,
-            "unit": "ml"
+            "unit": "ml",
+            "itemId": "b7c9c1e6-afd7-5833-8b42-a707595b5478"
           },
           {
             "name": "Aceite",
@@ -10187,9 +10382,9 @@
           }
         ],
         "steps": [
-          "Batir huevos, azúcar, aceite, leche, jugo y ralladura.",
-          "Incorporar harina y polvo de hornear.",
-          "Hornear en molde a 170 °C hasta que un palillo salga limpio."
+          "Batí los huevos con el azúcar, el aceite, la leche, el jugo y la ralladura de limón.",
+          "Incorporá la harina y el polvo de hornear. Volcá en un molde aceitado.",
+          "Horneá a 170 °C unos 40 minutos. Comprobá el centro con un palillo: debe salir limpio."
         ],
         "tags": [
           "dessert",
@@ -10198,7 +10393,12 @@
         "id": "614a5b54-6107-4519-b242-b55541892786",
         "createdBy": "4fa276ae-dfbf-4c14-af72-e999e458dfa0",
         "createdAt": 1791164618654,
-        "updatedAt": 1791164618654
+        "updatedAt": 1791164618654,
+        "stepSeconds": [
+          0,
+          0,
+          2400
+        ]
       },
       {
         "name": "Fideos con salsa rápida",
@@ -10223,9 +10423,9 @@
           }
         ],
         "steps": [
-          "Rehogar la cebolla y agregar el tomate.",
-          "Cocinar la salsa a fuego bajo.",
-          "Hervir los fideos según el envase y mezclar con la salsa."
+          "Rehogá la cebolla unos 5 minutos y agregá el tomate.",
+          "Cociná la salsa a fuego bajo unos 15 minutos, revolviendo de vez en cuando.",
+          "Herví los fideos el tiempo indicado en su envase. Escurrí y mezclá con la salsa."
         ],
         "tags": [
           "budget",
@@ -10234,7 +10434,12 @@
         "id": "71fdd246-d49d-4df8-9c8f-431efd516cf3",
         "createdBy": "5a258a45-7fa3-46c3-a6f5-c84d5a0ca545",
         "createdAt": 1791164618656,
-        "updatedAt": 1791164618656
+        "updatedAt": 1791164618656,
+        "stepSeconds": [
+          300,
+          900,
+          0
+        ]
       },
       {
         "name": "Omelette de queso",
@@ -10245,18 +10450,20 @@
           {
             "name": "Huevos",
             "quantity": 2,
-            "unit": "unidades"
+            "unit": "unidades",
+            "itemId": "9f6d6950-2b69-40a0-998a-23bdf0a52fd7"
           },
           {
             "name": "Queso",
             "quantity": 40,
-            "unit": "g"
+            "unit": "gr",
+            "itemId": "82e50dc9-e7e2-5cee-aaa0-a3e41a5f141c"
           }
         ],
         "steps": [
-          "Batir los huevos.",
-          "Verter en sartén caliente ligeramente aceitada.",
-          "Agregar el queso, doblar y cocinar hasta cuajar."
+          "Batí los huevos.",
+          "Verté en una sartén caliente ligeramente aceitada. Cociná unos 2 minutos a fuego moderado.",
+          "Agregá el queso, doblá y cociná unos 2 minutos más. Revisá que el huevo quede completamente cuajado."
         ],
         "tags": [
           "quick"
@@ -10264,7 +10471,12 @@
         "id": "800fbbfe-1384-401b-b409-392dcdbb018e",
         "createdBy": "profile-adult",
         "createdAt": 1791164618655,
-        "updatedAt": 1791164618655
+        "updatedAt": 1791164618655,
+        "stepSeconds": [
+          0,
+          120,
+          120
+        ]
       },
       {
         "name": "Arroz con tomate — 10 porciones",
@@ -10286,14 +10498,22 @@
           }
         ],
         "steps": [
-          "Ejemplo para probar el vínculo de ingredientes con el inventario.",
-          "Revisar los ingredientes disponibles antes de usar la acción Cocinar."
+          "Poné a hervir agua suficiente para el arroz. Revisá en el envase la proporción y el tiempo.",
+          "Agregá el arroz y cociná unos 18 minutos, o el tiempo indicado en el envase. Probá que esté tierno antes de escurrir.",
+          "Mientras tanto, calentá el tomate triturado a fuego bajo unos 5 minutos. Revolvé para que no se pegue.",
+          "Mezclá el arroz con el tomate. Al terminar, revisá el consumo antes de descontar del inventario."
         ],
         "tags": [],
         "id": "834dd758-d5bc-4f20-84e9-70865a5a8fc3",
         "createdBy": "profile-admin",
         "createdAt": 1791163188884,
-        "updatedAt": 1791163188884
+        "updatedAt": 1791163188884,
+        "stepSeconds": [
+          0,
+          1080,
+          300,
+          0
+        ]
       },
       {
         "name": "Sopa de calabaza",
@@ -10318,9 +10538,9 @@
           }
         ],
         "steps": [
-          "Rehogar la cebolla.",
-          "Agregar calabaza en cubos y caldo.",
-          "Cocinar hasta ablandar y licuar con cuidado."
+          "Rehogá la cebolla unos 5 minutos.",
+          "Agregá la calabaza en cubos y el caldo. Cociná unos 25 minutos, hasta que la calabaza esté tierna.",
+          "Retirá del fuego. Dejá bajar la temperatura antes de licuar y seguí las indicaciones de tu equipo para líquidos calientes."
         ],
         "tags": [
           "vegetarian",
@@ -10329,7 +10549,12 @@
         "id": "85eb75c1-3075-41ea-8e9f-104c122a795d",
         "createdBy": "profile-adult",
         "createdAt": 1791164618654,
-        "updatedAt": 1791164618654
+        "updatedAt": 1791164618654,
+        "stepSeconds": [
+          300,
+          1500,
+          0
+        ]
       },
       {
         "name": "Hummus casero",
@@ -10354,9 +10579,9 @@
           }
         ],
         "steps": [
-          "Procesar los garbanzos con tahini y limón.",
-          "Agregar agua de a poco hasta lograr una crema.",
-          "Servir con aceite de oliva y pimentón."
+          "Procesá los garbanzos ya cocidos con el tahini y el limón.",
+          "Agregá agua de a poco hasta lograr una crema.",
+          "Serví con aceite de oliva y pimentón si tenés. No requiere cocción."
         ],
         "tags": [
           "vegan",
@@ -10365,7 +10590,12 @@
         "id": "8e500411-41aa-4b67-b54f-2885677ef153",
         "createdBy": "profile-adult",
         "createdAt": 1791164618652,
-        "updatedAt": 1791164618652
+        "updatedAt": 1791164618652,
+        "stepSeconds": [
+          0,
+          0,
+          0
+        ]
       },
       {
         "name": "Guiso de lentejas y verduras",
@@ -10390,9 +10620,9 @@
           }
         ],
         "steps": [
-          "Enjuagar las lentejas.",
-          "Rehogar las verduras cortadas, agregar lentejas y cubrir con agua.",
-          "Cocinar hasta que todo esté tierno, reponiendo agua si hace falta."
+          "Enjuagá las lentejas y cortá las verduras.",
+          "Rehogá las verduras unos 5 minutos. Agregá las lentejas y cubrí con agua.",
+          "Cociná a fuego suave unos 35 minutos. Revisá que las lentejas y las papas estén tiernas; reponé agua si hace falta."
         ],
         "tags": [
           "vegan",
@@ -10401,7 +10631,12 @@
         "id": "9097b101-a965-4bf5-a5bc-2f121056491a",
         "createdBy": "4fa276ae-dfbf-4c14-af72-e999e458dfa0",
         "createdAt": 1791164618653,
-        "updatedAt": 1791164618653
+        "updatedAt": 1791164618653,
+        "stepSeconds": [
+          0,
+          300,
+          2100
+        ]
       },
       {
         "name": "Ensalada de garbanzos",
@@ -10426,9 +10661,9 @@
           }
         ],
         "steps": [
-          "Escurrir los garbanzos.",
-          "Cortar las verduras y mezclar.",
-          "Aliñar con aceite, limón y sal."
+          "Escurrí los garbanzos ya cocidos.",
+          "Cortá las verduras y mezclá.",
+          "Aliñá con aceite, limón y sal a gusto. No requiere cocción."
         ],
         "tags": [
           "vegan",
@@ -10437,7 +10672,12 @@
         "id": "973e9bc2-2fdd-453d-8f41-692dc9fa6ec0",
         "createdBy": "profile-admin",
         "createdAt": 1791164618655,
-        "updatedAt": 1791164618655
+        "updatedAt": 1791164618655,
+        "stepSeconds": [
+          0,
+          0,
+          0
+        ]
       },
       {
         "name": "Pizza de la familia",
@@ -10448,12 +10688,14 @@
           {
             "name": "Harina",
             "quantity": 500,
-            "unit": "g"
+            "unit": "gr",
+            "itemId": "f83079e7-8994-5256-9708-78d575e0d13c"
           },
           {
             "name": "Levadura seca",
             "quantity": 7,
-            "unit": "g"
+            "unit": "gr",
+            "itemId": "f58706cc-13ed-5f07-998c-229a0a716854"
           },
           {
             "name": "Agua",
@@ -10463,13 +10705,21 @@
           {
             "name": "Queso",
             "quantity": 250,
-            "unit": "g"
+            "unit": "gr",
+            "itemId": "82e50dc9-e7e2-5cee-aaa0-a3e41a5f141c"
+          },
+          {
+            "itemId": "c3f36c1d-c84d-4938-aed6-3499800ec8aa",
+            "name": "Tomate triturado 520 g",
+            "quantity": 1,
+            "unit": "unidades"
           }
         ],
         "steps": [
-          "Amasar harina, levadura, agua y una pizca de sal.",
-          "Dejar leudar hasta duplicar el volumen.",
-          "Estirar, cubrir con salsa y queso, y hornear hasta dorar."
+          "Mezclá harina, levadura, agua y sal. Amasá hasta lograr una masa suave.",
+          "Tapá y dejá leudar unos 45 minutos. Comprobá que duplique su volumen; puede tardar más si hace frío.",
+          "Estirá en una pizzera aceitada. Cubrí con salsa y queso.",
+          "Horneá en horno precalentado a 220 °C unos 20 minutos. Revisá que la base esté cocida y dorada."
         ],
         "tags": [
           "party",
@@ -10478,7 +10728,13 @@
         "id": "be96cab3-e5f7-4292-b4e3-583d614d03df",
         "createdBy": "5a258a45-7fa3-46c3-a6f5-c84d5a0ca545",
         "createdAt": 1791164618653,
-        "updatedAt": 1791164618653
+        "updatedAt": 1791164618653,
+        "stepSeconds": [
+          0,
+          2700,
+          0,
+          1200
+        ]
       },
       {
         "name": "Polenta cremosa",
@@ -10503,9 +10759,9 @@
           }
         ],
         "steps": [
-          "Hervir el agua con sal.",
-          "Agregar polenta en lluvia y revolver el tiempo indicado en el envase.",
-          "Terminar con el queso y servir caliente."
+          "Herví el agua con sal.",
+          "Agregá la polenta en lluvia. Revolvé y cociná el tiempo indicado en el envase: varía según el tipo.",
+          "Terminá con el queso y serví caliente."
         ],
         "tags": [
           "quick",
@@ -10514,7 +10770,12 @@
         "id": "cd11b372-b489-400e-8165-4d152ace769c",
         "createdBy": "5a258a45-7fa3-46c3-a6f5-c84d5a0ca545",
         "createdAt": 1791164618654,
-        "updatedAt": 1791164618654
+        "updatedAt": 1791164618654,
+        "stepSeconds": [
+          0,
+          0,
+          0
+        ]
       },
       {
         "name": "Tortilla de papas",
@@ -10530,7 +10791,8 @@
           {
             "name": "Huevos",
             "quantity": 4,
-            "unit": "unidades"
+            "unit": "unidades",
+            "itemId": "9f6d6950-2b69-40a0-998a-23bdf0a52fd7"
           },
           {
             "name": "Cebolla",
@@ -10539,9 +10801,10 @@
           }
         ],
         "steps": [
-          "Cortar las papas y la cebolla en rodajas finas.",
-          "Cocinar hasta que estén tiernas, mezclar con los huevos batidos y salar.",
-          "Cuajar en sartén a fuego moderado y dar vuelta con cuidado."
+          "Cortá las papas y la cebolla en rodajas finas.",
+          "Cocinalas en sartén a fuego moderado unos 15 minutos, hasta que estén tiernas. Mezclá con los huevos batidos.",
+          "Cuajá en sartén a fuego moderado unos 5 minutos.",
+          "Dala vuelta con un plato y cociná unos 5 minutos del otro lado. Comprobá que el huevo quede completamente cuajado."
         ],
         "tags": [
           "kids",
@@ -10550,7 +10813,13 @@
         "id": "d42d88a0-998f-462a-8b7f-6f88b972b0c0",
         "createdBy": "profile-admin",
         "createdAt": 1791164618652,
-        "updatedAt": 1791164618652
+        "updatedAt": 1791164618652,
+        "stepSeconds": [
+          0,
+          900,
+          300,
+          300
+        ]
       },
       {
         "name": "Panqueques caseros",
@@ -10567,24 +10836,33 @@
           {
             "name": "Harina",
             "quantity": 200,
-            "unit": "g"
+            "unit": "gr",
+            "itemId": "f83079e7-8994-5256-9708-78d575e0d13c"
           },
           {
             "name": "Leche",
             "quantity": 500,
-            "unit": "ml"
+            "unit": "ml",
+            "itemId": "b7c9c1e6-afd7-5833-8b42-a707595b5478"
           }
         ],
         "steps": [
-          "Batir los huevos con la leche.",
-          "Agregar la harina de a poco y mezclar.",
-          "Cocinar porciones finas de ambos lados en una sartén."
+          "Batí los huevos con la leche.",
+          "Agregá la harina de a poco y mezclá. Dejá reposar unos 10 minutos.",
+          "Cociná una capa fina en sartén caliente unos 60 segundos, hasta que se despegue.",
+          "Dala vuelta y cociná unos 30 segundos más. Repetí con el resto de la mezcla; reiniciá los timers para cada panqueque."
         ],
         "tags": [],
         "id": "f64a28c1-f5df-43f1-8eb2-0e7872de7ef9",
         "createdBy": "profile-adult",
         "createdAt": 1791163188964,
-        "updatedAt": 1791163188964
+        "updatedAt": 1791163188964,
+        "stepSeconds": [
+          0,
+          600,
+          60,
+          30
+        ]
       }
     ],
     "photos": [

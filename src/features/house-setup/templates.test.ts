@@ -97,15 +97,15 @@ test("starting empty is remembered; existing, protected and cloud homes cannot b
 });
 
 test("reference prices are traceable, in cents and visibly expire; unknown prices aren't invented", () => {
-  assert.equal(new Set(REFERENCE_PRICES.map((entry) => entry.catalogId)).size, REFERENCE_PRICES.length);
+  assert.equal(new Set(REFERENCE_PRICES.map((entry) => entry.url)).size, REFERENCE_PRICES.length);
   for (const entry of REFERENCE_PRICES) {
     assert.ok(BASIC_CATALOG.some((product) => product.id === entry.catalogId));
     assert.ok(Number.isSafeInteger(entry.amountCents) && entry.amountCents > 0);
     assert.ok(entry.presentation && entry.store && entry.consultedAt);
     assert.equal(new URL(entry.url).protocol, "https:");
-    assert.equal(referenceNeedsReview(entry, Date.parse("2026-10-15")), true);
+    assert.equal(referenceNeedsReview(entry, Date.parse(`${entry.consultedAt}T00:00:00Z`) + 8 * 86400_000), true);
   }
-  assert.equal(referenceNeedsReview(REFERENCE_PRICES[0], Date.parse("2026-10-07T12:00:00Z")), false);
+  assert.equal(referenceNeedsReview(REFERENCE_PRICES[0], Date.parse(`${REFERENCE_PRICES[0].consultedAt}T12:00:00Z`)), false);
 });
 
 test("custom rooms and containers start empty, need a selected room and reject bad names", () => {

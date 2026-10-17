@@ -1,3 +1,4 @@
+import { cloudPermitted } from "@/lib/network/policy";
 /**
  * Motor de sincronización: sube lo que cambió en este dispositivo y baja lo que cambiaron los
  * demás. Corre solo con la casa en la nube.
@@ -531,7 +532,7 @@ class Engine {
   }
 
   private connect() {
-    if (this.stopped || typeof WebSocket === "undefined") return;
+    if (this.stopped || typeof WebSocket === "undefined" || (typeof window !== "undefined" && !cloudPermitted())) return;
     if (this.socket && this.socket.readyState <= WebSocket.OPEN) return;
     const url = new URL(`/api/households/${this.ctx.link.householdId}/live`, API_URL || window.location.origin);
     url.protocol = url.protocol === "https:" ? "wss:" : "ws:";

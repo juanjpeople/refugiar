@@ -128,3 +128,11 @@ Crear una invitación por persona, con rol Administrador/Adulto para quien corre
 y Chico para los hijos; compartir su enlace o QR. Cada invitado entra con su propia
 cuenta. Si usan el mismo dispositivo, **Familia → Agregar miembro** crea perfiles
 locales. Si aún aparece Crear mi casa, primero falta vincular una casa a la nube.
+
+## Edición AR · 2026-10-17
+
+El buscador incluye variantes comerciales derivadas de las referencias publicadas, además de productos genéricos. Cada envase se cuenta por unidades, sin confundir un paquete con su peso. Se distribuye con la app, sin descarga adicional obligatoria. Las referencias múltiples se muestran por separado con marca, presentación, comercio y fecha; nunca como el menor precio entre tamaños incompatibles.
+
+Se sumaron azúcar Plus DIA 1 kg ($1.420) y Domino 1 kg ($1.500), consultadas el 17 de octubre. El resto conserva su fecha del 7 de octubre y la advertencia de antigüedad correspondiente. La fecha de edición del catálogo no cambia la fecha de las cotizaciones. No hay seguimiento de ofertas en vivo ni importación de SEPA en esta versión.
+
+Open Food Facts sigue siendo opcional para códigos de barras y ahora exige además el permiso de conexión en Ajustes → Datos. Si está bloqueado o falla, se conserva la carga manual. No requiere una API key; otros proveedores no se activan silenciosamente.

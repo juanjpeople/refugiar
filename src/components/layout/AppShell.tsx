@@ -1,5 +1,7 @@
 "use client";
 
+import { CLOUD_ENABLED } from "@/lib/cloud/api";
+import { CloudConsent } from "@/features/settings/components/CloudConsent";
 import { useCalendarReminders } from "@/features/calendar/useCalendarReminders";
 import { haloBackground } from "@/skins/surface";
 import { useSkin } from "@/skins/useSkin";
@@ -73,7 +75,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   // Páginas fijas que se leen antes de hidratar (buscadores, revisión de Play Store): no dependen del dispositivo.
   if (isPublic && STATIC_PUBLIC_ROUTES.includes(pathname)) return children;
   if (!hydrated) return null;
-  if (isPublic) return children;
+  if (isPublic) return CLOUD_ENABLED && ["/cuenta", "/unirme", "/feedback"].includes(pathname) ? <CloudConsent>{children}</CloudConsent> : children;
   if (firstVisit) return null;
 
   if (hydrated && membersLoadFailed) {

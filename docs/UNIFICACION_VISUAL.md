@@ -529,3 +529,10 @@ del dueño en el teléfono.
 ✅ Hecho: PurchaseDestination, SyncIndicator, CookingGuide, WeeklyMenu y ReminderPreferences exportados desde UI y demostrados en `/design`. Títulos móviles conservan jerarquía semántica; contexto compacto sin texto largo en cabecera; navegación activa usa texto de alto contraste. La revisión visual por el dueño en Android queda pendiente.
 
 Correcciones posteriores a #89: PageHeader permite conservar información esencial con `keepDescription` (ejemplo real del código de caja en StorageFlow); SyncIndicator conserva el estado offline y texto en escritorio; ContextBadge usa auto-desplazamiento horizontal. Revalidación visual pendiente, sin ocultar overflow ni quitar aserciones.
+
+## Tanda del 17 de octubre de 2026
+
+- ✅ `ConnectionConsent` y `QuietSummary` exportados en UI y documentados en `/design` → flujos cotidianos. `RecipeCover` muestra también una portada ilustrativa real.
+- ✅ Contexto de casa/demo en el encabezado, búsqueda móvil en Más, altura del popover acotada y movimiento reducido respetado.
+- ✅ «Acerca del proyecto» reemplaza el rótulo de valores del menú.
+- Revisión visual final del dueño pendiente; no se ejecutan navegadores locales desde el agente.

@@ -17,7 +17,7 @@ export function ContextBadge({ icon: Icon, label, title, children }: {
   return <Popover open={open} onOpenChange={setOpen} trigger="click" placement="bottom" destroyOnHidden
     afterOpenChange={visible => { if (visible) content.current?.focus({ preventScroll: true }); }}
     content={<Flex ref={content} tabIndex={-1} id={id} vertical gap={token.margin} role="region" aria-label={title}
-      style={{ width: token.controlHeight * 10, maxWidth: `calc(100vw - ${token.marginLG * 2}px)`, overflowWrap: "anywhere" }}
+      style={{ width: token.controlHeight * 10, maxWidth: `calc(100vw - ${token.marginLG * 2}px)`, overflowWrap: "anywhere", maxHeight: "calc(100dvh - 8rem)", overflowY: "auto" }}
       onKeyDown={event => { if (event.key === "Escape") { event.stopPropagation(); setOpen(false); trigger.current?.focus(); } }}>
       <Typography.Text strong>{title}</Typography.Text>
       {children}
