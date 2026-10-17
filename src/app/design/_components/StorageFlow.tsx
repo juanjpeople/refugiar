@@ -325,6 +325,7 @@ function ContainerScreen({ id, highlight, go }: { id: string; highlight?: string
         crumbs={<PathCrumbs items={[{ label: t("storage.title"), href: "/inventario", icon: Boxes }, { label: space.name, href: `/inventario/lugar?id=${space.id}`, icon: spaceAppearance(space).Icon }, ...ancestors.map((ancestor) => ({ label: ancestor.name, href: `/inventario/ver?id=${ancestor.id}` })), { label: container.name }]} />}
         leading={<ContainerScene key={container.id} container={container} compact open />}
         title={container.name}
+        keepDescription
         description={<>{t(`storage.containerKinds.${container.kind}`)} · {t("storage.code")} <span style={{ fontFamily: "var(--font-geist-mono)", letterSpacing: "0.08em" }}>{container.code}</span></>}
         extra={
           <>

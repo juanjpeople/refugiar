@@ -61,3 +61,5 @@ de dominio y se validó con exportación/importación. `seed.ts` adapta fechas y
 blobs locales. Tests verifican relaciones, aislamiento y conservación de cambios.
 `npm run e2e:demo` recorre productos, precios, fotos, comentarios, persistencia y reinicio.
 Las pruebas de la app normal también recorren el cambio entre casas en el mismo origen.
+
+Corrección posterior a #89: el detalle de la casa demo usa la colocación centrada del popover con desplazamiento automático para entrar en pantallas de 320 px. El test de vuelta a la casa habitual espera que termine el cambio de documento y se borre el selector temporal antes de navegar a Inventario. El recorrido visual completo conserva sus comprobaciones, con 300 segundos totales para decenas de capturas; los timeouts individuales no se amplían.

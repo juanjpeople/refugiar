@@ -527,3 +527,5 @@ del dueño en el teléfono.
 ## Tanda de uso diario (2026-10)
 
 ✅ Hecho: PurchaseDestination, SyncIndicator, CookingGuide, WeeklyMenu y ReminderPreferences exportados desde UI y demostrados en `/design`. Títulos móviles conservan jerarquía semántica; contexto compacto sin texto largo en cabecera; navegación activa usa texto de alto contraste. La revisión visual por el dueño en Android queda pendiente.
+
+Correcciones posteriores a #89: PageHeader permite conservar información esencial con `keepDescription` (ejemplo real del código de caja en StorageFlow); SyncIndicator conserva el estado offline y texto en escritorio; ContextBadge usa auto-desplazamiento horizontal. Revalidación visual pendiente, sin ocultar overflow ni quitar aserciones.

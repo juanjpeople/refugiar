@@ -50,6 +50,9 @@ Anotadas para no perderlas. Pasan a ⏭️ cuando se decide hacerlas.
 
 ## ✅ Hecho
 
+- **Correcciones de CI posteriores a #89 (locales, pendientes de publicar)**: estado offline también en casa local; código de caja visible en encabezado compacto; popover de demo con desplazamiento horizontal; prueba de cambio de casa sincronizada y plazo total del recorrido visual ajustado. E2E pendientes de revalidación.
+
+
 - **Navegación móvil**: Inicio, Inventario, Compras, Recetas y Más; cabecera contextual sin menú duplicado, escáner en Inventario y cierre de diálogos con Atrás en Android. Implementado; revisión visual en teléfono pendiente. → [Android](docs/ANDROID.md)
 
 Lo último arriba. El PR que termina algo lo agrega acá.
