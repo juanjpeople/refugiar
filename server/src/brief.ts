@@ -72,11 +72,15 @@ export async function weatherBrief(id: string): Promise<WeatherBrief | null> {
   }) as Promise<WeatherBrief>;
 }
 
+/** Plain text only: decode entities once. React escapes titles; this is never HTML sanitization. */
 function plain(value: string) {
-  return value.replace(/<!\[CDATA\[([\s\S]*?)\]\]>/g, "$1").replace(/<[^>]*>/g, "").replace(/&#(x[0-9a-f]+|\d+);/gi, (_, code: string) => {
-    const n = code[0].toLowerCase() === "x" ? parseInt(code.slice(1), 16) : Number(code);
+  const text = value.trim().replace(/^<!\[CDATA\[([\s\S]*)\]\]>$/, "$1");
+  const named: Record<string, string> = { amp: "&", quot: '\"', apos: "'", lt: "<", gt: ">" };
+  return text.replace(/&(#x[0-9a-f]+|#\d+|amp|quot|apos|lt|gt);/gi, (entity, code: string) => {
+    if (code[0] !== "#") return named[code.toLowerCase()] ?? entity;
+    const n = code[1].toLowerCase() === "x" ? parseInt(code.slice(2), 16) : Number(code.slice(1));
     return n > 0 && n <= 0x10ffff ? String.fromCodePoint(n) : "";
-  }).replace(/&amp;/g, "&").replace(/&quot;/g, '"').replace(/&apos;/g, "'").replace(/&lt;/g, "<").replace(/&gt;/g, ">").trim();
+  }).trim();
 }
 export async function newsBrief(id: string): Promise<NewsBrief | null> {
   const source = NEWS_SOURCES.find(entry => entry.id === id);
