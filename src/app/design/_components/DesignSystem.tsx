@@ -6,6 +6,7 @@ import { RequirePermission } from "@/components/auth/RequirePermission";
 import { PageHeader } from "@/components/ui";
 import { belowHeader } from "@/components/layout/constants";
 import { useUiStore } from "@/store/useNavigationStore";
+import { DailyFlows } from "./DailyFlows";
 import { ActionsSection } from "./ActionsSection";
 import { DataSection } from "./DataSection";
 import { FormsSection } from "./FormsSection";
@@ -36,7 +37,7 @@ const TOC = [
     group: "Componentes propios",
     items: [["componentes-estructura", "Estructura"], ["componentes-estados", "Estados"], ["componentes-seleccion", "Selección"], ["componentes-datos", "Datos"], ["componentes-fichas", "Fichas"], ["componentes-espacios", "Espacios"], ["componentes-entrada", "Entrada"], ["componentes-paneles", "Paneles"], ["componentes-barra", "Barra de abajo"], ["componentes-plantillas", "Plantillas"], ["componentes-plantillas-detalle", "Detalle"]],
   },
-  { group: "Flujos", items: [["flujo-almacenamiento", "Almacenamiento"], ["etiquetas", "Etiquetas QR"], ["flujo-catalogo", "Catálogo"], ["flujo-recetas", "Recetas"], ["flujo-entrada", "Entrada"]] },
+  { group: "Flujos", items: [["flujo-almacenamiento", "Almacenamiento"], ["etiquetas", "Etiquetas QR"], ["flujo-catalogo", "Catálogo"], ["flujo-recetas", "Recetas"], ["flujo-guardar-compra", "Guardar compra"], ["flujo-cocina", "Modo cocina"], ["flujo-sincronizacion", "Sincronización"], ["flujo-menu-semanal", "Menú semanal"], ["flujo-recordatorios", "Recordatorios"], ["flujo-entrada", "Entrada"]] },
   { group: "Calidad", items: [["revision", "Revisión antes de un PR"]] },
   { group: "Seguridad", items: [["permisos", "Matriz de permisos"], ["can", "<Can>"], ["servicios", "Servicios"]] },
 ] as const;
@@ -90,6 +91,7 @@ export function DesignSystem() {
             <EntrySection />
             <PanesSection />
             <BottomBarBlock />
+          <DailyFlows />
             <TemplatesSection />
             <DetailTemplateSection />
           </Section>

@@ -13,8 +13,9 @@ import { addToListWithin, LIST_TABLES } from "@/features/shopping/service";
 import { assertCan, type Actor } from "@/lib/auth/permissions";
 import { db } from "@/lib/db";
 import { NotFoundError, ValidationError } from "@/lib/errors";
+import { canSee } from "@/lib/sync/scope";
 import { createId } from "@/lib/id";
-import { checkAvailability, ingredientCheckKey, normalizeIngredient, parseRecipe, RECIPE_LIMITS, type RecipeInput } from "./domain";
+import { checkAvailability, ingredientCheckKey, normalizeIngredient, parseRecipe, RECIPE_LIMITS, type RecipeInput, type AvailabilityReport } from "./domain";
 
 async function getRecipe(id: string) {
   const recipe = await db.recipes.get(id);
@@ -38,8 +39,15 @@ export async function createRecipe(actor: Actor | null, input: RecipeInput) {
 export async function updateRecipe(actor: Actor | null, id: string, input: RecipeInput) {
   assertCan(actor, "recipes.manage");
   const data = parseRecipe(input);
-  await db.transaction("rw", db.recipes, db.activity, async () => {
+  await db.transaction("rw", db.recipes, db.activity, db.events, async () => {
     const recipe = await getRecipe(id);
+    if (!canSee(actor, recipe)) throw new NotFoundError("errors.notFound.recipe");
+    for (const event of await db.events.filter(event => event.meal?.recipeId === id).toArray()) {
+      const privacy = data.privacy === "private" ? "private" : event.privacy === "private" ? "private" : data.privacy === "adults" ? "adults" : event.privacy ?? "family";
+      const createdBy = data.privacy === "private" ? recipe.createdBy : event.createdBy;
+      await db.events.update(event.id, { title: data.name, privacy, createdBy, updatedAt: Date.now() });
+      await setActivityPrivacy("calendar", event.id, privacy, createdBy);
+    }
     await setActivityPrivacy("recipes", id, data.privacy, recipe.createdBy);
     await db.recipes.update(id, { ...data, updatedAt: Date.now() });
     await recordActivity(actor, { module: "recipes", action: "update", entityId: id, entityName: data.name, privacy: data.privacy, createdBy: recipe.createdBy });
@@ -62,9 +70,14 @@ export async function setRecipeCover(actor: Actor | null, id: string, photoId: s
 /** Borra la receta con sus fotos y comentarios (no tienen sentido solos). */
 export async function deleteRecipe(actor: Actor | null, id: string) {
   assertCan(actor, "recipes.manage");
-  await db.transaction("rw", db.recipes, db.photos, db.comments, db.activity, db.photoDeletes, async () => {
+  await db.transaction("rw", [db.recipes, db.photos, db.comments, db.activity, db.photoDeletes, db.events], async () => {
     const recipe = await db.recipes.get(id);
     if (!recipe) return;
+    if (!canSee(actor, recipe)) throw new NotFoundError("errors.notFound.recipe");
+    for (const event of await db.events.filter(event => event.meal?.recipeId === id).toArray()) {
+      await setActivityPrivacy("calendar", event.id, event.privacy ?? "family", event.createdBy);
+      await db.events.delete(event.id);
+    }
     await setActivityPrivacy("recipes", id, recipe.privacy ?? "family", recipe.createdBy);
     await db.recipes.delete(id);
     await deletePhotosOfWithin("recipe", id);
@@ -116,19 +129,26 @@ export async function addMissingToList(actor: Actor | null, id: string, servings
     const itemIds = recipe.ingredients.flatMap((ingredient) => (ingredient.itemId ? [ingredient.itemId] : []));
     const items = new Map((await db.inventory.bulkGet(itemIds)).flatMap((item) => (item ? [[item.id, item] as const] : [])));
     const report = checkAvailability(recipe, items, servings);
-    const pending = await db.shoppingList.where("[listId+status]").equals([HOME_LIST_ID, "pending"]).toArray();
-    const candidates = report.checks.filter((check) => check.state !== "ok" && (selected ? selected.includes(ingredientCheckKey(check)) : check.state !== "unlinked"));
-    for (const check of candidates) {
-      const item = check.item;
-      const name = item?.name ?? check.ingredient.name;
-      const unit = item?.unit ?? check.ingredient.unit;
-      const already = pending.filter((entry) => entry.unit === unit && (item ? entry.inventoryItemId === item.id : !entry.inventoryItemId && normalizeIngredient(entry.name) === normalizeIngredient(name))).reduce((sum, entry) => sum + entry.quantity, 0);
-      const quantity = roundQuantity(check.needed - (check.have ?? 0) - already);
-      if (quantity <= 0) continue;
-      await addToListWithin(actor, { name, quantity, unit, inventoryItemId: item?.id });
-      added++;
-    }
+    added = await addReportMissingWithin(actor, report, selected);
   });
   await pruneActivity();
+  return added;
+}
+
+/** Reutilizado por una receta y el menú semanal, dentro de la transacción de compras. */
+export async function addReportMissingWithin(actor: Actor, report: AvailabilityReport, selected?: string[]) {
+  let added = 0;
+  const pending = await db.shoppingList.where("[listId+status]").equals([HOME_LIST_ID, "pending"]).toArray();
+  const candidates = report.checks.filter((check) => check.state !== "ok" && (selected ? selected.includes(ingredientCheckKey(check)) : check.state !== "unlinked"));
+  for (const check of candidates) {
+    const item = check.item;
+    const name = item?.name ?? check.ingredient.name;
+    const unit = item?.unit ?? check.ingredient.unit;
+    const already = pending.filter((entry) => entry.unit === unit && (item ? entry.inventoryItemId === item.id : !entry.inventoryItemId && normalizeIngredient(entry.name) === normalizeIngredient(name))).reduce((sum, entry) => sum + entry.quantity, 0);
+    const quantity = roundQuantity(check.needed - (check.have ?? 0) - already);
+    if (quantity <= 0) continue;
+    await addToListWithin(actor, { name, quantity, unit, inventoryItemId: item?.id });
+    added++;
+  }
   return added;
 }
