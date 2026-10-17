@@ -35,3 +35,15 @@ En `/design` → Recetas están el selector, la revisión de compras y el formul
 **Menú semanal** permite elegir recetas guardadas y porciones para cada día. Cada comida es un evento del calendario. Los faltantes se calculan sumando las cantidades de todas las comidas de la semana y comparando una sola vez contra el inventario; se revisan antes de anotarlos en Compras y se descuentan los pendientes ya anotados. Planear no reserva ni consume stock. Los ingredientes sin vínculo requieren confirmación explícita.
 
 La comida nace con la privacidad de la receta. Si la receta pasa a un nivel más restringido, se restringen sus comidas; borrarla quita también esas comidas. Las repeticiones editadas desde Calendario se consideran en el menú. Quitar una comida repetida elimina la serie, como en Calendario.
+
+## Preparación y temporizadores
+
+Cada paso puede guardar un tiempo opcional (se ingresa en minutos, se conserva en segundos). Al mover o borrar un paso, su duración lo acompaña. La sugerencia sólo usa una duración explícita y no ambigua del texto; la persona la confirma. No se inventan tiempos de cocción.
+
+Modo cocina permite ajustar un tiempo manual e iniciar varios temporizadores, hasta 40 por receta/perfil en este dispositivo. Guarda fechas de finalización: cerrar, bloquear o volver a abrir no pausa el conteo. Los timers siguen al cerrar el modo y se cancelan individualmente. Los tiempos y avisos no certifican que un alimento esté cocido.
+
+Android ofrece avisos locales optativos para los nuevos temporizadores. Desactivar la opción cancela los pendientes de esta receta; denegar el permiso conserva el conteo y muestra un error. No requiere conexión ni servicio pago. El ahorro de batería puede demorar avisos: no se solicita permiso de alarmas exactas. Las notificaciones no muestran nombres ni contenido privado.
+
+Una cocinada registra los consumos que la integran. Deshacer desde la confirmación o el historial devuelve sus diferencias sobre el stock actual dentro de una transacción. Conserva compras posteriores, omite consumos ya deshechos y falla sin devolver parcialmente si falta un producto, cambió su unidad o excedería el límite de stock. Disponible durante 24 horas; las cocinadas antiguas sin agrupación conservan el deshacer individual. Evitar deshacer simultáneamente la misma operación en dos dispositivos sin sincronizar: la validación local no es un bloqueo distribuido.
+
+Validación local de la tanda: `npm run check` (245 aprobados), `npm run build` y recorrido de API aislada (3/3). La comprobación visual y de hardware sigue a cargo del dueño; CI ejecuta los recorridos existentes antes del merge.

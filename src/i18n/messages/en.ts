@@ -1,6 +1,7 @@
 import type { Messages } from "./es";
 
 export const en: Messages = {
+  kitchen: {"duration": "Step time (minutes; 0 = no timer)", "suggest": "Use {seconds} minutes from the text", "notify": "Notify me when new timers finish", "start": "Start {seconds}-second timer", "step": "Step {step}", "done": "Timer finished", "channel": "Kitchen timers", "error": "Could not save the timer or schedule the alert. Check notification permission.", "hint": "Times are approximate. Android battery saving may delay alerts. Timers continue after closing this mode.", "undo": "Undo the entire cooking session"},
   emails: {
     subject: "Refugiar: security notification",
     password: "Your account password was changed.",

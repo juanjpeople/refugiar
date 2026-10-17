@@ -13,7 +13,7 @@ import { ACTIVITY_LIMITS, type ActivityEntry, type ActivityModule } from "./doma
 type NewActivity = Omit<ActivityEntry, "id" | "at" | "actorId" | "actorName">;
 
 /** Devuelve el id de la entrada (la nueva o la agrupada), o `null` si el cambio se anuló. */
-export async function recordActivity(actor: Actor, entry: NewActivity): Promise<string | null> {
+export async function recordActivity(actor: Actor, entry: NewActivity, id = createId()): Promise<string | null> {
   const now = Date.now();
 
   // Clics seguidos en +/- sobre el mismo ítem: se actualiza la última entrada en vez de sumar una por clic.
@@ -34,7 +34,6 @@ export async function recordActivity(actor: Actor, entry: NewActivity): Promise<
     }
   }
 
-  const id = createId();
   await db.activity.add({ ...entry, id, at: now, actorId: actor.id, actorName: actor.name });
   return id;
 }

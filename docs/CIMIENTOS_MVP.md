@@ -241,3 +241,7 @@ Resend no equivale a entrega. Un build correcto no equivale a prueba en un telé
   El E2E de dos administradores ya no recarga Familia: sin la consulta periódica
   falló (el pedido no apareció en 20 s); con ella aprobó contra el backend local.
   `npm run check`: tipos y lint correctos, 245 pruebas aprobadas. Falta repetir en el A55.
+
+### Tanda de cocina posterior a versión 16
+
+La versión 16 ya se distribuyó en Prueba interna; no implica cerrar la validación física del MVP. Esta tanda agrega duración por paso, timers locales y deshacer agrupado, corrige el cierre de motores de sync y mejora teclado/pantalla en Android. No cambia la base ni migra datos para incorporar los campos opcionales. Se conservan pendientes las pruebas reales de actualización, segundo plano, avisos y concurrencia familiar.

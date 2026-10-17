@@ -8,7 +8,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useRef, useState } from "react";
 import { RequirePermission } from "@/components/auth/RequirePermission";
 import { Reveal } from "@/components/motion";
-import { PageHeader, PrivacySelect, StockTag, LoadingSkeleton } from "@/components/ui";
+import { StepTime, PageHeader, PrivacySelect, StockTag, LoadingSkeleton } from "@/components/ui";
 import { convertQuantity, isMeasuredUnit } from "@/features/inventory/quantity";
 import { getStockStatus, isUnit, UNITS } from "@/features/inventory/domain";
 import { PhotoGallery } from "@/features/media/components/PhotoGallery";
@@ -19,6 +19,7 @@ import { useI18n } from "@/i18n";
 import { SPRING } from "@/lib/motion";
 import type { Privacy } from "@/lib/sync/scope";
 import { usePageCrumbs } from "@/store/useBreadcrumbStore";
+import { suggestedSeconds } from "../timing";
 import { parseIngredientLine, parseStepLines, RECIPE_LIMITS, RECIPE_TAGS, type Recipe, type RecipeTag } from "../domain";
 import { useRecipe, useRecipeActions } from "../hooks";
 import { recipeHref } from "@/lib/navigation/routes";
@@ -33,6 +34,7 @@ interface IngredientDraft {
 }
 
 interface StepDraft {
+  seconds?: number;
   key: string;
   text: string;
 }
@@ -66,7 +68,7 @@ function EditorForm({ recipe }: { recipe: Recipe | null }) {
   const [ingredients, setIngredients] = useState<IngredientDraft[]>(
     recipe?.ingredients.map((ingredient) => ({ ...ingredient, key: nextKey() })) ?? [{ key: nextKey(), name: "", quantity: 1, unit: "unidades" }],
   );
-  const [steps, setSteps] = useState<StepDraft[]>(recipe?.steps.map((text) => ({ key: nextKey(), text })) ?? [{ key: nextKey(), text: "" }]);
+  const [steps, setSteps] = useState<StepDraft[]>(recipe?.steps.map((text, index) => ({ key: nextKey(), text, seconds: recipe.stepSeconds?.[index] ?? 0 })) ?? [{ key: nextKey(), text: "" }]);
   const [pendingPhotos, setPendingPhotos] = useState<File[]>([]);
   const [saving, setSaving] = useState(false);
   usePageCrumbs(recipe ? [{ label: recipe.name, href: recipeHref(recipe.id) }, { label: t("recipes.editTitle") }] : [{ label: t("recipes.newTitle") }]);
@@ -127,6 +129,7 @@ function EditorForm({ recipe }: { recipe: Recipe | null }) {
         .filter((ingredient) => ingredient.name.trim())
         .map(({ itemId, name: ingredientName, quantity, unit }) => ({ itemId, name: ingredientName, quantity: quantity ?? 0, unit })),
       steps: steps.map((step) => step.text),
+      stepSeconds: steps.map(step => step.seconds ?? 0),
     };
     const savedId = recipe ? ((await update(recipe.id, input)) !== null ? recipe.id : null) : await create(input);
     if (savedId && pendingPhotos.length > 0) {
@@ -274,6 +277,7 @@ function EditorForm({ recipe }: { recipe: Recipe | null }) {
                             <Button type="text" size="small" danger aria-label={t("recipes.editor.removeStep")} icon={<Trash2 />} onClick={() => setSteps((current) => current.filter((value) => value.key !== step.key))} />
                           </Flex>
                         </Flex>
+                        <StepTime seconds={step.seconds ?? 0} suggestion={suggestedSeconds(step.text)} onChange={seconds => setSteps(current => current.map(value => value.key === step.key ? { ...value, seconds } : value))} />
                       </motion.div>
                     ))}
                   </AnimatePresence>

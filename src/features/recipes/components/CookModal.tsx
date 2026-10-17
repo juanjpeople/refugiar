@@ -4,6 +4,8 @@ import { formatUnit } from "@/features/inventory/format";
 
 import { Alert, App, Button, Flex, InputNumber, Modal, Select, Switch, Typography, theme } from "antd";
 import { ChefHat } from "lucide-react";
+import { createId } from "@/lib/id";
+import { usePermission } from "@/lib/auth/hooks";
 import { useRef, useState } from "react";
 import { IconTile, QuantityStepper } from "@/components/ui";
 import { convertQuantity, roundQuantity } from "@/features/inventory/quantity";
@@ -29,12 +31,19 @@ interface CookModalProps {
  */
 export function CookModal({ open, recipe, items, servings: initialServings, onClose, onCooked }: CookModalProps) {
   const [saving, setSaving] = useState(false);
-  const { cook } = useRecipeActions();
+  const { cook, undoCook } = useRecipeActions();
+  const { message } = App.useApp();
+  const { t } = useI18n();
+  const canUndo = usePermission("inventory.adjust");
   const options = useInventoryOptions();
   const allItems = new Map([...(options ?? []).map(({ item }) => [item.id, item] as const), ...items]);
   return (
     <Modal open={open} onCancel={onClose} closable={!saving} mask={{ closable: !saving }} keyboard={!saving} footer={null} destroyOnHidden width={520} title={null}>
-      {open && <CookForm recipe={recipe} items={allItems} initialServings={initialServings} onClose={onClose} onBusy={setSaving} onCook={async (...args) => { const result = await cook(...args); if (result !== null) onCooked?.(); return result; }} places={Object.fromEntries((options ?? []).map(({ item, place }) => [item.id, place]))} />}
+      {open && <CookForm recipe={recipe} items={allItems} initialServings={initialServings} onClose={onClose} onBusy={setSaving} onCook={async (...args) => { const result = await cook(...args); if (result !== null) {
+        onCooked?.();
+        const operationId = args[3];
+        if (canUndo && operationId) message.open({ key: operationId, duration: 12, content: <Button onClick={async () => { if (await undoCook(operationId) !== null) message.destroy(operationId); }}>{t("kitchen.undo")}</Button> });
+      } return result; }} places={Object.fromEntries((options ?? []).map(({ item, place }) => [item.id, place]))} />}
     </Modal>
   );
 }
@@ -42,7 +51,7 @@ export function CookModal({ open, recipe, items, servings: initialServings, onCl
 /** Formulario real también usado en /design con un consumo en memoria. */
 export function CookForm({ recipe, items, initialServings, onClose, onCook, onBusy, places = {} }: {
   recipe: Recipe; items: Map<string, InventoryItem>; initialServings: number; onClose: () => void;
-  onCook: (id: string, servings: number, consumptions: Consumption[]) => Promise<{ itemId: string; missing: number }[] | null>;
+  onCook: (id: string, servings: number, consumptions: Consumption[], operationId?: string) => Promise<{ itemId: string; missing: number }[] | null>;
   onBusy?: (busy: boolean) => void;
   places?: Record<string, string>;
 }) {
@@ -52,6 +61,7 @@ export function CookForm({ recipe, items, initialServings, onClose, onCook, onBu
   const report = checkAvailability(recipe, items, initialServings);
   const linked = report.checks.flatMap((check) => check.item ? [check.ingredient] : []);
   const pending = useRef(false);
+  const operationId = useRef(createId());
   const defaults = (servings: number) => Object.fromEntries(checkAvailability(recipe, items, servings).checks.flatMap((check) => check.item ? [[check.item.id, check.needed]] : []));
   const [servings, setServings] = useState(initialServings);
   const [amounts, setAmounts] = useState<Record<string, number>>(() => defaults(initialServings));
@@ -82,7 +92,7 @@ export function CookForm({ recipe, items, initialServings, onClose, onCook, onBu
     onBusy?.(true);
     let result;
     try {
-      result = await onCook(recipe.id, servings, Object.entries(amounts).map(([itemId, amount]) => ({ itemId: sources[itemId] ?? itemId, amount })));
+      result = await onCook(recipe.id, servings, Object.entries(amounts).map(([itemId, amount]) => ({ itemId: sources[itemId] ?? itemId, amount })), operationId.current);
     } finally {
       onBusy?.(false);
       pending.current = false;

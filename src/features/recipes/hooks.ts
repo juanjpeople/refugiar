@@ -9,7 +9,7 @@ import { db } from "@/lib/db";
 import { getErrorMessage } from "@/lib/errors";
 import { canSee } from "@/lib/sync/scope";
 import { averageRating, checkAvailability, type AvailabilityReport, type Recipe, type RecipeInput } from "./domain";
-import { addMissingToList, cookRecipe, createRecipe, deleteRecipe, setRecipeCover, updateRecipe, type Consumption } from "./service";
+import { addMissingToList, undoCooking, cookRecipe, createRecipe, deleteRecipe, setRecipeCover, updateRecipe, type Consumption } from "./service";
 
 export interface RecipeSummary extends Recipe {
   report: AvailabilityReport;
@@ -84,7 +84,8 @@ export function useRecipeActions() {
     update: (id: string, input: RecipeInput) => run(() => updateRecipe(user, id, input), t("recipes.toast.saved")),
     remove: (id: string) => run(() => deleteRecipe(user, id), t("recipes.toast.deleted")),
     setCover: (id: string, photoId: string | undefined) => run(() => setRecipeCover(user, id, photoId)),
-    cook: (id: string, servings: number, consumptions: Consumption[]) => run(() => cookRecipe(user, id, servings, consumptions)),
+    undoCook: (id: string) => run(() => undoCooking(user, id), t("activity.undone")),
+    cook: (id: string, servings: number, consumptions: Consumption[], operationId?: string) => run(() => cookRecipe(user, id, servings, consumptions, operationId)),
     addMissing: (id: string, servings: number, selected?: string[]) => run(() => addMissingToList(user, id, servings, selected)),
   };
 }

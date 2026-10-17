@@ -50,3 +50,7 @@ Detalle técnico: [PLAN_PRODUCCION.md](../PLAN_PRODUCCION.md) y [SECURITY.md](..
 La cabecera muestra un indicador táctil: sólo en este dispositivo, sincronizando, al día, sin conexión o con error. Al tocarlo se ven los pendientes y el último éxito, con el reintento existente. Nunca se presenta como sincronizada una sesión que todavía no confirmó su primera sincronización. Los perfiles sin acceso al inventario conservan el aviso de conexión sin detalles de la casa.
 
 El indicador usa también el estado de conexión del dispositivo: una casa local muestra Sin conexión cuando corresponde, aunque no tenga sincronización en la nube. En escritorio conserva texto visible; en móvil mantiene el nombre accesible y el detalle al tocar.
+
+## Reanudación y confirmaciones
+
+La sesión que se desmonta sólo detiene su propio motor; un trabajo esperando el lock no inicia un ciclo si ya fue detenido. Al volver a primer plano se revisa también la conexión en tiempo real y se agenda sincronización. Se conserva el mecanismo existente de lotes persistidos con IDs estables: una respuesta incompleta no borra pendientes, y al reabrir la base se reenvían los mismos bytes. La compra y su vínculo de inventario siguen guardándose juntos; no se crea una operación nueva al reintentar el transporte. Esto no equivale a certificar todas las ediciones concurrentes entre teléfonos.
