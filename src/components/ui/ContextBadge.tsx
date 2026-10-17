@@ -14,7 +14,7 @@ export function ContextBadge({ icon: Icon, label, title, children }: {
   const id = useId();
   const trigger = useRef<HTMLButtonElement>(null);
   const content = useRef<HTMLDivElement>(null);
-  return <Popover open={open} onOpenChange={setOpen} trigger="click" placement="bottomRight" destroyOnHidden
+  return <Popover open={open} onOpenChange={setOpen} trigger="click" placement="bottom" destroyOnHidden
     afterOpenChange={visible => { if (visible) content.current?.focus({ preventScroll: true }); }}
     content={<Flex ref={content} tabIndex={-1} id={id} vertical gap={token.margin} role="region" aria-label={title}
       style={{ width: token.controlHeight * 10, maxWidth: `calc(100vw - ${token.marginLG * 2}px)`, overflowWrap: "anywhere" }}
