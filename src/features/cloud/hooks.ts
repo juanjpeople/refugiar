@@ -55,7 +55,8 @@ export function useCloudSession() {
     if (CLOUD_ENABLED && cloudPermitted() && useCloudStore.getState().status === "idle") void restoreCloudSession();
   }, [mode, allowed]);
 
-  return { status: CLOUD_ENABLED ? status : ("signed-out" as Status), session };
+  const connected = CLOUD_ENABLED && cloudPermitted();
+  return { status: connected ? status : ("signed-out" as Status), session: connected ? session : null };
 }
 
 /** Acciones que muestran el error traducido y devuelven `null` si fallan. */
