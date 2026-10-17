@@ -7,6 +7,7 @@ test("comentarios: valida, evita doble envío y conserva el borrador al fallar",
   let pending: Route | undefined;
   await page.route("**/api/feedback", route => { bodies.push(route.request().postDataJSON()); pending = route; });
   await page.goto("/feedback");
+  await page.getByRole("button", { name: "Permitir esta conexión", exact: true }).click();
   const send = page.getByRole("button", { name: "Enviar", exact: true });
   const message = page.getByRole("textbox", { name: "Mensaje", exact: true });
   await send.click();
@@ -40,6 +41,7 @@ test("comentarios: valida, evita doble envío y conserva el borrador al fallar",
 
 test("comentarios: validación en inglés", async ({ home: page }) => {
   await page.goto("/feedback");
+  await page.getByRole("button", { name: "Permitir esta conexión", exact: true }).click();
   await page.getByText("EN", { exact: true }).click();
   await expect(page.getByRole("radio", { name: "EN", exact: true })).toBeChecked();
   await page.getByRole("textbox", { name: "Message", exact: true }).fill("short");

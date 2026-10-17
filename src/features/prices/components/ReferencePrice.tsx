@@ -5,16 +5,17 @@ import { ExternalLink } from "lucide-react";
 import { Callout } from "@/components/ui";
 import { useNow } from "@/hooks/useNow";
 import { useI18n } from "@/i18n";
-import { referenceFor, referenceNeedsReview } from "../references";
+import { referencesFor, referenceNeedsReview } from "../references";
 
 export function ReferencePrice({ catalogId }: { catalogId: string }) {
   const { t, format } = useI18n();
   const { token } = theme.useToken();
   const now = useNow();
-  const reference = referenceFor(catalogId);
-  if (!reference) return <Callout>{t("prices.reference.unavailable")}</Callout>;
+  const references = referencesFor(catalogId);
+  if (!references.length) return <Callout>{t("prices.reference.unavailable")}</Callout>;
+  return <Flex vertical gap={token.marginSM}>{references.map(reference => {
   const stale = referenceNeedsReview(reference, now);
-  return <Callout tone={stale ? "warning" : "neutral"} title={t("prices.reference.published", { amount: format.money(reference.amountCents, reference.currency) })}>
+  return <Callout key={reference.url} tone={stale ? "warning" : "neutral"} title={t("prices.reference.published", { amount: format.money(reference.amountCents, reference.currency) })}>
     <Flex vertical gap={token.marginXXS} style={{ fontSize: token.fontSizeSM }}>
       <span>{reference.product} · {reference.presentation}</span>
       <Typography.Link href={reference.url} target="_blank" rel="noopener noreferrer" style={{ display: "inline-flex", alignItems: "center", gap: token.marginXXS }}>
@@ -24,5 +25,5 @@ export function ReferencePrice({ catalogId }: { catalogId: string }) {
       <span>{t("prices.reference.listPrice")}</span>
       <span>{t(stale ? "prices.reference.review" : "prices.reference.notice")}</span>
     </Flex>
-  </Callout>;
+  </Callout>; })}</Flex>;
 }

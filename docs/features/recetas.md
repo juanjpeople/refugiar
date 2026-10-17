@@ -47,3 +47,11 @@ Android ofrece avisos locales optativos para los nuevos temporizadores. Desactiv
 Una cocinada registra los consumos que la integran. Deshacer desde la confirmación o el historial devuelve sus diferencias sobre el stock actual dentro de una transacción. Conserva compras posteriores, omite consumos ya deshechos y falla sin devolver parcialmente si falta un producto, cambió su unidad o excedería el límite de stock. Disponible durante 24 horas; las cocinadas antiguas sin agrupación conservan el deshacer individual. Evitar deshacer simultáneamente la misma operación en dos dispositivos sin sincronizar: la validación local no es un bloqueo distribuido.
 
 Validación local de la tanda: `npm run check` (245 aprobados), `npm run build` y recorrido de API aislada (3/3). La comprobación visual y de hardware sigue a cargo del dueño; CI ejecuta los recorridos existentes antes del merge.
+
+## Ejemplos y portadas (octubre de 2026)
+
+Las 15 recetas de la demo tienen fotos ilustrativas generadas, optimizadas en WebP: miniatura de 480 px y detalle de 960 px, cerca de 1,7 MiB entre todas. Están incluidas en Android y el paquete local; la PWA intenta guardarlas durante su instalación y al abrirlas. Una foto personal siempre tiene prioridad. El ejemplo se reconoce por identificador y nombre; renombrarlo deja de usar esa portada. Las imágenes no documentan una preparación real.
+
+Los pasos incluyen tiempos orientativos donde corresponde. Las recetas frías y los pasos sin duración definida no inventan timers. La persona los inicia en Modo cocina; confirmar el consumo sigue siendo una acción separada. Panqueques tiene harina, leche y huevos vinculados y disponibles; omelette tiene queso insuficiente; pizza tiene levadura agotada. El menú muestra panqueques y pizza y Compras incluye harina comprada pendiente de guardar.
+
+La demo tiene 95 productos, recetas, escuela, calendario, comentarios y herramientas reutilizables. Inicio ofrece un recorrido con accesos a esas funciones. Los nuevos datos se incorporan en la demo: las recetas existentes se actualizan solo si conservan el contenido anterior y no tienen tiempos personalizados. Las casas reales no reciben esa migración. Una demo editada conserva los cambios; «Restablecer demo» carga todos los ejemplos actuales con confirmación.

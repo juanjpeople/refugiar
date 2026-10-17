@@ -7,6 +7,7 @@
  * Límite de uso de la API pública: unas 100 consultas por minuto. Una tanda de compras queda muy
  * por debajo; la app no reintenta ni consulta en segundo plano.
  */
+import { serviceFetch } from "@/lib/network/policy";
 import { INVENTORY_LIMITS } from "./domain";
 
 const ENDPOINT = "https://world.openfoodfacts.org/api/v2/product/";
@@ -25,7 +26,7 @@ export function productName(product: OffProduct, locale: string): string | null 
 export async function lookupProductName(barcode: string, locale: string, signal?: AbortSignal): Promise<string | null> {
   const fields = [`product_name_${locale}`, "product_name", "brands", "quantity"].join(",");
   try {
-    const response = await fetch(`${ENDPOINT}${encodeURIComponent(barcode)}.json?fields=${fields}`, { signal, credentials: "omit", referrerPolicy: "no-referrer" });
+    const response = await serviceFetch("products", `${ENDPOINT}${encodeURIComponent(barcode)}.json?fields=${fields}`, { signal, credentials: "omit", referrerPolicy: "no-referrer" });
     if (!response.ok) return null;
     const data = (await response.json()) as { status?: number; product?: OffProduct };
     return data.status === 1 && data.product ? productName(data.product, locale) : null;

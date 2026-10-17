@@ -7,7 +7,7 @@ import { useRouter } from "next/navigation";
 import { usePreferences, useSetPreference } from "@/hooks/usePreferences";
 import { detectBrowserLocale, LOCALE_META, LOCALES, useI18n, useT, type Locale } from "@/i18n";
 import { MemberAvatar } from "@/components/ui/MemberAvatar";
-import { DemoNotice } from "@/features/demo/DemoNotice";
+import { HouseSwitcher } from "@/features/demo/HouseSwitcher";
 import { QuickAppearance } from "@/features/settings/components/QuickAppearance";
 import { SyncStatusButton } from "./SyncStatusButton";
 import { isSecured, pickableProfiles } from "@/features/members/domain";
@@ -241,9 +241,9 @@ export function HeaderActions({ search = false }: { search?: boolean }) {
 
   return (
     <Flex align="center" gap={screens.md ? 12 : 4} style={{ flexShrink: 0 }}>
-      <DemoNotice />
+      <HouseSwitcher />
       <SyncStatusButton />
-      {search && <SearchTrigger />}
+      {search && screens.md && <SearchTrigger />}
       {screens.md && <LanguageMenu />}
       {screens.lg && <ThemeModeSwitch />}
       <UserMenu />

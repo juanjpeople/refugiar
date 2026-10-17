@@ -129,7 +129,7 @@ export function RecipeCard({ recipe, wanted = [] }: { recipe: RecipeSummary; wan
       <Card hoverable style={{ height: "100%", overflow: "hidden" }} styles={{ body: { padding: 16 } }} cover={
         <div style={{ position: "relative", overflow: "hidden" }}>
           <motion.div variants={{ hover: { scale: 1.04 } }} transition={{ duration: 0.4 }}>
-            <RecipeCover recipeId={recipe.id} photoId={recipe.coverPhotoId} />
+            <RecipeCover name={recipe.name} recipeId={recipe.id} photoId={recipe.coverPhotoId} />
           </motion.div>
           <span style={{ position: "absolute", top: 10, left: 10 }}>
             <AvailabilityTag availability={recipe.report.availability} solid />

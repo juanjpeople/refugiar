@@ -73,3 +73,9 @@ están cifrados con las claves de cada familia: quien tenga la carpeta no puede 
 - Un solo equipo: si se apaga, la familia sigue con lo que tiene en cada teléfono y sincroniza
   cuando vuelve.
 - Pasar una casa de refugi.ar al servidor de casa (o al revés) se hace con Exportar e Importar.
+
+## Acceso desde Ajustes
+
+Ajustes → Datos permite guardar una dirección literal privada y consultar `/api/health`, con un máximo de cinco segundos y sin cookies ni redirecciones. Acepta IPv4 RFC1918, loopback y localhost; no resuelve nombres públicos ni nombres mDNS. Un error de certificado, CORS, contenido mixto o permiso de red queda visible y no bloquea la casa.
+
+«Abrir nodo local» abre el servidor en su propia dirección; requiere su sesión allí. No transforma la casa actual en una casa sincronizada con ese nodo ni transmite credenciales de la nube. Integrar el transporte nativo y administrar el ESP real continúa pendiente.
