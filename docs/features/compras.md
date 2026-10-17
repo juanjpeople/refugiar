@@ -20,3 +20,9 @@ Compras → elegir lista → anotar con autocompletado. Pegar una lista (de What
 
 - Un proyecto suma solo las listas de la misma moneda.
 - La comparación de precios online es a pedido, no automática.
+
+## Guardar lo comprado en inventario
+
+Después de marcar una compra suelta, **Guardar en inventario** permite elegir un producto existente o crear uno dentro de una caja. Se confirma cantidad y unidad; las medidas compatibles se convierten y las incompatibles requieren una cantidad explícita. El inventario es compartido aunque la lista sea privada: el formulario lo avisa.
+
+El stock y el vínculo se guardan en la misma transacción. Repetir la acción en este dispositivo no vuelve a sumar. Desmarcar la compra revierte la cantidad guardada; limpiar comprados conserva el stock. El total pagado se conserva. Un precio anotado antes de vincular no se agrega retroactivamente al historial de precios del producto.

@@ -35,6 +35,7 @@ export const CONTENT_WIDTH = { default: 1280, wide: 1680 } as const;
  * aporta a la búsqueda va en `src/features/registry.ts`.
  */
 export const APP_ROUTES: AppRoute[] = [
+  { id: "mealPlan", href: "/recetas/semana", labelKey: "meals.title", icon: ChefHat, section: "main", parent: "recipes", hidden: true, permission: "recipes.view" },
   { id: "more", href: "/mas", labelKey: "nav.more", icon: Ellipsis, section: "system", hidden: true },
   { id: "home", href: "/", labelKey: "nav.routes.home", icon: House, section: "main" },
   { id: "inventory", href: "/inventario", labelKey: "nav.routes.inventory", icon: Boxes, permission: "inventory.view", section: "main", width: "wide" },

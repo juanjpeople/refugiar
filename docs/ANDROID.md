@@ -384,3 +384,13 @@ No ejecutar `pm clear` ni desinstalar entre fases: eso invalidaría el ensayo.
 Antes de Play: instalación y arranque sin red, cierre forzado, reinicio, actualización
 sin pérdida, Android/web con API real, permisos, recuperación y hardware físico.
 Ver [PLAY_STORE.md](PLAY_STORE.md). Un AAB firmado no prueba aceptación funcional.
+
+## Tanda de uso diario (2026-10)
+
+✅ Hecho en código: guardar compras en inventario, estado de sincronización accesible desde la cabecera, modo cocina con progreso local, menú semanal y recordatorios locales optativos. Componentes reales documentados en `/design`.
+
+Los recordatorios usan `@capacitor/local-notifications` 8.2.1 (compatible con Capacitor 8). El plugin solicita POST_NOTIFICATIONS sólo tras guardar una selección. No incorpora servicio push ni facturación. El manifiesto del plugin incluye restauración tras reinicio. Los límites y la prueba pendiente en teléfono están en [Calendario](features/calendario.md#comidas-y-recordatorios-locales).
+
+El modo cocina intenta Screen Wake Lock y avisa si el WebView no lo admite. No se promete mantener encendida la pantalla en todos los Android. Instalar un APK nuevo es necesario para incorporar el plugin nativo; un despliegue web no actualiza por sí solo la app instalada.
+
+Verificación local de esta tanda: `npm run check` (245 tests existentes), build web, recorrido API contra D1 local (3/3), `npm run android:build` y Gradle `lintDebug`. No se ejecutaron navegadores ni se probó en un teléfono; los E2E del merge anterior siguen fallidos en GitHub. El APK compilado valida la integración nativa del plugin, no la entrega real de alarmas por el sistema operativo.

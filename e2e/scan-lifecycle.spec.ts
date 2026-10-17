@@ -111,7 +111,7 @@ test("cámara: cambiar de modo descarta permisos pendientes y conserva la búsqu
   await page.getByRole("textbox", { name: "¿Qué buscás?" }).fill("arroz");
   await page.getByRole("button", { name: "Activar cámara" }).click();
   await expect(page.getByRole("button", { name: "Detener", exact: true })).toBeVisible();
-  await page.getByRole("radiogroup", { name: "Modo de cámara" }).getByText("AR espacial", { exact: true }).click();
+  await page.getByRole("button", { name: "Probar AR espacial (experimental)", exact: true }).click();
   await expect(page.getByRole("button", { name: "Entrar en AR" })).toBeDisabled();
   // El diagnóstico dice por qué no hay AR, para poder reportarlo.
   await expect(page.getByText("Diagnóstico: navigator.xr", { exact: true })).toBeVisible();
@@ -165,7 +165,7 @@ test("cámara: encontrar muestra productos y notas; QR abre la ficha", async ({ 
   await expect(page.getByText("Frasco azul", { exact: true })).toHaveCount(0);
   await page.evaluate(() => window.scrollTo({ top: 0, behavior: "instant" }));
   await page.screenshot({ path: testInfo.outputPath("encontrar.png"), fullPage: true, animations: "disabled" });
-  await page.getByRole("radiogroup", { name: "Modo de cámara" }).getByText("AR espacial", { exact: true }).click();
+  await page.getByRole("button", { name: "Probar AR espacial (experimental)", exact: true }).click();
   await expect(page.getByText("Vista previa de la tarjeta", { exact: true })).toBeVisible();
   await expect(page.getByRole("button", { name: "Entrar en AR" })).toBeDisabled();
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
@@ -226,10 +226,10 @@ test("cámara: búsqueda manual y AR sin soporte en inglés", async ({ home: pag
   await page.getByText("English", { exact: true }).click();
   await page.addInitScript(() => Object.defineProperty(navigator, "xr", { value: undefined, configurable: true }));
   await page.goto("/inventario/camara");
-  await page.getByRole("combobox", { name: "Container to display" }).fill("Alacena");
+  await page.getByRole("combobox", { name: "Box to display" }).fill("Alacena");
   await page.getByText("Cocina › Alacena", { exact: true }).click();
   await expect(page.getByRole("heading", { name: "Alacena", exact: true })).toBeVisible();
-  await page.getByRole("radiogroup", { name: "Camera mode" }).getByText("Spatial AR", { exact: true }).click();
+  await page.getByRole("button", { name: "Try spatial AR (experimental)", exact: true }).click();
   await expect(page.getByText("Card preview", { exact: true })).toBeVisible();
   await expect(page.getByRole("button", { name: "Enter AR" })).toBeDisabled();
   await expect(page.getByRole("link", { name: "Open details" })).toBeVisible();
