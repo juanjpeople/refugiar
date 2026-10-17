@@ -1,4 +1,5 @@
 "use client";
+import { ConnectionSettings } from "./ConnectionSettings";
 import { SKIN_IDS, type SkinId } from "@/skins/types";
 import { SKINS } from "@/skins/skins";
 import { DemoLauncher } from "@/features/demo/DemoLauncher";
@@ -66,7 +67,7 @@ export function SettingsPage() {
     shortcuts: <ShortcutsSettings />,
     unlock: <ProfileSecuritySettings />,
     account: <AccountSettings />,
-    data: <><DemoLauncher /><DataSettings /></>,
+    data: <><DemoLauncher /><ConnectionSettings /><DataSettings /></>,
     about: <AboutSettings />,
   };
   const sections = VISIBLE_SECTIONS.map(({ id, key, icon }) => ({

@@ -1,3 +1,5 @@
+import { revokeCloudSession } from "@/lib/network/policy";
+import { SAMPLE_HOUSE } from "@/lib/demo";
 /**
  * Operaciones sobre los datos del dispositivo. Las que tocan los datos de la casa
  * (exportar, borrar) exigen `settings.data`; la caché no contiene datos de nadie.
@@ -150,11 +152,16 @@ export async function deleteAllData(actor: Actor | null) {
   assertCan(actor, "settings.data");
   await db.delete();
   // También las claves de la cuenta de la nube guardadas en este dispositivo.
-  await clearVault().catch(() => {});
-  for (const key of Object.keys(localStorage)) {
-    if (key.startsWith(STORAGE_PREFIX)) localStorage.removeItem(key);
+  if (!SAMPLE_HOUSE) {
+    await clearVault().catch(() => {});
+    revokeCloudSession();
   }
-  sessionStorage.clear();
+  for (const key of Object.keys(localStorage)) {
+    if (!key.startsWith(STORAGE_PREFIX)) continue;
+    const sampleKey = key.endsWith("-demo") || key.endsWith("-tests");
+    if (SAMPLE_HOUSE ? key.endsWith(`-${SAMPLE_HOUSE}`) : !sampleKey) localStorage.removeItem(key);
+  }
+  // Keep the tab’s house selection: clearing cache/data must never open the real house.
 }
 
 /** Caché del navegador (Cache Storage y service workers). No toca datos ni preferencias. */
@@ -165,7 +172,7 @@ export async function clearCache() {
   if ("serviceWorker" in navigator) {
     for (const registration of await navigator.serviceWorker.getRegistrations()) await registration.unregister();
   }
-  sessionStorage.clear();
+  // Keep the tab’s house selection: clearing cache/data must never open the real house.
 }
 
 /** Espacio usado y disponible, si el navegador lo informa. */

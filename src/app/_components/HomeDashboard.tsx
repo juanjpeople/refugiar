@@ -1,5 +1,7 @@
 "use client";
 
+import { DemoTour } from "@/features/demo/DemoTour";
+import { BriefPanel } from "@/features/brief/BriefPanel";
 import { haloBackground } from "@/skins/surface";
 import { useSkin } from "@/skins/useSkin";
 import { Card, Col, Flex, Grid, Row, Typography, theme } from "antd";
@@ -62,7 +64,9 @@ function HouseHome() {
         }
       />
 
+      <DemoTour />
       <BackupReminder />
+      <BriefPanel />
       <Can perform="calendar.view"><SchoolToday /></Can>
       <Stagger delay={0.15}>
         <Row gutter={[16, 16]}>

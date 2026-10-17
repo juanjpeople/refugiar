@@ -1,4 +1,5 @@
 "use client";
+import { revokeCloudSession } from "@/lib/network/policy";
 import { DemoLauncher } from "@/features/demo/DemoLauncher";
 
 import { DEMO_ENABLED, SAMPLE_HOUSE } from "@/lib/demo";
@@ -51,6 +52,7 @@ export function Onboarding() {
   const { message } = App.useApp();
 
   function finishLocal() {
+    if (!DEMO_ENABLED) revokeCloudSession();
     setMode("local");
     router.push("/");
   }

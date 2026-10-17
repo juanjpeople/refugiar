@@ -1,3 +1,4 @@
+import { useDeviceStore } from "@/store/useDeviceStore";
 import "fake-indexeddb/auto";
 import { buildDefaultStorage } from "@/features/storage/seed";
 import assert from "node:assert/strict";
@@ -9,6 +10,8 @@ import { useSyncStatus } from "./status";
 
 for (const code of [401, 404]) {
   test(`una respuesta ${code} detiene los reintentos sin borrar la copia local`, async (t) => {
+    useDeviceStore.setState({ mode: "cloud" });
+    t.after(() => useDeviceStore.setState({ mode: "unset" }));
     let stop: () => void = () => undefined;
     t.after(() => stop());
     const windowEvents = Object.assign(new EventTarget(), { location: { origin: "https://test.example" } });

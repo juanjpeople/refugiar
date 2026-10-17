@@ -17,8 +17,8 @@ test("crear cuenta pide un código de acceso desde bienvenida y empezar", async 
   await expect(page.getByRole("link", { name: "Crear cuenta", exact: true })).toBeVisible();
   // La captura también debe incluir las tarjetas tras su animación de entrada.
   await expect(page.getByRole("heading", { name: "Crear mi casa", exact: true }).locator("../../..")).toHaveCSS("opacity", "1");
-  await page.getByRole("link", { name: "Nuestros valores" }).scrollIntoViewIfNeeded();
-  await expect(page.getByRole("link", { name: "Nuestros valores" }).locator("../../..")).toHaveCSS("opacity", "1");
+  await page.getByRole("link", { name: "Acerca del proyecto" }).scrollIntoViewIfNeeded();
+  await expect(page.getByRole("link", { name: "Acerca del proyecto" }).locator("../../..")).toHaveCSS("opacity", "1");
   await page.screenshot({ path: testInfo.outputPath("cuenta-claro.png"), fullPage: true });
   await page.emulateMedia({ colorScheme: "dark", reducedMotion: "reduce" });
   await page.screenshot({ path: testInfo.outputPath("cuenta-oscuro.png"), fullPage: true });

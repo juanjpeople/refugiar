@@ -14,7 +14,7 @@ test("el catálogo filtra, consulta referencias y espera la confirmación para g
   await filters.getByRole("button", { name: "Almacén y cocina", exact: true }).press("Space");
   await expect(filters.getByRole("button", { name: "Almacén y cocina", exact: true })).toHaveAttribute("aria-pressed", "true");
   await dialog.getByRole("textbox").fill("arroz");
-  await expect(dialog.getByRole("status")).toHaveText("1 cosa");
+  await expect(dialog.getByRole("status")).toHaveText("2 cosas");
   await dialog.getByRole("button", { name: "Precio de referencia de Arroz", exact: true }).click();
   const reference = page.getByRole("region", { name: "Precio de referencia", exact: true });
   await expect(reference).toContainText("Referencia publicada:");
