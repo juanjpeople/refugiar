@@ -85,6 +85,6 @@ export function useRecipeActions() {
     remove: (id: string) => run(() => deleteRecipe(user, id), t("recipes.toast.deleted")),
     setCover: (id: string, photoId: string | undefined) => run(() => setRecipeCover(user, id, photoId)),
     cook: (id: string, servings: number, consumptions: Consumption[]) => run(() => cookRecipe(user, id, servings, consumptions)),
-    addMissing: (id: string, servings: number) => run(() => addMissingToList(user, id, servings)),
+    addMissing: (id: string, servings: number, selected?: string[]) => run(() => addMissingToList(user, id, servings, selected)),
   };
 }

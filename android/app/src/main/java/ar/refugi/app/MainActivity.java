@@ -4,6 +4,7 @@ import com.getcapacitor.BridgeActivity;
 import android.os.Bundle;
 import android.content.Intent;
 import android.net.Uri;
+import androidx.activity.OnBackPressedCallback;
 
 public class MainActivity extends BridgeActivity {
     @Override
@@ -13,6 +14,19 @@ public class MainActivity extends BridgeActivity {
         super.onCreate(savedInstanceState);
         getBridge().setWebViewClient(new StaticWebViewClient(getBridge()));
         openHouseLink(getIntent());
+        getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
+            @Override
+            public void handleOnBackPressed() {
+                getBridge().getWebView().evaluateJavascript(
+                    "Boolean(window.refugiarHandleBack && window.refugiarHandleBack())",
+                    handled -> {
+                        if ("true".equals(handled)) return;
+                        if (getBridge().getWebView().canGoBack()) getBridge().getWebView().goBack();
+                        else moveTaskToBack(true);
+                    }
+                );
+            }
+        });
     }
 
     @Override

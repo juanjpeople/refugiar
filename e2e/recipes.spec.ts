@@ -14,6 +14,7 @@ test("una receta vinculada sabe qué falta, lo anota y descuenta al cocinarla", 
 
   await expect(page.getByText("Falta poco").or(page.getByText("Faltan cosas")).first()).toBeVisible();
   await page.getByRole("button", { name: /Agregar lo que falta/ }).click();
+  await page.getByRole("button", { name: "Agregar a Compras", exact: true }).click();
   await expect(page.getByText("1 ingrediente anotado en la lista de compras")).toBeVisible();
 
   await page.getByRole("button", { name: "Cociné esto" }).click();

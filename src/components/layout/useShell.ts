@@ -22,12 +22,14 @@ export function useToggleSidebar() {
   const { sidebar } = usePreferences();
   const setPreference = useSetPreference();
   const setNavDrawerOpen = useUiStore((s) => s.setNavDrawerOpen);
-  const usesDrawer = !screens.md || sidebar === "hidden";
+  const usesDrawer = sidebar === "hidden";
+  const router = useRouter();
 
   return useCallback(() => {
-    if (usesDrawer) setNavDrawerOpen(true);
+    if (!screens.md) router.push("/mas");
+    else if (usesDrawer) setNavDrawerOpen(true);
     else setPreference("sidebar", sidebar === "expanded" ? "collapsed" : "expanded");
-  }, [usesDrawer, sidebar, setPreference, setNavDrawerOpen]);
+  }, [screens.md, router, usesDrawer, sidebar, setPreference, setNavDrawerOpen]);
 }
 
 /** Atajos globales: Ctrl/⌘+K búsqueda, Ctrl/⌘+B menú, Ctrl/⌘+, ajustes. */

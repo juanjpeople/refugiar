@@ -1,4 +1,4 @@
-import { Boxes, CalendarDays, ChefHat, GraduationCap, HardHat, House, Images, ListChecks, MapPin, MessageSquare, Palette, ScanBarcode, ScanLine, Settings, ShieldCheck, ShoppingCart, Sparkles, Users, type LucideIcon } from "lucide-react";
+import { Boxes, Ellipsis, CalendarDays, ChefHat, GraduationCap, HardHat, House, Images, ListChecks, MapPin, MessageSquare, Palette, ScanBarcode, ScanLine, Settings, ShieldCheck, ShoppingCart, Sparkles, Users, type LucideIcon } from "lucide-react";
 import type { MessageKey } from "@/i18n/translate";
 import type { Permission } from "@/lib/auth/permissions";
 
@@ -35,6 +35,7 @@ export const CONTENT_WIDTH = { default: 1280, wide: 1680 } as const;
  * aporta a la búsqueda va en `src/features/registry.ts`.
  */
 export const APP_ROUTES: AppRoute[] = [
+  { id: "more", href: "/mas", labelKey: "nav.more", icon: Ellipsis, section: "system", hidden: true },
   { id: "home", href: "/", labelKey: "nav.routes.home", icon: House, section: "main" },
   { id: "inventory", href: "/inventario", labelKey: "nav.routes.inventory", icon: Boxes, permission: "inventory.view", section: "main", width: "wide" },
   { id: "space", href: "/inventario/lugar", labelKey: "nav.routes.space", icon: MapPin, permission: "inventory.view", section: "main", parent: "inventory", hidden: true, needsId: true, width: "wide" },

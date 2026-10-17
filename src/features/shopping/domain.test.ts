@@ -98,7 +98,8 @@ describe("anotar en la lista", () => {
     });
     assert.throws(() => parseNewShoppingItem({ name: "", quantity: 1, unit: "unidades" }), ValidationError);
     assert.throws(() => parseNewShoppingItem({ name: "Velas", quantity: 0, unit: "unidades" }), ValidationError);
-    assert.throws(() => parseNewShoppingItem({ name: "Velas", quantity: 1, unit: "toneladas" }), ValidationError);
+    assert.equal(parseNewShoppingItem({ name: "Leche", quantity: 0.5, unit: "taza" }).quantity, 0.5);
+    assert.throws(() => parseNewShoppingItem({ name: "Velas", quantity: 1, unit: "toneladas", inventoryItemId: "velas" }), ValidationError);
   });
 });
 

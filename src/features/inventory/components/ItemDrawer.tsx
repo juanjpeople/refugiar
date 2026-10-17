@@ -236,7 +236,7 @@ function ItemForm({ item }: { item: InventoryItem }) {
       <Row gutter={12}>
         <Col xs={24} sm={12}>
           <Form.Item name="minThreshold" label={t("inventory.form.min")} tooltip={t("inventory.form.minTooltip")}>
-            <InputNumber min={0} max={INVENTORY_LIMITS.maxQuantity} precision={0} style={{ width: "100%" }} />
+            <InputNumber min={0} max={INVENTORY_LIMITS.maxQuantity} precision={3} style={{ width: "100%" }} />
           </Form.Item>
         </Col>
         <Col xs={24} sm={12}>
@@ -298,9 +298,9 @@ function ConsumptionPanel({ item }: { item: InventoryItem }) {
           <Space.Compact>
             <InputNumber
               aria-label={t("inventory.consume.amount")}
-              min={1}
+              min={0.001}
               max={INVENTORY_LIMITS.maxQuantity}
-              precision={0}
+              precision={3}
               value={amount}
               onChange={(value) => setAmount(value ?? 1)}
               style={{ width: 88 }}

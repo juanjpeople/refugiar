@@ -1,6 +1,6 @@
 "use client";
 
-import { AutoComplete, Button, Card, Col, Flex, Grid, Input, InputNumber, Row, Tag, Tooltip, Typography, theme } from "antd";
+import { AutoComplete, Button, Card, Col, Flex, Grid, Input, InputNumber, Row, Select, Tag, Tooltip, Typography, theme } from "antd";
 import { AnimatePresence, motion } from "framer-motion";
 import { ArrowDown, ArrowUp, ImagePlus, Link2, Plus, Save, Trash2, X } from "lucide-react";
 import Link from "next/link";
@@ -9,6 +9,7 @@ import { useRef, useState } from "react";
 import { RequirePermission } from "@/components/auth/RequirePermission";
 import { Reveal } from "@/components/motion";
 import { PageHeader, PrivacySelect, StockTag, LoadingSkeleton } from "@/components/ui";
+import { convertQuantity, isMeasuredUnit } from "@/features/inventory/quantity";
 import { getStockStatus, isUnit, UNITS } from "@/features/inventory/domain";
 import { PhotoGallery } from "@/features/media/components/PhotoGallery";
 import { PHOTO_LIMITS } from "@/features/media/domain";
@@ -82,16 +83,17 @@ function EditorForm({ recipe }: { recipe: Recipe | null }) {
 
   /**
    * Una lista pegada en un ingrediente se reparte: uno por renglón, desde ese lugar. Lo que se llama
-   * igual que algo del inventario (con la misma unidad o sin unidad) queda vinculado.
+   * igual que algo del inventario (con una medida compatible y sin coincidencias ambiguas) queda vinculado.
    */
   function pasteIngredients(key: string, text: string) {
-    const byName = new Map((options ?? []).map(({ item }) => [item.name.toLowerCase(), item]));
+    const available = (options ?? []).filter(({ item }) => !item.reusable);
     const parsed = text.split(/\r?\n/).map(parseIngredientLine).filter((line) => line !== null);
     const drafts: IngredientDraft[] = parsed.map((line) => {
-      const item = byName.get(line.name.toLowerCase());
-      const sameUnit = item && (line.unit === "" || line.unit === "unidades" || line.unit === item.unit);
+      const matches = available.filter(({ item }) => item.name.toLowerCase() === line.name.toLowerCase());
+      const item = matches.length === 1 ? matches[0].item : undefined;
+      const sameUnit = item && convertQuantity(line.quantity, line.unit, item.unit) !== null;
       return sameUnit
-        ? { key: nextKey(), itemId: item.id, name: item.name, quantity: Math.max(1, Math.round(line.quantity)), unit: item.unit }
+        ? { key: nextKey(), itemId: item.id, name: item.name, quantity: line.quantity, unit: line.unit }
         : { key: nextKey(), name: line.name, quantity: line.quantity, unit: line.unit };
     });
     setIngredients((current) => {
@@ -352,8 +354,13 @@ function IngredientField({
   const { t } = useI18n();
   const { token } = theme.useToken();
   const query = ingredient.name.trim().toLowerCase();
-  const matches = query && !ingredient.itemId ? options.filter(({ item, place }) => `${item.name} ${place}`.toLowerCase().includes(query)).slice(0, 6) : [];
+  const matches = query && !ingredient.itemId ? options.filter(({ item, place }) => !item.reusable && `${item.name} ${place}`.toLowerCase().includes(query)).slice(0, 6) : [];
   const linked = !!ingredient.itemId;
+  function changeUnit(unit: string) {
+    const item = options.find((option) => option.item.id === ingredient.itemId)?.item;
+    onChange({ unit, ...(item && convertQuantity(1, unit, item.unit) === null ? { itemId: undefined } : {}) });
+  }
+  const linkedItem = options.find((option) => option.item.id === ingredient.itemId)?.item;
   const unitOptions = UNITS.map((unit) => ({ value: unit, label: t(`inventory.units.${unit}`, { count: 2 }) }));
 
   return (
@@ -376,7 +383,10 @@ function IngredientField({
         onChange={(value: string) => onChange(linked ? { name: value, itemId: undefined } : { name: value })}
         onSelect={(id: string) => {
           const match = options.find((option) => option.item.id === id);
-          if (match) onChange({ itemId: match.item.id, name: match.item.name, unit: match.item.unit, quantity: Math.max(1, Math.round(ingredient.quantity ?? 1)) });
+          if (match) {
+            const compatible = convertQuantity(ingredient.quantity ?? 1, ingredient.unit, match.item.unit) !== null;
+            onChange({ itemId: match.item.id, name: match.item.name, unit: compatible ? ingredient.unit : match.item.unit, quantity: compatible ? ingredient.quantity : 1 });
+          }
         }}
         options={matches.map(({ item, place }) => ({
           value: item.id,
@@ -399,26 +409,26 @@ function IngredientField({
       <InputNumber
         aria-label={t("inventory.form.quantity")}
         // Suelto se pueden escribir decimales ("0,5 taza"); con las flechas va de a uno.
-        min={linked ? 1 : 0.01}
-        precision={linked ? 0 : undefined}
+        min={0.001}
+        precision={linked && !isMeasuredUnit(ingredient.unit) ? 0 : 3}
         value={ingredient.quantity}
         onChange={(value) => onChange({ quantity: value })}
         style={{ width: 90 }}
       />
-      {linked ? (
-        <Tooltip title={t("recipes.editor.unitFromItem")}>
-          <Input value={isUnit(ingredient.unit) ? t(`inventory.units.${ingredient.unit}`, { count: 2 }) : ingredient.unit} disabled style={{ width: 120 }} aria-label={t("inventory.form.unit")} />
-        </Tooltip>
-      ) : (
-        <AutoComplete
-          value={isUnit(ingredient.unit) ? t(`inventory.units.${ingredient.unit}`, { count: 2 }) : ingredient.unit}
-          options={unitOptions}
-          aria-label={t("inventory.form.unit")}
-          onChange={(value: string) => onChange({ unit: UNITS.find((unit) => t(`inventory.units.${unit}`, { count: 2 }) === value) ?? value })}
-          onSelect={(value: string) => onChange({ unit: value })}
-          style={{ width: 120 }}
-        />
-      )}
+      {linked && linkedItem ? <Select
+        value={ingredient.unit}
+        aria-label={t("inventory.form.unit")}
+        options={[...UNITS, "ml"].filter((unit) => convertQuantity(1, unit, linkedItem.unit) !== null).map((unit) => ({ value: unit, label: isUnit(unit) ? t(`inventory.units.${unit}`, { count: 2 }) : unit }))}
+        onChange={changeUnit}
+        style={{ width: 120 }}
+      /> : <AutoComplete
+        value={isUnit(ingredient.unit) ? t(`inventory.units.${ingredient.unit}`, { count: 2 }) : ingredient.unit}
+        options={unitOptions}
+        aria-label={t("inventory.form.unit")}
+        onChange={(value: string) => changeUnit(UNITS.find((unit) => t(`inventory.units.${unit}`, { count: 2 }) === value) ?? value)}
+        onSelect={(value: string) => changeUnit(value)}
+        style={{ width: 120 }}
+      />}
       <Button type="text" danger aria-label={t("recipes.editor.removeIngredient")} icon={<Trash2 />} onClick={onRemove} />
     </Flex>
   );

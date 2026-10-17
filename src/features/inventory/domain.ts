@@ -2,6 +2,7 @@
  * Dominio de inventarios: tipos, reglas y validación. Sin React ni base de datos,
  * así se puede usar igual en la UI, en los servicios y (a futuro) en el servidor.
  */
+import { roundQuantity } from "./quantity";
 import { ValidationError } from "@/lib/errors";
 
 /** Las unidades se guardan con este identificador y se traducen al mostrarse (`inventory.units.<id>`). */
@@ -142,7 +143,7 @@ export function forecastUsage(quantity: number, uses: { at: number; amount: numb
 // --- Validación --------------------------------------------------------------
 
 function isValidAmount(value: unknown): value is number {
-  return typeof value === "number" && Number.isInteger(value) && value >= 0 && value <= INVENTORY_LIMITS.maxQuantity;
+  return typeof value === "number" && Number.isFinite(value) && value >= 0 && value <= INVENTORY_LIMITS.maxQuantity;
 }
 
 function parseName(input: string | undefined) {
@@ -186,7 +187,7 @@ export function parseNewInventoryItem(input: NewInventoryItem): NewInventoryItem
   if (!isValidAmount(input.quantity)) throw new ValidationError("errors.validation.quantityInvalid");
   if (!isValidAmount(input.minThreshold)) throw new ValidationError("errors.validation.minInvalid");
   if (!isUnit(input.unit)) throw new ValidationError("errors.validation.unitInvalid");
-  return { name, quantity: input.quantity, unit: input.unit, minThreshold: input.minThreshold,
+  return { name, quantity: roundQuantity(input.quantity), unit: input.unit, minThreshold: roundQuantity(input.minThreshold),
     ...(input.autoSuggest === undefined ? {} : { autoSuggest: !!input.autoSuggest }),
     ...(input.reusable === undefined ? {} : { reusable: !!input.reusable }),
     ...(parseBarcode(input.barcode) ? { barcode: parseBarcode(input.barcode) } : {}) };
@@ -197,7 +198,7 @@ export function parseInventoryPatch(patch: InventoryItemPatch): InventoryItemPat
   if (patch.name !== undefined) out.name = parseName(patch.name);
   if (patch.minThreshold !== undefined) {
     if (!isValidAmount(patch.minThreshold)) throw new ValidationError("errors.validation.minInvalid");
-    out.minThreshold = patch.minThreshold;
+    out.minThreshold = roundQuantity(patch.minThreshold);
   }
   if (patch.unit !== undefined) {
     if (!isUnit(patch.unit)) throw new ValidationError("errors.validation.unitInvalid");
@@ -224,9 +225,9 @@ export interface ConsumptionPlan {
 
 /** Cuánto se descuenta al consumir `amount`. Nunca deja negativos: si no alcanza, descuenta hasta 0. */
 export function planConsumption(current: number, amount: number): ConsumptionPlan {
-  if (!Number.isInteger(amount) || amount <= 0 || amount > INVENTORY_LIMITS.maxQuantity) {
+  if (!Number.isFinite(amount) || amount < 0.001 || amount > INVENTORY_LIMITS.maxQuantity) {
     throw new ValidationError("errors.validation.quantityInvalid");
   }
   const consumed = Math.min(current, amount);
-  return { quantity: current - consumed, consumed, missing: amount - consumed };
+  return { quantity: roundQuantity(current - consumed), consumed, missing: roundQuantity(amount - consumed) };
 }

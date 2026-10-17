@@ -12,14 +12,17 @@ import { useCallback, useEffect, useRef, type ReactNode } from "react";
 import { LockScreen } from "@/components/auth/LockScreen";
 import { MembersBridge } from "@/components/auth/MembersBridge";
 import { HouseMark } from "@/components/illustrations/HouseMark";
-import { BOTTOM_BAR_HEIGHT, Callout } from "@/components/ui";
+import { BOTTOM_BAR_HEIGHT, MobileHeader, Callout } from "@/components/ui";
 import { guardians } from "@/features/members/domain";
+import { useHistoryNavigation } from "@/hooks/useHistoryNavigation";
+import { useBreadcrumbStore } from "@/store/useBreadcrumbStore";
+import { useNativeBack } from "@/hooks/useNativeBack";
 import { useHydrated } from "@/hooks/useHydrated";
 import { usePreferences } from "@/hooks/usePreferences";
 import { useT } from "@/i18n";
 import { deviceProfiles, kidEntryAllowed, useCurrentUser, useIsLocked, useLockStore, useMembersStore, useSessionStore } from "@/lib/auth/session";
 import { FONT_SIZES } from "@/lib/theme";
-import { APP_ROUTES, CONTENT_WIDTH, findRoute } from "@/lib/navigation/routes";
+import { APP_ROUTES, CONTENT_WIDTH, findRoute, getRouteTrail } from "@/lib/navigation/routes";
 import { useDeviceStore } from "@/store/useDeviceStore";
 import { useUiStore } from "@/store/useNavigationStore";
 import type { SidebarMode } from "@/store/usePreferencesStore";
@@ -44,6 +47,7 @@ const STATIC_PUBLIC_ROUTES = ["/bienvenida", "/politica-de-privacidad", "/borrar
  * primera vez → landing · cargando → selector de perfil → layout (estándar o infantil).
  */
 export function AppShell({ children }: { children: ReactNode }) {
+  useNativeBack();
   const t = useT();
   const pathname = usePathname();
   const hydrated = useHydrated();
@@ -177,6 +181,16 @@ function DefaultLayout({ children }: { children: ReactNode }) {
   useKeepLocalData();
 
   const isMobile = !screens.md;
+  const tail = useBreadcrumbStore((state) => state.tail);
+  const currentRoute = findRoute(pathname);
+  const history = useHistoryNavigation();
+  const mobileTitle = tail.at(-1)?.label ?? (currentRoute ? t(currentRoute.labelKey) : "");
+  const router = useRouter();
+  const parentRoute = getRouteTrail(currentRoute).at(-2);
+  const back = currentRoute?.parent ? () => {
+    if (history.canGoBack) history.back();
+    else router.replace(parentRoute?.needsId ? "/inventario" : parentRoute?.href ?? "/");
+  } : undefined;
   const barVisible = useMobileBarVisible() && isMobile;
   const mode: SidebarMode = isMobile ? "hidden" : sidebar;
   const collapsed = mode === "collapsed";
@@ -187,7 +201,7 @@ function DefaultLayout({ children }: { children: ReactNode }) {
         placement="left"
         size={SIDEBAR_WIDTH.expanded + 20}
         title={<Brand />}
-        open={drawerOpen && mode === "hidden"}
+        open={drawerOpen && mode === "hidden" && !isMobile}
         onClose={() => setDrawerOpen(false)}
         styles={{ body: { padding: "8px 0" } }}
         footer={
@@ -254,8 +268,9 @@ function DefaultLayout({ children }: { children: ReactNode }) {
             display: "flex",
             flexWrap: "wrap",
             height: "auto",
-            minHeight: token.controlHeight * 2,
+            minHeight: isMobile ? token.controlHeightLG : token.controlHeight * 2,
             paddingBlock: token.paddingXS,
+            paddingTop: `max(${token.paddingXS}px, env(safe-area-inset-top, 0px))`,
             justifyContent: "space-between",
             alignItems: "center",
             gap: 12,
@@ -268,6 +283,7 @@ function DefaultLayout({ children }: { children: ReactNode }) {
             borderBottom: `1px solid ${token.colorBorderSecondary}`,
           }}
         >
+          {isMobile ? <MobileHeader title={mobileTitle} onBack={back} actions={<HeaderActions search />} /> : <>
           {/* Toma solo el espacio que sobra: unas migas largas se recortan en lugar de bajar las acciones a otro renglón. */}
           <Flex align="center" gap={4} style={isMobile ? { minWidth: 0 } : { flex: "1 1 0", minWidth: token.controlHeight * (mode === "hidden" ? 3 : 2) + 16 }}>
             {mode === "hidden" && (
@@ -279,6 +295,7 @@ function DefaultLayout({ children }: { children: ReactNode }) {
             <HeaderNavigation />
           </Flex>
           <HeaderActions search />
+          </>}
         </Header>
         {/* El mismo resplandor de marca que la landing: da profundidad sin costo (es un gradiente). */}
         <Content

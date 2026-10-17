@@ -19,6 +19,21 @@ archivos estáticos con los recursos necesarios para compilar Next.js. El almace
 de los datos depende de la cuota del navegador; exportá respaldos, especialmente antes
 de cambiar de dispositivo, navegador o dirección.
 
+## Política de builds y previews
+
+Una tanda se consolida en el PR abierto y se publica con un único merge/deploy.
+No habilitar previews ni compilaciones automáticas de ramas secundarias: el dueño
+no los usa y quiere evitar procesamiento adicional. Mantener los checks de CI.
+Los comandos `preview:lan` y `preview:tests` son servidores locales, no despliegues.
+
+Revisión del 17/10/2026: Cloudflare devuelve `enabled: false` y
+`previews_enabled: false` para el Worker `opendomus`; no hay proyectos Pages en
+la cuenta. `wrangler.jsonc` también conserva `preview_urls: false`.
+Esto no prueba que los builds de ramas secundarias estén deshabilitados: la API
+Builds respondió 403 con el token local. Verificar en Workers & Pages → opendomus
+→ Settings → Builds que Non-production branch builds esté apagado. No se cambió
+esa configuración remota ni se asegura un ahorro monetario sin revisar su uso.
+
 ## Desarrollo y build
 
 Desde una copia del [repositorio público](https://github.com/juanjpeople/opendomus),
