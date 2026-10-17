@@ -2,6 +2,7 @@ import { expect, test } from "./fixtures";
 
 test("feedback y formulario de operador no exponen datos privados", async ({ home: page }) => {
   await page.goto("/feedback");
+  await page.getByRole("button", { name: "Permitir esta conexión", exact: true }).click();
   await expect(page.getByRole("heading", { name: "Ayudanos a mejorar Refugiar" })).toBeVisible();
   await expect(page.getByRole("button", { name: "Enviar" })).toBeVisible();
 

@@ -33,7 +33,7 @@ Sistema visual completo: `/design` dentro de la app (perfil Administrador).
 
 Ajustes → Datos permite a un administrador habilitar por separado consultas de productos, clima y noticias. Empiezan apagadas, incluso si se usa la nube. Se guardan en este dispositivo y separados de demo/pruebas. El resumen se configura allí: ciudad, fuentes, palabras silenciadas y actualización mientras Inicio está visible. → [Resumen](resumen.md)
 
-Desde una casa local, entrar a cuentas solicita permiso para esa sesión antes de contactar la API. No sube datos ni vincula la casa automáticamente. No se restaura una sesión de nube en segundo plano mientras el modo es local. Abrir expresamente una fuente externa sigue siendo una decisión del usuario.
+Desde una casa local, entrar a cuentas solicita permiso para esa sesión antes de contactar la API. No sube datos ni vincula la casa automáticamente. Sin permiso activo, no se restaura una sesión de nube en segundo plano mientras el modo es local. El permiso dura en esta pestaña, incluidas sus recargas; elegir volver a modo local o borrar la casa real lo revoca. Abrir expresamente una fuente externa sigue siendo una decisión del usuario.
 
 El selector superior indica Mi casa/Demo y recarga para abrir la base correspondiente. Las preferencias, conexiones y resumen de demo no se mezclan con los reales; borrar la demo no borra la bóveda real. La búsqueda móvil está en Más. Las animaciones respetan movimiento reducido y acotan el retraso de entrada.
 

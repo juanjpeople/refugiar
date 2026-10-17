@@ -31,12 +31,26 @@ export function privateOrigin(value: string): string | null {
   } catch { return null; }
 }
 
-let cloudAccess = false;
-export function permitCloudSession() { cloudAccess = true; }
+const CLOUD_PERMISSION_KEY = "refugiar-cloud-permission";
+function initialCloudPermission() {
+  try { return typeof sessionStorage !== "undefined" && sessionStorage.getItem(CLOUD_PERMISSION_KEY) === "granted"; }
+  catch { return false; }
+}
+export const useCloudPermission = create<{ allowed: boolean }>(() => ({ allowed: initialCloudPermission() }));
+export function permitCloudSession() {
+  if (DEMO_ENABLED) return;
+  try { sessionStorage.setItem(CLOUD_PERMISSION_KEY, "granted"); } catch { /* In-memory consent still works for this document. */ }
+  useCloudPermission.setState({ allowed: true });
+}
+export function revokeCloudSession() {
+  useCloudPermission.setState({ allowed: false });
+  try { sessionStorage.removeItem(CLOUD_PERMISSION_KEY); } catch { /* No persisted grant. */ }
+}
+useDeviceStore.subscribe((state, previous) => {
+  if (state.mode === "local" && previous.mode !== "local") revokeCloudSession();
+});
 export function cloudPermitted() {
-  const mode = useDeviceStore.getState().mode;
-  const accountEntry = typeof window !== "undefined" && ["/cuenta", "/unirme", "/feedback"].includes(window.location.pathname);
-  return !DEMO_ENABLED && (mode === "cloud" || cloudAccess || (mode === "unset" && accountEntry));
+  return !DEMO_ENABLED && (useDeviceStore.getState().mode === "cloud" || useCloudPermission.getState().allowed);
 }
 export function assertCloudAccess() {
   if (!cloudPermitted()) throw new AppError("connections.blocked");

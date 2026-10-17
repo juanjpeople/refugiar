@@ -1,3 +1,4 @@
+import { revokeCloudSession } from "@/lib/network/policy";
 import { SAMPLE_HOUSE } from "@/lib/demo";
 /**
  * Operaciones sobre los datos del dispositivo. Las que tocan los datos de la casa
@@ -151,7 +152,10 @@ export async function deleteAllData(actor: Actor | null) {
   assertCan(actor, "settings.data");
   await db.delete();
   // También las claves de la cuenta de la nube guardadas en este dispositivo.
-  if (!SAMPLE_HOUSE) await clearVault().catch(() => {});
+  if (!SAMPLE_HOUSE) {
+    await clearVault().catch(() => {});
+    revokeCloudSession();
+  }
   for (const key of Object.keys(localStorage)) {
     if (!key.startsWith(STORAGE_PREFIX)) continue;
     const sampleKey = key.endsWith("-demo") || key.endsWith("-tests");

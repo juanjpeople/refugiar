@@ -4,7 +4,7 @@ import { App } from "antd";
 import { useEffect } from "react";
 import { create } from "zustand";
 import { useT } from "@/i18n";
-import { cloudPermitted } from "@/lib/network/policy";
+import { cloudPermitted, useCloudPermission } from "@/lib/network/policy";
 import { useDeviceStore } from "@/store/useDeviceStore";
 import { CLOUD_ENABLED } from "@/lib/cloud/api";
 import { getErrorMessage } from "@/lib/errors";
@@ -47,12 +47,13 @@ export async function restoreCloudSession() {
 /** La sesión de la nube; la primera vez que se pide, la recupera. */
 export function useCloudSession() {
   const mode = useDeviceStore(s => s.mode);
+  const allowed = useCloudPermission(s => s.allowed);
   const status = useCloudStore((s) => s.status);
   const session = useCloudStore((s) => s.session);
 
   useEffect(() => {
     if (CLOUD_ENABLED && cloudPermitted() && useCloudStore.getState().status === "idle") void restoreCloudSession();
-  }, [mode]);
+  }, [mode, allowed]);
 
   return { status: CLOUD_ENABLED ? status : ("signed-out" as Status), session };
 }
