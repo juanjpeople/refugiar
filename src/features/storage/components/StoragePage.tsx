@@ -112,7 +112,7 @@ export function StoragePage() {
           <>
             {(canManage || canCreate) && containerCount > 0 && <Button icon={<NotebookPen />} onClick={() => setQuickOpen(true)}>{t("quickNote.button")}</Button>}
             {canManage && <Link href={organizeHref()}><Button icon={<ListChecks />}>{t("organize.button")}</Button></Link>}
-            <Link href={cameraHref()}><Button icon={<Camera />}>{t("camera.openMode")}</Button></Link>
+            <Link href={cameraHref()}><Button icon={<Camera />}>{t("nav.routes.scan")}</Button></Link>
             <Can perform="storage.manage">
               <Button type="primary" icon={<Plus />} onClick={() => setDialog({ kind: "space" })}>
                 {t("storage.addSpace")}

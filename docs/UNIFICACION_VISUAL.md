@@ -514,3 +514,9 @@ Para que una función nueva no rehaga su página de lista ni su página de detal
    - 320px de ancho (sin scroll horizontal);
    - claro y oscuro.
 5. Cámara y AR: en un Android real (WebXR no se prueba en Playwright).
+
+### Navegación móvil
+
+✅ MobileHeader y la barra de cinco destinos están documentados en /design
+(PanesSection). Más reutiliza Navigation con permisos. Queda la revisión visual
+del dueño en el teléfono.

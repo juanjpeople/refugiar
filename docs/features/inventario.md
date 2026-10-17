@@ -38,3 +38,8 @@ Para etiquetar un mueble: abrilo → ⋮ → "Agregar varias cajas" → escribí
 - Sin nube, cada dispositivo tiene su propio inventario.
 
 Detalle de navegación y cámara: [INVENTARIO.md](../INVENTARIO.md).
+
+### Acceso móvil al escáner
+
+Escanear QR se abre desde Inventario. Las pantallas de cámara ocultan la barra
+inferior y permiten volver desde la cabecera.
