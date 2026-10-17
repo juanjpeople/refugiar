@@ -1220,7 +1220,9 @@ export const en: Messages = {
       added: "Price recorded",
     },
   },
+  syncNotice: { title: "Your changes", local: "On this device", checking: "Checking sync", pending: "{count} changes waiting to sync", synced: "Synced", detail: "View sync status", localHint: "This home is stored here. A backup helps you recover it if you lose this device.", settings: "Open Data", saved: "Pending changes remain on this device.", waiting: "The first sync has not been confirmed yet." },
   shopping: {
+    store: { action: "Store in inventory", title: "Where will you store {name}?", existing: "Existing product", create: "New product", product: "Product", container: "Box or cabinet", name: "Name", quantity: "Quantity to store", unit: "Unit", confirm: "Store", saved: "Purchase stored in inventory", notBought: "Mark the purchase as bought first.", shared: "Inventory is shared with the family. Everyone can see what you store here.", conversion: "Confirm the quantity in the selected product's unit. Packages are not converted to weight.", empty: "Create a box or cabinet in Inventory first.", original: "You bought {amount}" },
     eyebrow: "Shopping",
     title: "Shopping list",
     description: "What the house needs, in one place. Whatever runs out shows up on its own for review.",
@@ -1365,7 +1367,10 @@ export const en: Messages = {
       button: "Install",
     },
   },
+  reminders: {"save": "Save reminders", "title": "Reminders on this device", "hint": "Choose the events to remember. Clear all and save to turn them off. All-day events notify at 9 am.", "events": "Events", "before": "When to notify", "minutes": "{count} minutes before", "atTime": "At event time", "limits": "Up to 64 reminders are scheduled for the next 30 days. Open the app to renew them. Android battery saving may delay reminders. Switching profiles cancels the previous profile’s reminders.", "androidOnly": "Local reminders are available in the Android app outside the demo house. No cloud notification service is needed.", "saved": "Preferences saved. Reminders are updated on this device.", "denied": "Android notifications are disabled. Enable them in app settings and save again.", "error": "Could not update reminders. Save again to retry.", "notificationTitle": "Refugiar · Calendar", "notificationBody": "An event is coming up. Open the calendar to see it."},
+  meals: { title: "Weekly menu", description: "Choose saved recipes and gather the week's missing ingredients.", add: "Plan a meal", empty: "No meal planned yet.", recipe: "Recipe", day: "Day", servings: "Servings", save: "Add to menu", remove: "Remove meal", removeConfirm: "Remove this meal? Repeating meals are removed as a whole series.", previous: "Previous week", next: "Next week", missing: "Review this week's shopping", hint: "Planning does not reserve or consume stock. Missing ingredients add up all meals in the selected week. They go to the shared household list.", unavailable: "This recipe is no longer available.", planned: "Meal added to menu", noRecipes: "Save a recipe to start planning." },
   recipes: {
+    mode: { open: "Cooking mode", title: "Cooking {name}", ingredients: "Prepared ingredients", step: "Step {current} of {total}", next: "Next", previous: "Previous", finish: "Finished: review consumption", close: "Save progress and leave", reset: "Start again", hint: "Checking ingredients or steps does not reduce stock. Review consumption when you finish.", saved: "Progress is saved on this device for your profile.", noSteps: "This recipe has no steps yet.", awake: "Keep screen awake", unavailable: "This device could not keep the screen awake.", storageError: "Progress could not be saved on this device.", complete: "Step done", resetTitle: "Clear progress for this preparation?" },
     substitutions: "Choose another ingredient as a substitute",
     source: "Use {name} from…",
     want: { title: "I want to use…", placeholder: "Choose or type ingredients", hint: "Search your saved recipes. Recipes using more of your chosen ingredients appear first.", matches: "Uses {count} of {total} chosen ingredients" },

@@ -23,6 +23,7 @@ import { BudgetBar } from "./BudgetBar";
 import { CheckCircle } from "./CheckCircle";
 import { ListModal } from "./ListModal";
 import { ListSwitcher } from "./ListSwitcher";
+import { StorePurchaseModal } from "./StorePurchaseModal";
 import { QuickAdd } from "./QuickAdd";
 import { EstimatePrice, QuickPrice } from "./QuickPrice";
 import { ReviewPanel } from "./ReviewPanel";
@@ -386,6 +387,8 @@ function RowItem({ row, currency, targets }: { row: ShoppingRow; currency: Curre
   const screens = Grid.useBreakpoint();
   const canManage = usePermission("shopping.manage");
   const { buy, unbuy, setQuantity, remove, move } = useShoppingActions();
+  const canStore = usePermission("inventory.create");
+  const [storing, setStoring] = useState(false);
   const done = row.status === "bought";
   const unit = (count: number) => (formatUnit(t, count, row.unit));
   // Precio conocido en la moneda de la lista (si es de otra, no se mezcla: se puede estimar a mano).
@@ -404,6 +407,7 @@ function RowItem({ row, currency, targets }: { row: ShoppingRow; currency: Curre
       transition={SPRING.snappy}
       style={{ borderTop: `1px solid ${token.colorBorderSecondary}`, background: done ? token.colorFillQuaternary : token.colorBgContainer }}
     >
+      {storing && <StorePurchaseModal row={row} onClose={() => setStoring(false)} />}
       {/* Una sola línea también en el celular: los datos se acomodan abajo del nombre, no los controles. */}
       <Flex align="center" gap={screens.sm ? 16 : 10} style={{ padding: screens.sm ? "12px 24px" : "12px 16px" }}>
         <Flex align="center" gap={screens.sm ? 16 : 12} style={{ flex: "1 1 0", minWidth: 0 }}>
@@ -441,6 +445,7 @@ function RowItem({ row, currency, targets }: { row: ShoppingRow; currency: Curre
                   {t("shopping.cheapestAt", { store: cheapest!.store, amount: format.money(cheapest!.amountCents, cheapest!.currency) })}
                 </Typography.Text>
               )}
+              {done && !row.inventoryItemId && canManage && canStore && <Button size="small" onClick={() => setStoring(true)}>{t("shopping.store.action")}</Button>}
               {done && !!row.restocked && (
                 <Typography.Text style={{ fontSize: "inherit", color: token.colorSuccessText }}>
                   {t("shopping.list.restocked", { amount: row.restocked })}

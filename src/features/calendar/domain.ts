@@ -14,6 +14,7 @@ export type EventKind = (typeof EVENT_KINDS)[number];
 export interface CalendarEvent {
   id: string;
   title: string;
+  meal?: { recipeId: string; servings: number };
   /** Quién lo ve con la casa en la nube (por defecto, Familia). */
   privacy?: Privacy;
   /** Inicio (ms). En eventos de todo el día, la medianoche local del primer día. */

@@ -7,6 +7,10 @@ El detalle de cada funcionalidad está en [docs/features](docs/features/).
 
 ## 🔨 Ahora
 
+- **Costos de builds**: apagar builds de ramas no productivas en el panel de Cloudflare. URLs preview ya apagadas; acceso a Builds pendiente. → [instructivo](docs/SIN_PREVIEW.md)
+- **Publicación después de checks completos**: configurar el disparador productivo para esperar CI; requiere acceso a Builds. No se habilitó otro deploy.
+
+
 - **Android autónomo**: recursos dentro del APK, datos propios, arranque y desbloqueo sin internet; conservar sincronización web. Ya pasó en emulador; falta probarlo en un teléfono real antes de publicar.
 - **Resiliencia**: conservar pendientes y reintentos sin duplicar cambios al reconectar.
 - **Familia en cuatro ventanas**: cerrar el laboratorio local existente con dos admins y dos chicos.
@@ -38,7 +42,7 @@ Anotadas para no perderlas. Pasan a ⏭️ cuando se decide hacerlas.
 - Préstamo de herramientas e inventarios temporales.
 - Bóveda de documentos: garantías, pólizas, manuales.
 - Chat interno con avisos de la casa.
-- Eventos recurrentes para chicos y adultos (extracurriculares, deportes, idiomas, gimnasio, turnos médicos) con recordatorios por evento; aviso al salir de casa solo opt-in y en el teléfono, sin enviar ubicación.
+- Aviso al salir de casa sólo opt-in y en el teléfono, sin enviar ubicación. Los recordatorios locales por evento ya están implementados en Android.
 - Sensores conectados a la base ESP32, después de validarla. → [plataformas](docs/PLATAFORMAS.md)
 - Servidor de casa usable desde la app de Android (hoy solo desde el navegador). → [servidor de casa](docs/SERVIDOR_CASA.md)
 - Multimedia en la NAS (Jellyfin, Plex) y modo party.
@@ -52,6 +56,7 @@ Lo último arriba. El PR que termina algo lo agrega acá.
 
 | Cuándo | Qué | PR |
 | --- | --- | --- |
+| 2026-10 | Guardar compras en inventario; sincronización visible; modo cocina con avance local; menú semanal con faltantes agrupados; recordatorios locales optativos en Android. Implementado, revisión visual y avisos en teléfono pendientes | Esta tanda |
 | 2026-10 | Recetas conectadas a la alacena y Compras: “Quiero usar…” con recetas guardadas, disponibilidad sin falsos positivos, suma de ingredientes repetidos, medidas compatibles y decimales, elección del producto al cocinar, sustituciones explícitas, filtros conservados al volver, stock con ubicación y revisión de faltantes sin duplicar compras; sin IA ni servicios externos | #87 |
 | 2026-10 | Chicos con su día: Inicio propio con escuela, calendario (solo lo suyo y lo de toda la casa) y recetas para opinar, sin Inventario, Compras ni Proyectos; un chico entra solo si un grande del dispositivo tiene PIN o huella, y un grande sin PIN se abre con el PIN de un grande. Foto con punto en la ficha de cada cosa; cargar envases con códigos de barras en ráfaga (nombres de Open Food Facts, opcional); "Anotar rápido" en una frase; landing con color, escenas reales y "En camino"; tests de navegador al día con las palabras nuevas | #86 |
 | 2026-10 | Uso diario en el celular: barra de abajo con Inicio, Inventario, Compras, Calendario y escanear en el centro; la búsqueda de arriba encuentra anotaciones y códigos; casas solo en el dispositivo piden no borrarse y recuerdan el respaldo; Lugar › Mueble › Caja › Cosa en toda la app; Compras con la lista primero, pegar varias cosas y compartir; encabezados compactos en el celular; pegar ingredientes y pasos en Recetas | #85 |

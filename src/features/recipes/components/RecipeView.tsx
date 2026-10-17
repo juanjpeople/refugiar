@@ -24,6 +24,7 @@ import { recipeHref } from "@/lib/navigation/routes";
 import { usePageCrumbs } from "@/store/useBreadcrumbStore";
 import { averageRating, checkAvailability, ingredientCheckKey, RECIPE_LIMITS, type IngredientCheck, type IngredientState } from "../domain";
 import { useRecipe, useRecipeActions } from "../hooks";
+import { CookingMode } from "./CookingMode";
 import { CookModal } from "./CookModal";
 import { AvailabilityTag, RatingBadge, RecipeCover } from "./RecipeBits";
 import { belowHeader } from "@/components/layout/constants";
@@ -40,6 +41,7 @@ export function RecipeView() {
   const { remove, setCover, addMissing } = useRecipeActions();
   const canManage = usePermission("recipes.manage");
   const [servings, setServings] = useState<number | null>(null);
+  const [guided, setGuided] = useState(false);
   const [cooking, setCooking] = useState(false);
   const [shopping, setShopping] = useState(false);
   const [doneSteps, setDoneSteps] = useState<Set<number>>(new Set());
@@ -119,6 +121,7 @@ export function RecipeView() {
                 <RatingBadge rating={rating} />
               </Flex>
               <Flex gap={8} wrap style={{ marginTop: 8 }}>
+                <Button size="large" onClick={() => setGuided(true)}>{t("recipes.mode.open")}</Button>
                 <Can perform="inventory.consume">
                   <Button type="primary" size="large" icon={<ChefHat />} onClick={() => setCooking(true)}>
                     {t("recipes.cook.button")}
@@ -211,6 +214,7 @@ export function RecipeView() {
       </Row>
 
       {shopping && <ReviewChecklist title={t("recipes.review.title")} description={t("recipes.review.hint")} options={report.checks.filter((check) => check.state !== "ok").map((check) => ({ value: ingredientCheckKey(check), label: `${check.ingredient.name} · ${formatQuantity(t, Math.max(0, check.needed - (check.have ?? 0)), check.ingredient.unit, format.number)}`, checked: check.state !== "unlinked" }))} onConfirm={onAddMissing} onClose={() => setShopping(false)} />}
+      {guided && <CookingMode key={`${recipe.id}:${portions}`} recipe={recipe} items={items} servings={portions} onClose={() => setGuided(false)} />}
       <CookModal open={cooking} recipe={recipe} items={items} servings={portions} onClose={() => setCooking(false)} />
     </RequirePermission>
   );

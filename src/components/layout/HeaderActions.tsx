@@ -9,7 +9,7 @@ import { detectBrowserLocale, LOCALE_META, LOCALES, useI18n, useT, type Locale }
 import { MemberAvatar } from "@/components/ui/MemberAvatar";
 import { DemoNotice } from "@/features/demo/DemoNotice";
 import { QuickAppearance } from "@/features/settings/components/QuickAppearance";
-import { OfflineBadge } from "@/components/pwa/OfflineBadge";
+import { SyncStatusButton } from "./SyncStatusButton";
 import { isSecured, pickableProfiles } from "@/features/members/domain";
 import { getSyncLink } from "@/lib/sync/middleware";
 import { kidEntryAllowed, useCurrentUser, useLockStore, useMembersStore, useSessionStore } from "@/lib/auth/session";
@@ -242,7 +242,7 @@ export function HeaderActions({ search = false }: { search?: boolean }) {
   return (
     <Flex align="center" gap={screens.md ? 12 : 4} style={{ flexShrink: 0 }}>
       <DemoNotice />
-      <OfflineBadge />
+      <SyncStatusButton />
       {search && <SearchTrigger />}
       {screens.md && <LanguageMenu />}
       {screens.lg && <ThemeModeSwitch />}

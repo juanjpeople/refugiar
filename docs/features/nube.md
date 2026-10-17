@@ -44,3 +44,7 @@ Sin cuenta, todo queda en el dispositivo. No se comparte con nadie ni se sincron
 - Cada cuenta puede sumar un segundo paso: un código de una app autenticadora o una llave de acceso.
 
 Detalle técnico: [PLAN_PRODUCCION.md](../PLAN_PRODUCCION.md) y [SECURITY.md](../../SECURITY.md).
+
+## Estado visible
+
+La cabecera muestra un indicador táctil: sólo en este dispositivo, sincronizando, al día, sin conexión o con error. Al tocarlo se ven los pendientes y el último éxito, con el reintento existente. Nunca se presenta como sincronizada una sesión que todavía no confirmó su primera sincronización. Los perfiles sin acceso al inventario conservan el aviso de conexión sin detalles de la casa.

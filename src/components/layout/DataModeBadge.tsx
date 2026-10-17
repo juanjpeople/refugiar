@@ -27,10 +27,10 @@ export function DataModeBadge({ iconOnly = false }: { iconOnly?: boolean }) {
   const mode = useDeviceStore((s) => s.mode);
   const { phase, pending, lastSyncAt } = useSyncStatus();
   const cloud = mode === "cloud";
-  // Recién abierta, antes de la primera vuelta del motor, se muestra como al día.
-  const state = cloud ? CLOUD[phase === "off" ? "synced" : phase] : null;
+  // Hasta la primera confirmación no se muestra la casa como sincronizada.
+  const state = cloud ? CLOUD[phase === "off" || (phase === "synced" && pending > 0) ? "syncing" : phase] : null;
   const Icon = state?.icon ?? HardDrive;
-  const label = state ? t(state.label) + (phase === "offline" && pending > 0 ? ` · ${t("cloud.sync.pending", { count: pending })}` : "") : t("dataMode.local");
+  const label = state ? t(state.label) + (pending > 0 ? ` · ${t("cloud.sync.pending", { count: pending })}` : "") : t("dataMode.local");
   const hint = cloud
     ? [t("dataMode.cloudHint"), lastSyncAt ? t("cloud.sync.lastSync", { time: format.relative(lastSyncAt) }) : null].filter(Boolean).join(" ")
     : t("dataMode.localHint");
