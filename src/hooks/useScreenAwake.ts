@@ -1,6 +1,10 @@
 "use client";
 
+import { registerPlugin } from "@capacitor/core";
+import { isAndroidApp } from "@/lib/platform";
 import { useEffect, useState } from "react";
+
+const kitchenScreen = registerPlugin<{ setEnabled(options: { enabled: boolean }): Promise<void> }>("KitchenScreen");
 
 /** Se libera al salir, y se vuelve a pedir al regresar del fondo. */
 export function useScreenAwake(enabled: boolean) {
@@ -8,6 +12,10 @@ export function useScreenAwake(enabled: boolean) {
   useEffect(() => {
     if (!enabled) return;
     let stopped = false;
+    if (isAndroidApp()) {
+      void kitchenScreen.setEnabled({ enabled: true }).then(() => { if (!stopped) setUnavailable(false); }).catch(() => { if (!stopped) setUnavailable(true); });
+      return () => { stopped = true; void kitchenScreen.setEnabled({ enabled: false }).catch(() => undefined); };
+    }
     let lock: WakeLockSentinel | undefined;
     let requesting = false;
     const acquire = async () => {

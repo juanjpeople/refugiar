@@ -3,10 +3,12 @@
  * con las reglas del inventario, y "Agregar lo que falta" anota con las de la lista de compras,
  * cada uno en una sola transacción (todo o nada).
  */
+import { isUndoable } from "@/features/activity/domain";
 import { pruneActivity, recordActivity, setActivityPrivacy } from "@/features/activity/service";
 import { deleteCommentsOfWithin } from "@/features/comments/service";
-import { consumeWithin, QUANTITY_TABLES } from "@/features/inventory/service";
+import { consumeWithin, undoQuantityChange, QUANTITY_TABLES } from "@/features/inventory/service";
 import { deletePhotosOfWithin } from "@/features/media/service";
+import { INVENTORY_LIMITS } from "@/features/inventory/domain";
 import { roundQuantity } from "@/features/inventory/quantity";
 import { HOME_LIST_ID } from "@/features/shopping/domain";
 import { addToListWithin, LIST_TABLES } from "@/features/shopping/service";
@@ -96,12 +98,16 @@ export interface Consumption {
  * queda como consumo del producto (se puede deshacer desde el historial) y la receta, como cocinada.
  * Devuelve qué productos no alcanzaron.
  */
-export async function cookRecipe(actor: Actor | null, id: string, servings: number, consumptions: Consumption[]) {
+export async function cookRecipe(actor: Actor | null, id: string, servings: number, consumptions: Consumption[], operationId = createId()) {
   assertCan(actor, "inventory.consume");
   if (!Number.isInteger(servings) || servings < 1 || servings > RECIPE_LIMITS.maxServings) throw new ValidationError("errors.validation.servingsInvalid");
   const short: { itemId: string; missing: number }[] = [];
   await db.transaction("rw", [db.recipes, ...QUANTITY_TABLES()], async () => {
     const recipe = await getRecipe(id);
+    if (!canSee(actor, recipe)) throw new NotFoundError("errors.notFound.recipe");
+    // Repetir la misma confirmación no vuelve a consumir, incluso después de un cierre.
+    if (await db.activity.get(operationId)) return;
+    const consumptionIds: string[] = [];
     const amounts = new Map<string, number>();
     for (const { itemId, amount } of consumptions) {
       if (!Number.isFinite(amount) || amount < 0) throw new ValidationError("errors.validation.quantityInvalid");
@@ -111,9 +117,10 @@ export async function cookRecipe(actor: Actor | null, id: string, servings: numb
       if (amount === 0) continue;
       if (!(await db.inventory.get(itemId))) throw new NotFoundError("errors.notFound.item");
       const plan = await consumeWithin(actor, itemId, amount);
+      if (plan?.entryId) consumptionIds.push(plan.entryId);
       if (plan && plan.missing > 0) short.push({ itemId, missing: plan.missing });
     }
-    await recordActivity(actor, { module: "recipes", action: "cooked", entityId: id, entityName: recipe.name, to: servings, privacy: recipe.privacy ?? "family", createdBy: recipe.createdBy });
+    await recordActivity(actor, { module: "recipes", action: "cooked", entityId: id, entityName: recipe.name, to: servings, consumptionIds, privacy: recipe.privacy ?? "family", createdBy: recipe.createdBy }, operationId);
   });
   await pruneActivity();
   return short;
@@ -151,4 +158,23 @@ export async function addReportMissingWithin(actor: Actor, report: AvailabilityR
     added++;
   }
   return added;
+}
+
+/** Todo o nada; los consumos deshechos individualmente no se devuelven otra vez. */
+export async function undoCooking(actor: Actor | null, entryId: string) {
+  assertCan(actor, "inventory.adjust");
+  await db.transaction("rw", QUANTITY_TABLES(), async () => {
+    const entry = await db.activity.get(entryId);
+    if (!entry || entry.module !== "recipes" || !isUndoable(entry, Date.now()) || !canSee(actor, entry)) throw new ValidationError("errors.activity.notUndoable");
+    for (const id of entry.consumptionIds ?? []) {
+      const consumption = await db.activity.get(id);
+      if (!consumption) throw new ValidationError("errors.activity.notUndoable");
+      if (consumption.undoneAt === undefined) {
+        const item = await db.inventory.get(consumption.entityId);
+        if (!item || item.unit !== consumption.unit || item.quantity + (consumption.from! - consumption.to!) > INVENTORY_LIMITS.maxQuantity) throw new ValidationError("errors.activity.notUndoable");
+        await undoQuantityChange(actor, id);
+      }
+    }
+    await db.activity.update(entryId, { undoneAt: Date.now(), undoneBy: actor.name });
+  });
 }
