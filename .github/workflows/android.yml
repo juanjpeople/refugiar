@@ -1,8 +1,9 @@
 name: Android
 
 # Android incluye el export web. Compilarlo antes de Gradle es obligatorio.
-# Solo al mergear a main (o a pedido): en los PR no se espera a Gradle.
+# Se verifica en cada PR antes del merge y se conserva el APK de main.
 on:
+  pull_request:
   push:
     branches: [main]
     paths:
