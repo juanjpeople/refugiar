@@ -110,7 +110,7 @@ export function BottomBar({ items, activeId, action, position = "fixed", layoutI
               justifyContent: "center",
               gap: 2,
               minWidth: 0,
-              color: active ? token.colorPrimary : token.colorTextSecondary,
+              color: active ? token.colorText : token.colorTextSecondary,
               fontWeight: active ? 600 : 400,
             }}
           >

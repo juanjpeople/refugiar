@@ -1,6 +1,6 @@
 "use client";
 
-import { Button, Flex, Popover, Typography, theme } from "antd";
+import { Button, Flex, Grid, Popover, Typography, theme } from "antd";
 import type { LucideIcon } from "lucide-react";
 import { useId, useRef, useState, type ReactNode } from "react";
 
@@ -9,6 +9,7 @@ export function ContextBadge({ icon: Icon, label, title, children }: {
   icon: LucideIcon; label: string; title: string; children: ReactNode;
 }) {
   const { token } = theme.useToken();
+  const screens = Grid.useBreakpoint();
   const [open, setOpen] = useState(false);
   const id = useId();
   const trigger = useRef<HTMLButtonElement>(null);
@@ -24,7 +25,7 @@ export function ContextBadge({ icon: Icon, label, title, children }: {
     <Button ref={trigger} icon={<Icon />} aria-label={title} aria-expanded={open} aria-controls={open ? id : undefined}
       onKeyDown={event => { if (event.key === "Escape") setOpen(false); }}
       style={{ minHeight: 44, color: token.colorInfoText, background: token.colorInfoBg, borderColor: token.colorInfoBorder }}>
-      {label}
+      {screens.md ? label : null}
     </Button>
   </Popover>;
 }

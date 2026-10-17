@@ -1,3 +1,5 @@
+import { canSee } from "@/lib/sync/scope";
+import { INVENTORY_LIMITS, isUnit } from "@/features/inventory/domain";
 /**
  * Servicio de compras: ÚNICO punto que escribe las listas, sus ítems y las sugerencias.
  * Comprar algo vinculado al inventario lo repone en la misma transacción (vía el servicio
@@ -5,7 +7,7 @@
  */
 import { roundQuantity } from "@/features/inventory/quantity";
 import { pruneActivity, recordActivity, setActivityPrivacy } from "@/features/activity/service";
-import { QUANTITY_TABLES, restockWithin } from "@/features/inventory/service";
+import { createInventoryItemWithin, QUANTITY_TABLES, restockWithin } from "@/features/inventory/service";
 import { CURRENCIES, type Currency } from "@/features/prices/domain";
 import { addPriceWithin, PRICE_TABLES } from "@/features/prices/service";
 import { assertCan, can, type Actor } from "@/lib/auth/permissions";
@@ -146,6 +148,41 @@ export async function markBought(actor: Actor | null, id: string) {
       const list = await getActiveList(entry.listId);
       await recordActivity(actor, { module: "shopping", action: "bought", entityId: entry.id, entityName: entry.name, to: entry.quantity, unit: entry.unit, listId: entry.listId, privacy: list.privacy ?? "family", createdBy: list.createdBy });
     }
+  });
+  await pruneActivity();
+}
+
+export type StorePurchase = { quantity: number } & ({ itemId: string } | { containerId: string; name: string; unit: string });
+
+/** Guarda una compra suelta una sola vez, junto con su vínculo y el stock. */
+export async function storePurchase(actor: Actor | null, id: string, input: StorePurchase) {
+  assertCan(actor, "shopping.manage");
+  assertCan(actor, "inventory.adjust");
+  const quantity = parseShoppingQuantity(input.quantity);
+  await db.transaction("rw", [db.shoppingList, db.shoppingLists, ...QUANTITY_TABLES()], async () => {
+    const entry = await db.shoppingList.get(id);
+    if (!entry) throw new NotFoundError("errors.notFound.item");
+    const list = await getActiveList(entry.listId);
+    if (!canSee(actor, list)) throw new NotFoundError("errors.notFound.list");
+    if (entry.inventoryItemId) return; // doble clic / otra pestaña: ya se guardó
+    if (entry.status !== "bought") throw new ValidationError("shopping.store.notBought");
+    let itemId: string;
+    let unit: string;
+    if ("itemId" in input) {
+      const item = await db.inventory.get(input.itemId);
+      if (!item) throw new NotFoundError("errors.notFound.item");
+      if (item.quantity + quantity > INVENTORY_LIMITS.maxQuantity) throw new ValidationError("errors.validation.quantityInvalid");
+      itemId = item.id;
+      unit = item.unit;
+      await restockWithin(actor, itemId, quantity);
+    } else {
+      if (!isUnit(input.unit)) throw new ValidationError("errors.validation.quantityInvalid");
+      unit = input.unit;
+      itemId = await createInventoryItemWithin(actor, input.containerId, { name: input.name, quantity, unit, minThreshold: 0, autoSuggest: true });
+    }
+    // La compra pasa a la medida de su producto; el gasto total no cambia.
+    await db.shoppingList.update(id, { inventoryItemId: itemId, quantity, unit, restocked: quantity,
+      estimateCents: entry.estimateCents === undefined ? undefined : Math.round(entry.estimateCents * entry.quantity / quantity) });
   });
   await pruneActivity();
 }

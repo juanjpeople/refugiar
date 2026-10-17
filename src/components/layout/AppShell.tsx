@@ -1,5 +1,6 @@
 "use client";
 
+import { useCalendarReminders } from "@/features/calendar/useCalendarReminders";
 import { haloBackground } from "@/skins/surface";
 import { useSkin } from "@/skins/useSkin";
 import { DEMO_ENABLED } from "@/lib/demo";
@@ -48,6 +49,7 @@ const STATIC_PUBLIC_ROUTES = ["/bienvenida", "/politica-de-privacidad", "/borrar
  */
 export function AppShell({ children }: { children: ReactNode }) {
   useNativeBack();
+  useCalendarReminders();
   const t = useT();
   const pathname = usePathname();
   const hydrated = useHydrated();
