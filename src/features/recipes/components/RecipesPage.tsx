@@ -76,7 +76,7 @@ export function RecipesPage() {
   return (
     <RequirePermission perform="recipes.view">
       <ListPage
-        header={{ eyebrow: t("recipes.eyebrow"), title: t("recipes.title"), description: t("recipes.description"), extra: newButton }}
+        header={{ eyebrow: t("recipes.eyebrow"), title: t("recipes.title"), description: t("recipes.description"), extra: <><Link href="/recetas/semana"><Button>{t("meals.title")}</Button></Link>{newButton}</> }}
         items={recipes}
         visible={visible}
         getKey={(recipe) => recipe.id}

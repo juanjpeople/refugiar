@@ -2,6 +2,7 @@
  * Servicio del calendario: ÚNICO punto que escribe eventos. Verifica permisos, que los
  * participantes existan, y deja todo en el historial.
  */
+import { canSee } from "@/lib/sync/scope";
 import { recordActivity, setActivityPrivacy } from "@/features/activity/service";
 import { assertCan, type Actor } from "@/lib/auth/permissions";
 import { db } from "@/lib/db";
@@ -38,9 +39,15 @@ export async function createEvent(actor: Actor | null, input: EventInput) {
 export async function updateEvent(actor: Actor | null, id: string, input: EventInput) {
   assertCan(actor, "calendar.manage");
   const data = parseEvent(input);
-  await db.transaction("rw", db.events, db.members, db.activity, async () => {
+  await db.transaction("rw", db.events, db.members, db.activity, db.recipes, async () => {
     const event = await db.events.get(id);
     if (!event) throw new NotFoundError("errors.notFound.event");
+    if (event.meal) {
+      const recipe = await db.recipes.get(event.meal.recipeId);
+      if (!canSee(actor, event) || (recipe && !canSee(actor, recipe))) throw new NotFoundError("errors.notFound.event");
+      if (recipe?.privacy === "private") data.privacy = "private";
+      else if (recipe?.privacy === "adults" && data.privacy === "family") data.privacy = "adults";
+    }
     await setActivityPrivacy("calendar", id, data.privacy, event.createdBy);
     const participantIds = await existingParticipants(data.participantIds);
     await db.events.update(id, { ...data, repeatUntil: data.repeatUntil, eventKind: data.eventKind, homeworkDone: data.homeworkDone, teacher: data.teacher, participantIds, updatedAt: Date.now() });
@@ -53,6 +60,7 @@ export async function deleteEvent(actor: Actor | null, id: string) {
   await db.transaction("rw", db.events, db.activity, async () => {
     const event = await db.events.get(id);
     if (!event) return;
+    if (!canSee(actor, event)) throw new NotFoundError("errors.notFound.event");
     await setActivityPrivacy("calendar", id, event.privacy ?? "family", event.createdBy);
     await db.events.delete(id);
     await recordActivity(actor, { module: "calendar", action: "delete", entityId: id, entityName: event.title, privacy: event.privacy ?? "family", createdBy: event.createdBy });

@@ -66,20 +66,23 @@ async function writeQuantity(actor: Actor, item: InventoryItem, quantity: number
   return { item: updated, entryId };
 }
 
-export async function createInventoryItem(actor: Actor | null, containerId: string, input: NewInventoryItem) {
+/** Crear dentro de una transacción compartida con Compras. */
+export async function createInventoryItemWithin(actor: Actor, containerId: string, input: NewInventoryItem) {
   assertCan(actor, "inventory.create");
   const data = parseNewInventoryItem(input);
   const now = Date.now();
   const id = createId();
+  const place = await containerName(containerId);
+  const item: InventoryItem = { ...data, id, containerId, createdAt: now, updatedAt: now };
+  await db.inventory.add(item);
+  await recordActivity(actor, { module: "inventory", action: "create", entityId: id, entityName: data.name, containerId, place, to: data.quantity, unit: data.unit });
+  await syncSuggestion(null, item);
+  return id;
+}
 
-  await db.transaction("rw", QUANTITY_TABLES(), async () => {
-    const place = await containerName(containerId);
-    const item: InventoryItem = { ...data, id, containerId, createdAt: now, updatedAt: now };
-    await db.inventory.add(item);
-    await recordActivity(actor, { module: "inventory", action: "create", entityId: id, entityName: data.name, containerId, place, to: data.quantity, unit: data.unit });
-    // Un producto que se carga ya agotado (o por debajo del mínimo) también va a "Para revisar".
-    await syncSuggestion(null, item);
-  });
+export async function createInventoryItem(actor: Actor | null, containerId: string, input: NewInventoryItem) {
+  assertCan(actor, "inventory.create");
+  const id = await db.transaction("rw", QUANTITY_TABLES(), () => createInventoryItemWithin(actor, containerId, input));
   await pruneActivity();
   return id;
 }

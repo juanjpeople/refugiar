@@ -20,20 +20,21 @@ interface CookModalProps {
   items: Map<string, InventoryItem>;
   servings: number;
   onClose: () => void;
+  onCooked?: () => void;
 }
 
 /**
  * "Cociné esto": antes de descontar, muestra qué sale de dónde y deja ajustarlo
  * (se usó menos harina, no se usó la manteca). Recién al confirmar se descuenta.
  */
-export function CookModal({ open, recipe, items, servings: initialServings, onClose }: CookModalProps) {
+export function CookModal({ open, recipe, items, servings: initialServings, onClose, onCooked }: CookModalProps) {
   const [saving, setSaving] = useState(false);
   const { cook } = useRecipeActions();
   const options = useInventoryOptions();
   const allItems = new Map([...(options ?? []).map(({ item }) => [item.id, item] as const), ...items]);
   return (
     <Modal open={open} onCancel={onClose} closable={!saving} mask={{ closable: !saving }} keyboard={!saving} footer={null} destroyOnHidden width={520} title={null}>
-      {open && <CookForm recipe={recipe} items={allItems} initialServings={initialServings} onClose={onClose} onBusy={setSaving} onCook={cook} places={Object.fromEntries((options ?? []).map(({ item, place }) => [item.id, place]))} />}
+      {open && <CookForm recipe={recipe} items={allItems} initialServings={initialServings} onClose={onClose} onBusy={setSaving} onCook={async (...args) => { const result = await cook(...args); if (result !== null) onCooked?.(); return result; }} places={Object.fromEntries((options ?? []).map(({ item, place }) => [item.id, place]))} />}
     </Modal>
   );
 }

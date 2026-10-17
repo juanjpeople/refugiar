@@ -3,7 +3,7 @@ import { addNote, chooseView, expect, test } from "./fixtures";
 test("el plano conserva la etiqueta y encuentra anotaciones sin tildes", async ({ home: page }, testInfo) => {
   if (testInfo.project.name === "celular") await page.setViewportSize({ width: 320, height: 740 });
   await page.goto("/inventario");
-  await expect(page.getByRole("main").getByRole("link", { name: "Cámara", exact: true })).toHaveCount(1);
+  await expect(page.getByRole("main").getByRole("link", { name: "Escanear QR", exact: true })).toHaveCount(1);
   await expect(page.getByRole("main").getByRole("link", { name: "Escanear", exact: true })).toHaveCount(0);
   // La vista elegida queda como la de este perfil.
   await chooseView(page, "Plano");

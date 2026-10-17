@@ -27,3 +27,11 @@ En `/design` → Recetas están el selector, la revisión de compras y el formul
 - Las cantidades tienen precisión de tres decimales; no es una balanza de precisión.
 - Los ingredientes sin vínculo no se descuentan. Si se compran como ítems sueltos, no crean un producto de inventario automáticamente.
 - Las fotos viajan cifradas a la nube solo si la casa está en la nube.
+
+## Modo cocina y menú semanal
+
+**Modo cocina** muestra ingredientes para marcar, un paso por vez y progreso. Guarda el avance por perfil, receta y porciones en este dispositivo. Cerrar no descuenta stock. Al terminar, se abre la revisión habitual de consumo; sólo la confirmación modifica el inventario. Puede mantener la pantalla encendida si el dispositivo admite Screen Wake Lock; si no, lo informa. El avance se reinicia si cambian ingredientes, pasos o porciones.
+
+**Menú semanal** permite elegir recetas guardadas y porciones para cada día. Cada comida es un evento del calendario. Los faltantes se calculan sumando las cantidades de todas las comidas de la semana y comparando una sola vez contra el inventario; se revisan antes de anotarlos en Compras y se descuentan los pendientes ya anotados. Planear no reserva ni consume stock. Los ingredientes sin vínculo requieren confirmación explícita.
+
+La comida nace con la privacidad de la receta. Si la receta pasa a un nivel más restringido, se restringen sus comidas; borrarla quita también esas comidas. Las repeticiones editadas desde Calendario se consideran en el menú. Quitar una comida repetida elimina la serie, como en Calendario.
