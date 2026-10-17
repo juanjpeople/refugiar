@@ -1,6 +1,5 @@
-# Cada PR (en paralelo, menos de 2 minutos): tipos, lint, tests unitarios, build y recorrido de la API.
-# Al mergear a main corre además todo Playwright: escritorio, celular, temas, casa demo, capturas
-# y el paquete local para NAS. Android empaqueta esta interfaz; su compilación corre aparte (android.yml).
+# Cada PR ejecuta todos los checks antes de publicar: API, escritorio, celular, demo y paquete local.
+# main vuelve a verificarse tras el merge. Android se comprueba también en el PR (android.yml).
 name: CI
 
 on:
@@ -70,8 +69,6 @@ jobs:
 
   e2e:
     name: Pruebas de punta a punta
-    # Solo al mergear a main: en los PR no se espera a Playwright.
-    if: github.event_name == 'push'
     timeout-minutes: 15
     runs-on: ubuntu-latest
     needs: check
@@ -105,8 +102,6 @@ jobs:
 
   local-package:
     name: Paquete local y navegador
-    # Cambia poco: se arma y se prueba al mergear a main, sin gastar minutos en cada PR.
-    if: github.event_name == 'push'
     runs-on: ubuntu-latest
     timeout-minutes: 15
     needs: check
@@ -130,7 +125,6 @@ jobs:
 
   demo:
     name: Casa demo aislada
-    if: github.event_name == 'push'
     runs-on: ubuntu-latest
     timeout-minutes: 15
     needs: check
