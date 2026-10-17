@@ -57,5 +57,7 @@ export { WeeklyMenu } from "./WeeklyMenu";
 
 export { ReminderPreferences } from "./ReminderPreferences";
 
+export { QuietSummary } from "./QuietSummary";
+export { ConnectionConsent } from "./ConnectionConsent";
 export { StepTime } from "./StepTime";
 export { KitchenTimers } from "./KitchenTimers";

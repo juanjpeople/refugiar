@@ -1,3 +1,4 @@
+import { REFERENCE_PRICES } from "@/features/prices/references";
 import type { Locale } from "@/i18n/config";
 import { normalizeSearch } from "@/lib/search";
 import type { NewInventoryItem, Unit } from "./domain";
@@ -13,6 +14,7 @@ export interface CatalogProduct {
   aliases: string[];
   unit: Unit;
   durable: boolean;
+  referenceCatalogId?: string;
 }
 
 function product(id: string, category: CatalogCategory, es: string, en: string, unit: Unit = "unidades", aliases: string[] = [], durable = false): CatalogProduct {
@@ -135,9 +137,16 @@ export const BASIC_CATALOG: readonly CatalogProduct[] = [
   product("clay-wire", "ceramics", "Hilo cortador de arcilla", "Clay cutting wire", "unidades", [], true),
 ];
 
+export const ARGENTINA_CATALOG: readonly CatalogProduct[] = REFERENCE_PRICES.map((reference) => ({
+  id: `ar-commercial-${new URL(reference.url).pathname}`, referenceCatalogId: reference.catalogId, category: BASIC_CATALOG.find(product => product.id === reference.catalogId)?.category ?? "food",
+  name: { es: `${reference.product} · ${reference.presentation}`, en: `${reference.product} · ${reference.presentation}` },
+  aliases: [reference.store], unit: "unidades", durable: false,
+}));
+export const CATALOG_VERSION = "AR · 2026-10-17";
+
 export function searchCatalog(query: string, category?: CatalogCategory): CatalogProduct[] {
   const terms = normalizeSearch(query).split(" ").filter(Boolean);
-  return BASIC_CATALOG.filter((entry) => {
+  return [...BASIC_CATALOG, ...ARGENTINA_CATALOG].filter((entry) => {
     if (category && entry.category !== category) return false;
     const haystack = normalizeSearch([...Object.values(entry.name), ...entry.aliases].join(" "));
     return terms.every((term) => haystack.includes(term));
@@ -148,7 +157,7 @@ export function catalogDefaults(entry: CatalogProduct, locale: Locale): NewInven
   return { name: entry.name[locale], quantity: 1, unit: entry.unit, minThreshold: entry.durable ? 0 : 1, autoSuggest: !entry.durable, reusable: entry.durable };
 }
 
-const BY_NAME = new Map(BASIC_CATALOG.flatMap((entry) => [...Object.values(entry.name), ...entry.aliases].map((name) => [normalizeSearch(name), entry] as const)));
+const BY_NAME = new Map([...BASIC_CATALOG, ...ARGENTINA_CATALOG].flatMap((entry) => [...Object.values(entry.name), ...(entry.referenceCatalogId ? [] : entry.aliases)].map((name) => [normalizeSearch(name), entry] as const)));
 
 /** Solo coincidencias conocidas: no adivina el rubro de un nombre personalizado. */
 export function findCatalogProduct(name: string): CatalogProduct | undefined {

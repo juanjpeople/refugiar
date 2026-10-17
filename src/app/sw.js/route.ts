@@ -1,3 +1,4 @@
+import { EXAMPLE_COVER_ASSETS } from "@/features/recipes/example-covers";
 import { BRAND } from "@/config/brand";
 import { APP_ROUTES } from "@/lib/navigation/routes";
 
@@ -31,6 +32,7 @@ h1{font-size:20px;margin:16px 0 8px}p{margin:0 0 20px;opacity:.7;line-height:1.5
 const source = (version: string, pages: string[]) => String.raw`
 const VERSION = ${JSON.stringify(version)};
 const PAGES = ${JSON.stringify(pages)};
+const RECIPE_ASSETS = ${JSON.stringify(EXAMPLE_COVER_ASSETS)};
 const STATIC = "od-static-" + VERSION;
 const PAGES_CACHE = "od-pages-" + VERSION;
 const NETWORK_TIMEOUT = 3500;
@@ -65,7 +67,10 @@ async function cachePage(url) {
 
 self.addEventListener("install", (event) => {
   // Con tope: si algo no responde, la app se instala igual y lo que falte se guarda al usarla.
-  event.waitUntil(withTimeout(Promise.all(PAGES.map((url) => cachePage(url).catch(() => {}))), 30000).catch(() => {}));
+  event.waitUntil(withTimeout(Promise.all([
+    ...PAGES.map((url) => cachePage(url).catch(() => {})),
+    ...RECIPE_ASSETS.map((url) => caches.open(STATIC).then((cache) => store(cache, url)).catch(() => {})),
+  ]), 30000).catch(() => {}));
 });
 
 self.addEventListener("activate", (event) => {
@@ -141,7 +146,7 @@ self.addEventListener("fetch", (event) => {
   // navegación completa, que la resuelve "navigate" desde la caché.
   if (request.headers.get("RSC") || url.searchParams.has("_rsc")) return;
   if (request.mode === "navigate") return event.respondWith(navigate(request));
-  if (url.pathname.startsWith("/_next/static/") || url.pathname.startsWith("/icons/")) return event.respondWith(cacheFirst(request));
+  if (url.pathname.startsWith("/_next/static/") || url.pathname.startsWith("/icons/") || RECIPE_ASSETS.includes(url.pathname)) return event.respondWith(cacheFirst(request));
 });
 `;
 

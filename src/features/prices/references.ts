@@ -19,6 +19,8 @@ const dia = (catalogId: string, product: string, presentation: string, pesos: nu
 
 /** List prices where a promotion is shown; excludes shipping, memberships and bank discounts. */
 export const REFERENCE_PRICES: readonly ReferencePrice[] = [
+  { catalogId: "sugar", product: "Azúcar Plus DIA común tipo A", presentation: "1 kg", amountCents: 142000, currency: "ARS", store: "DIA online · Argentina", url: "https://diaonline.supermercadosdia.com.ar/azucar-plus-dia-comun-tipo-a-1-kg-130321/p", consultedAt: "2026-10-17", sourceAge: "recent" },
+  { catalogId: "sugar", product: "Azúcar común tipo A Domino", presentation: "1 kg", amountCents: 150000, currency: "ARS", store: "DIA online · Argentina", url: "https://diaonline.supermercadosdia.com.ar/azucar-comun-tipo-a-domino-1-kg-46881/p", consultedAt: "2026-10-17", sourceAge: "recent" },
   dia("rice", "Arroz largo fino DIA", "1 kg", 1490, "arroz-largo-fino-00000-dia-1-kg-55745"),
   dia("pasta", "Fideos codito DIA", "500 g", 1390, "fideos-codito-dia-500-gr-286226"),
   dia("flour", "Harina de trigo 000 DIA", "1 kg", 1050, "harina-de-trigo-000-dia-1-kg-24272"),
@@ -36,6 +38,10 @@ export const REFERENCE_PRICES: readonly ReferencePrice[] = [
   dia("bleach", "Lavandina DIA triple acción", "1 l", 1490, "lavandina-dia-triple-accion-1-lt-275291", "older"),
   { catalogId: "clay", product: "Arcilla blanca Chilavert", presentation: "10 kg", amountCents: 1600000, currency: "ARS", store: "Nuevas Criaturas · Argentina", url: "https://nuevascriaturas.com.ar/producto/arcilla-blanca-2/", consultedAt: "2026-10-07", sourceAge: "older" },
 ];
+
+export function referencesFor(catalogId: string) {
+  return REFERENCE_PRICES.filter(entry => entry.catalogId === catalogId);
+}
 
 export function referenceFor(catalogId: string) {
   return REFERENCE_PRICES.find((entry) => entry.catalogId === catalogId);
