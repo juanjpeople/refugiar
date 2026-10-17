@@ -47,7 +47,7 @@ export function revokeCloudSession() {
   try { sessionStorage.removeItem(CLOUD_PERMISSION_KEY); } catch { /* No persisted grant. */ }
 }
 if (typeof window !== "undefined") useDeviceStore.subscribe((state, previous) => {
-  if (state.mode === "local" && previous.mode !== "local") revokeCloudSession();
+  if (state.mode === "local" && previous.mode === "cloud") revokeCloudSession();
 });
 export function cloudPermitted() {
   return !DEMO_ENABLED && (useDeviceStore.getState().mode === "cloud" || useCloudPermission.getState().allowed);
