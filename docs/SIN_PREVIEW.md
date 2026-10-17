@@ -23,6 +23,8 @@ Los comandos `preview:lan` y `preview:tests` son servidores locales para probar 
 
 Mantener una sola rama de trabajo y un solo PR por tanda. Integrar cambios y correr `npm run check`, build y recorrido de API local antes del único push. La revisión visual la hace el dueño. No crear despliegues de prueba ni reejecutar CI sin una causa concreta.
 
+Los PR ejecutan ahora el recorrido completo de CI y Android. Esperar que todos terminen correctamente antes de mergear: así Cloudflare recibe una revisión validada. Las pruebas también se conservan en main como comprobación posterior.
+
 **Pendiente:** el despliegue automático de Cloudflare es independiente de GitHub Actions. El merge anterior se publicó antes de que terminaran los E2E, que fallaron. Apagar previews no cambia ese orden. Para hacer que producción espere a todos los checks, hace falta cambiar el mecanismo de publicación con acceso a Builds y un token de despliegue adecuado; no se habilitó una segunda vía de deploy ni se copiaron credenciales locales a GitHub.
 
 No borrar D1, el Worker, las rutas del dominio ni secretos para ahorrar builds: son los recursos de producción.
