@@ -59,6 +59,10 @@ test('casas integradas: demo y pruebas conservan cambios sin tocar la casa habit
   await expect(page.getByText('Solo en demo, nunca en mi casa', { exact: true })).toBeVisible();
   await page.getByRole('button', { name: 'Casa demo · datos ficticios', exact: true }).click();
   await page.getByRole('link', { name: 'Volver a mi casa', exact: true }).click();
+  // Esperar el documento nuevo: el selector de casa se resuelve al arrancar.
+  await page.waitForURL(url => url.pathname === '/' && url.searchParams.get('house') === 'home');
+  await page.waitForFunction(() => sessionStorage.getItem('refugiar-sample-house') === null);
+  await expect(page.getByRole('button', { name: 'Casa demo · datos ficticios', exact: true })).toHaveCount(0);
   await page.goto('/inventario');
   await expect(page.getByRole('link', { name: /^Herramientas inventariadas/ })).toHaveCount(0);
   await page.getByText('Estantería de herramientas', { exact: true }).first().click();
