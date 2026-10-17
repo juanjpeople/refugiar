@@ -5,6 +5,7 @@
  * mínimo, la sugerencia de la lista de compras se actualiza en esa misma transacción.
  * Cuando haya backend, estas funciones pasan a llamar a la API sin tocar los componentes.
  */
+import { roundQuantity } from "./quantity";
 import { isUndoable, type ActivityAction } from "@/features/activity/domain";
 import { pruneActivity, recordActivity } from "@/features/activity/service";
 import { dropSuggestions, SUGGESTION_TABLES, syncSuggestion } from "@/features/shopping/suggestions";
@@ -45,7 +46,8 @@ async function getItem(id: string) {
  * SOLO para servicios, dentro de una transacción que incluya `QUANTITY_TABLES`.
  */
 async function writeQuantity(actor: Actor, item: InventoryItem, quantity: number, action: Extract<ActivityAction, "adjust" | "consume" | "restock" | "undo">) {
-  const next = Math.min(Math.max(quantity, 0), INVENTORY_LIMITS.maxQuantity);
+  if (!Number.isFinite(quantity)) throw new ValidationError("errors.validation.quantityInvalid");
+  const next = roundQuantity(Math.min(Math.max(quantity, 0), INVENTORY_LIMITS.maxQuantity));
   if (next === item.quantity) return { item, entryId: null };
   const updated = { ...item, quantity: next, updatedAt: Date.now() };
   await db.inventory.put(updated);

@@ -4,7 +4,7 @@ import type { InventoryItem } from "@/features/inventory/domain";
 import { parseNewComment } from "@/features/comments/domain";
 import { fitWithin } from "@/features/media/domain";
 import { ValidationError } from "@/lib/errors";
-import { averageRating, checkAvailability, parseRecipe, scaleQuantity, type RecipeIngredient } from "./domain";
+import { averageRating, checkAvailability, parseRecipe, rankRecipes, scaleQuantity, type RecipeIngredient } from "./domain";
 
 const item = (id: string, quantity: number): InventoryItem => ({ id, name: id, containerId: "c", quantity, minThreshold: 0, unit: "unidades", createdAt: 0, updatedAt: 0 });
 const linked = (itemId: string, quantity: number): RecipeIngredient => ({ itemId, name: itemId, quantity, unit: "unidades" });
@@ -18,18 +18,29 @@ describe("porciones", () => {
 
   test("lo suelto se escala con decimales", () => {
     assert.equal(scaleQuantity({ quantity: 1.5 }, 4, 2), 0.75);
-    assert.equal(scaleQuantity({ quantity: 1 }, 3, 1), 0.33);
+    assert.equal(scaleQuantity({ itemId: "leche", quantity: 0.5, unit: "litros" }, 4, 2), 0.25);
+    assert.equal(scaleQuantity({ quantity: 1 }, 3, 1), 0.333);
   });
 });
 
 describe("disponibilidad", () => {
   const recipe = { servings: 4, ingredients: [linked("huevos", 3), linked("harina", 1), linked("leche", 1), linked("manteca", 1), { name: "sal", quantity: 1, unit: "pizca" }] };
 
-  test("hay todo", () => {
+  test("el stock conocido alcanza pero queda un ingrediente por revisar", () => {
     const items = new Map([["huevos", item("huevos", 6)], ["harina", item("harina", 1)], ["leche", item("leche", 2)], ["manteca", item("manteca", 1)]]);
     const report = checkAvailability(recipe, items);
-    assert.equal(report.availability, "ready");
+    assert.equal(report.availability, "unknown");
     assert.equal(report.checks.at(-1)!.state, "unlinked");
+    const measured = { servings: 4, ingredients: [{ itemId: "harina", name: "Harina", quantity: 250, unit: "gr" }, { itemId: "harina", name: "Harina", quantity: 0.3, unit: "kg" }] };
+    const pantry = new Map([["harina", { ...item("harina", 0.5), unit: "kg" }]]);
+    const combined = checkAvailability(measured, pantry);
+    assert.equal(combined.checks.length, 1);
+    assert.equal(combined.checks[0].needed, 0.55);
+    assert.equal(combined.checks[0].state, "short");
+    assert.equal(checkAvailability(measured, pantry, 2).checks[0].needed, 0.275);
+    const saved = { ...measured, id: "r", name: "Masa", minutes: 10, tags: [], steps: [], createdBy: "a", createdAt: 0, updatedAt: 0, report: combined };
+    assert.equal(rankRecipes([saved], ["harina"]).length, 1);
+    assert.equal(rankRecipes([saved], ["arroz"]).length, 0);
   });
 
   test("falta poco: uno solo", () => {
@@ -48,7 +59,7 @@ describe("disponibilidad", () => {
 
   test("con más porciones, lo que alcanzaba puede no alcanzar", () => {
     const items = new Map([["huevos", item("huevos", 3)], ["harina", item("harina", 1)], ["leche", item("leche", 1)], ["manteca", item("manteca", 1)]]);
-    assert.equal(checkAvailability(recipe, items, 4).availability, "ready");
+    assert.equal(checkAvailability(recipe, items, 4).availability, "unknown");
     assert.notEqual(checkAvailability(recipe, items, 8).availability, "ready");
   });
 

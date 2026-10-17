@@ -61,6 +61,8 @@ Consumo, lista de compras, calendario y recetas ya están hechos (ver [docs/feat
 
 ### 3. Comidas y recetas
 
+Actualizado: “Quiero usar…” busca en las recetas guardadas; la disponibilidad distingue ingredientes por revisar y Compras incluye los faltantes que la persona confirme, sin duplicar cantidades ya pendientes. Ver [flujo y límites](docs/features/recetas.md).
+
 **Qué resuelve:** tener las recetas de la casa en un solo lugar, con fotos y la opinión de la familia, conectadas al inventario.
 
 - **Receta:** nombre, foto principal y galería, porciones, tiempo, pasos, etiquetas (vegetariana, rápida, para chicos…) e **ingredientes vinculados a productos del inventario** (o texto libre si no está cargado).
@@ -70,7 +72,7 @@ Consumo, lista de compras, calendario y recetas ya están hechos (ver [docs/feat
 - **Fotos (offline):** se guardan como `Blob` en IndexedDB, comprimidas en el dispositivo antes de guardar (máximo ~1600 px, WebP/JPEG ~80 %), con miniatura aparte para las listas. Límite por foto y aviso de espacio usado en Ajustes. Nada se sube a ningún lado hasta que exista la sincronización.
 - **Modelo (v8):**
   - `Recipe { id, name, servings, minutes, ingredients[], steps[], tags[], coverPhotoId?, createdBy, createdAt, updatedAt }`
-  - Los ingredientes (`{ itemId?, name, quantity, unit }`) viven **dentro** de la receta: se guardan y se exportan juntos, siempre coherentes. Vinculados: cantidad entera en la unidad del producto; al escalar porciones se redondea para arriba.
+  - Los ingredientes (`{ itemId?, name, quantity, unit }`) viven **dentro** de la receta: se guardan y se exportan juntos, siempre coherentes. Vinculados: medidas compatibles con el inventario y hasta tres decimales; solo las unidades contables se redondean hacia arriba al escalar porciones. Se agrupan ingredientes repetidos antes de comparar o consumir.
   - `Photo { id, ownerType, ownerId, blob, thumb, width, height, createdAt }`
   - `Comment { id, ownerType, ownerId, authorId, text, rating?, createdAt }`
   - `Photo` y `Comment` son **genéricos** (`ownerType` + `ownerId`): sirven después para la bóveda, los productos, etc.

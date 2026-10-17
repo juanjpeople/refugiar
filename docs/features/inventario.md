@@ -4,6 +4,8 @@ Qué hay en la casa y dónde está.
 
 ## Qué hace
 
+- Las cantidades y mínimos admiten hasta tres decimales. Cocinar una receta descuenta las medidas convertidas y suma los usos repetidos del mismo producto; cada consumo conserva su historial para deshacer.
+
 - Cuatro palabras en toda la app: **Lugar** (Taller) › **Mueble** (Armario) › **Caja** (todo lo que va adentro: caja, cajón, estante) › **Cosa** (lo guardado, con o sin cantidad). Las cajas se anidan hasta tres niveles (placard → puerta → cajón).
 - Cada mueble y cada caja tiene su **etiqueta QR** imprimible. Escanearla la abre (en la app si está instalada; si no, en el navegador).
 - **Etiquetas a medida**: de 25 × 25 mm (solo QR, para cajones) a A6, o una medida propia en mm. Se acomodan solas: chicas, solo QR y código; anchas, QR al lado del nombre; altas, QR arriba.

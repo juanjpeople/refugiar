@@ -63,12 +63,12 @@ export function ProductModal({ containerId, place, open, onClose }: { containerI
         <Row gutter={token.margin}>
           <Col xs={12} sm={8}>
             <Form.Item name="quantity" label={t("inventory.form.quantity")} rules={[{ required: true, message: t("inventory.form.required") }]}>
-              <InputNumber min={0} max={INVENTORY_LIMITS.maxQuantity} precision={0} style={{ width: "100%" }} />
+              <InputNumber min={0} max={INVENTORY_LIMITS.maxQuantity} precision={3} style={{ width: "100%" }} />
             </Form.Item>
           </Col>
           <Col xs={12} sm={8}>
             <Form.Item name="minThreshold" label={t("inventory.form.min")} tooltip={t("inventory.form.minTooltip")} extra={t("inventory.form.minHelp")}>
-              <InputNumber min={0} max={INVENTORY_LIMITS.maxQuantity} precision={0} style={{ width: "100%" }} />
+              <InputNumber min={0} max={INVENTORY_LIMITS.maxQuantity} precision={3} style={{ width: "100%" }} />
             </Form.Item>
           </Col>
           <Col xs={24} sm={8}>
