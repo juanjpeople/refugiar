@@ -7,12 +7,14 @@ import { pruneActivity, recordActivity, setActivityPrivacy } from "@/features/ac
 import { deleteCommentsOfWithin } from "@/features/comments/service";
 import { consumeWithin, QUANTITY_TABLES } from "@/features/inventory/service";
 import { deletePhotosOfWithin } from "@/features/media/service";
+import { roundQuantity } from "@/features/inventory/quantity";
+import { HOME_LIST_ID } from "@/features/shopping/domain";
 import { addToListWithin, LIST_TABLES } from "@/features/shopping/service";
 import { assertCan, type Actor } from "@/lib/auth/permissions";
 import { db } from "@/lib/db";
 import { NotFoundError, ValidationError } from "@/lib/errors";
 import { createId } from "@/lib/id";
-import { checkAvailability, parseRecipe, type RecipeInput } from "./domain";
+import { checkAvailability, ingredientCheckKey, normalizeIngredient, parseRecipe, RECIPE_LIMITS, type RecipeInput } from "./domain";
 
 async function getRecipe(id: string) {
   const recipe = await db.recipes.get(id);
@@ -83,12 +85,18 @@ export interface Consumption {
  */
 export async function cookRecipe(actor: Actor | null, id: string, servings: number, consumptions: Consumption[]) {
   assertCan(actor, "inventory.consume");
-  if (!Number.isInteger(servings) || servings < 1) throw new ValidationError("errors.validation.servingsInvalid");
+  if (!Number.isInteger(servings) || servings < 1 || servings > RECIPE_LIMITS.maxServings) throw new ValidationError("errors.validation.servingsInvalid");
   const short: { itemId: string; missing: number }[] = [];
   await db.transaction("rw", [db.recipes, ...QUANTITY_TABLES()], async () => {
     const recipe = await getRecipe(id);
+    const amounts = new Map<string, number>();
     for (const { itemId, amount } of consumptions) {
-      if (amount <= 0) continue;
+      if (!Number.isFinite(amount) || amount < 0) throw new ValidationError("errors.validation.quantityInvalid");
+      amounts.set(itemId, roundQuantity((amounts.get(itemId) ?? 0) + amount));
+    }
+    for (const [itemId, amount] of amounts) {
+      if (amount === 0) continue;
+      if (!(await db.inventory.get(itemId))) throw new NotFoundError("errors.notFound.item");
       const plan = await consumeWithin(actor, itemId, amount);
       if (plan && plan.missing > 0) short.push({ itemId, missing: plan.missing });
     }
@@ -98,17 +106,26 @@ export async function cookRecipe(actor: Actor | null, id: string, servings: numb
   return short;
 }
 
-/** Anota en la lista lo que falta para cocinarla (solo ingredientes vinculados al inventario). */
-export async function addMissingToList(actor: Actor | null, id: string, servings: number) {
+/** Anota en la lista lo que falta para cocinarla (incluye ingredientes sin vínculo confirmados por la persona). */
+export async function addMissingToList(actor: Actor | null, id: string, servings: number, selected?: string[]) {
   assertCan(actor, "shopping.manage");
+  if (!Number.isInteger(servings) || servings < 1 || servings > RECIPE_LIMITS.maxServings) throw new ValidationError("errors.validation.servingsInvalid");
   let added = 0;
   await db.transaction("rw", [db.recipes, ...LIST_TABLES()], async () => {
     const recipe = await getRecipe(id);
     const itemIds = recipe.ingredients.flatMap((ingredient) => (ingredient.itemId ? [ingredient.itemId] : []));
     const items = new Map((await db.inventory.bulkGet(itemIds)).flatMap((item) => (item ? [[item.id, item] as const] : [])));
-    for (const check of checkAvailability(recipe, items, servings).lacking) {
-      const item = check.item!;
-      await addToListWithin(actor, { name: item.name, quantity: check.needed - (check.have ?? 0), unit: item.unit, inventoryItemId: item.id });
+    const report = checkAvailability(recipe, items, servings);
+    const pending = await db.shoppingList.where("[listId+status]").equals([HOME_LIST_ID, "pending"]).toArray();
+    const candidates = report.checks.filter((check) => check.state !== "ok" && (selected ? selected.includes(ingredientCheckKey(check)) : check.state !== "unlinked"));
+    for (const check of candidates) {
+      const item = check.item;
+      const name = item?.name ?? check.ingredient.name;
+      const unit = item?.unit ?? check.ingredient.unit;
+      const already = pending.filter((entry) => entry.unit === unit && (item ? entry.inventoryItemId === item.id : !entry.inventoryItemId && normalizeIngredient(entry.name) === normalizeIngredient(name))).reduce((sum, entry) => sum + entry.quantity, 0);
+      const quantity = roundQuantity(check.needed - (check.have ?? 0) - already);
+      if (quantity <= 0) continue;
+      await addToListWithin(actor, { name, quantity, unit, inventoryItemId: item?.id });
       added++;
     }
   });

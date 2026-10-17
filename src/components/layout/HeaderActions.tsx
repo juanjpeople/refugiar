@@ -214,13 +214,13 @@ export function UserMenu({ labeled = false, onSelect }: { labeled?: boolean; onS
         type="text"
         aria-label={t("shell.switchProfile")}
         title={t("shell.switchProfile")}
-        style={{ height: "auto", minHeight: 44, paddingBlock: 4, paddingInline: screens.sm || labeled ? undefined : 8 }}
+        style={{ height: "auto", minHeight: 44, paddingBlock: 4, paddingInline: screens.md || labeled ? undefined : 8 }}
       >
-        <Flex align="center" gap={screens.sm || labeled ? 8 : 4}>
+        <Flex align="center" gap={screens.md || labeled ? 8 : 4}>
           <MemberAvatar member={user} size={28} />
           {labeled ? (
             <Typography.Text>{t("shell.switchProfile")}</Typography.Text>
-          ) : screens.sm && (
+          ) : screens.md && (
             <Flex vertical align="flex-start" style={{ lineHeight: 1.2 }}>
               <Typography.Text strong>{user.name}</Typography.Text>
               <Typography.Text type="secondary" style={{ fontSize: token.fontSizeSM }}>

@@ -42,3 +42,7 @@ export { WeekdayChips, type WeekdayChip } from "./WeekdayChips";
 export { WeekSchedule, type WeekScheduleDay, type WeekScheduleEntry } from "./WeekSchedule";
 export { BOTTOM_BAR_HEIGHT, BottomBar, type BottomBarItem } from "./BottomBar";
 export { PhotoSpot, type SpotPoint } from "./PhotoSpot";
+
+export { IngredientPicker } from "./IngredientPicker";
+export { ReviewChecklist } from "./ReviewChecklist";
+export { MobileHeader } from "./MobileHeader";

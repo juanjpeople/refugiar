@@ -11,7 +11,7 @@ import { useState } from "react";
 import { Can } from "@/components/auth/Can";
 import { RequirePermission } from "@/components/auth/RequirePermission";
 import { Reveal, Stagger, StaggerItem } from "@/components/motion";
-import { EmptyState, QuantityStepper, LoadingSkeleton } from "@/components/ui";
+import { ReviewChecklist, EmptyState, QuantityStepper, LoadingSkeleton } from "@/components/ui";
 import { CommentsPanel } from "@/features/comments/components/CommentsPanel";
 import { useComments } from "@/features/comments/hooks";
 
@@ -22,14 +22,14 @@ import { SPRING } from "@/lib/motion";
 import { useTrackVisit } from "@/components/layout/useShell";
 import { recipeHref } from "@/lib/navigation/routes";
 import { usePageCrumbs } from "@/store/useBreadcrumbStore";
-import { averageRating, checkAvailability, RECIPE_LIMITS, type IngredientCheck, type IngredientState } from "../domain";
+import { averageRating, checkAvailability, ingredientCheckKey, RECIPE_LIMITS, type IngredientCheck, type IngredientState } from "../domain";
 import { useRecipe, useRecipeActions } from "../hooks";
 import { CookModal } from "./CookModal";
 import { AvailabilityTag, RatingBadge, RecipeCover } from "./RecipeBits";
 import { belowHeader } from "@/components/layout/constants";
 
 export function RecipeView() {
-  const { t } = useI18n();
+  const { t, format } = useI18n();
   const { token } = theme.useToken();
   const screens = Grid.useBreakpoint();
   const router = useRouter();
@@ -41,6 +41,7 @@ export function RecipeView() {
   const canManage = usePermission("recipes.manage");
   const [servings, setServings] = useState<number | null>(null);
   const [cooking, setCooking] = useState(false);
+  const [shopping, setShopping] = useState(false);
   const [doneSteps, setDoneSteps] = useState<Set<number>>(new Set());
   usePageCrumbs(data ? [{ label: data.recipe.name }] : null);
   useTrackVisit(data ? recipeHref(data.recipe.id) : null);
@@ -79,9 +80,10 @@ export function RecipeView() {
       },
     });
 
-  const onAddMissing = async () => {
-    const added = await addMissing(recipe.id, portions);
+  const onAddMissing = async (selected: string[]) => {
+    const added = await addMissing(recipe.id, portions, selected);
     if (added !== null) message.success(t("recipes.missingAdded", { count: added }));
+    return added !== null;
   };
 
   return (
@@ -123,9 +125,9 @@ export function RecipeView() {
                   </Button>
                 </Can>
                 <Can perform="shopping.manage">
-                  <Tooltip title={report.lacking.length === 0 ? t("recipes.nothingMissing") : undefined}>
-                    <Button size="large" icon={<ListPlus />} disabled={report.lacking.length === 0} onClick={onAddMissing}>
-                      {t("recipes.addMissing", { count: report.lacking.length })}
+                  <Tooltip title={report.checks.filter((check) => check.state !== "ok").length === 0 ? t("recipes.nothingMissing") : undefined}>
+                    <Button size="large" icon={<ListPlus />} disabled={report.checks.filter((check) => check.state !== "ok").length === 0} onClick={() => setShopping(true)}>
+                      {t("recipes.addMissing", { count: report.checks.filter((check) => check.state !== "ok").length })}
                     </Button>
                   </Tooltip>
                 </Can>
@@ -208,6 +210,7 @@ export function RecipeView() {
         </Col>
       </Row>
 
+      {shopping && <ReviewChecklist title={t("recipes.review.title")} description={t("recipes.review.hint")} options={report.checks.filter((check) => check.state !== "ok").map((check) => ({ value: ingredientCheckKey(check), label: `${check.ingredient.name} · ${formatQuantity(t, Math.max(0, check.needed - (check.have ?? 0)), check.ingredient.unit, format.number)}`, checked: check.state !== "unlinked" }))} onConfirm={onAddMissing} onClose={() => setShopping(false)} />}
       <CookModal open={cooking} recipe={recipe} items={items} servings={portions} onClose={() => setCooking(false)} />
     </RequirePermission>
   );

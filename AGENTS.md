@@ -11,6 +11,7 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 ## Forma de trabajo
 
 - Una tanda = un PR = un deploy. Lo pedido se termina entero en ese PR, sin partirlo en PRs chicos.
+- Preferencia persistente del dueño: agrupar también los ajustes de recetas, inventario y Android que se sumen durante la tanda en el mismo PR abierto. Evitar PRs y deploys adicionales porque consumen presupuesto. No habilitar previews ni builds automáticos de ramas secundarias; no se usan. Si se pide dividir una tanda, advertir primero el impacto en builds/deploys.
 - Ramas `feat/…` o `fix/…`. Nunca `claude/…`.
 - El dueño prueba en la UI. No sumar tests extra ni correr navegadores (Playwright, capturas) desde el
   agente. Los checks que ya existen (`npm run check`, recorrido de la API) se corren, y se actualizan

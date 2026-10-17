@@ -52,13 +52,13 @@ test("patterns are optional, respect three levels, preserve units and keep works
   assert.equal(full.inventory.find((row) => row.name === "Zanahorias")?.unit, "gr");
 });
 
-test("invalid input cannot create duplicate items, fractional stock, or unselected containers", () => {
+test("invalid input cannot create duplicate items, invalid stock, or unselected containers", () => {
   const row = { groupId: "fridge", catalogId: "eggs", quantity: 2 };
   assert.throws(() => buildHouseSetup({ groups: ["unknown"], rows: [] }, "es"));
   assert.throws(() => buildHouseSetup({ groups: ["fridge", "fridge"], rows: [] }, "es"));
   assert.throws(() => buildHouseSetup({ groups: [], rows: [row] }, "es"));
   assert.throws(() => buildHouseSetup({ groups: ["fridge"], rows: [row, row] }, "es"));
-  for (const quantity of [-1, 0.5, NaN, Infinity, 100001]) assert.throws(() => buildHouseSetup({ groups: ["fridge"], rows: [{ ...row, quantity }] }, "es"));
+  for (const quantity of [-1, NaN, Infinity, 100001]) assert.throws(() => buildHouseSetup({ groups: ["fridge"], rows: [{ ...row, quantity }] }, "es"));
   assert.throws(() => buildHouseSetup({ groups: ["fridge"], rows: [{ ...row, catalogId: "hammer" }] }, "es"));
 });
 

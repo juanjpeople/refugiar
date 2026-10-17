@@ -137,9 +137,9 @@ export function QuickAdd({ listId }: { listId: string }) {
           <InputNumber
             size="large"
             aria-label={t("inventory.form.quantity")}
-            min={1}
+            min={0.001}
             max={SHOPPING_LIMITS.maxQuantity}
-            precision={0}
+            precision={3}
             value={quantity}
             onChange={(value) => setQuantity(value ?? 1)}
             onPressEnter={submit}
