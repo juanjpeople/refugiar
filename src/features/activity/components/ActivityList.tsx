@@ -8,6 +8,7 @@ import { ArrowDown, ArrowUp, BellOff, ChefHat, ListPlus, MoveRight, PackageMinus
 import { Fragment } from "react";
 import { EmptyState, LoadingSkeleton } from "@/components/ui";
 
+import { useRecipeActions } from "@/features/recipes/hooks";
 import { useInventoryActions } from "@/features/inventory/hooks";
 import { useNow } from "@/hooks/useNow";
 import { useI18n } from "@/i18n";
@@ -35,6 +36,7 @@ export function ActivityList({ entries, showPlace = false }: ActivityListProps) 
   const { token } = theme.useToken();
   const now = useNow();
   const { undo } = useInventoryActions();
+  const { undoCook } = useRecipeActions();
   const canUndo = usePermission("inventory.adjust");
 
   if (!entries) return <LoadingSkeleton paragraph={{ rows: 4 }} />;
@@ -174,7 +176,7 @@ export function ActivityList({ entries, showPlace = false }: ActivityListProps) 
                     </Flex>
                   </Flex>
                   {canUndo && isUndoable(entry, now) && (
-                    <Button size="small" type="text" icon={<Undo2 />} onClick={() => undo(entry.id)} style={{ flexShrink: 0, color: token.colorTextSecondary }}>
+                    <Button size="small" type="text" icon={<Undo2 />} onClick={() => entry.module === "recipes" ? undoCook(entry.id) : undo(entry.id)} style={{ flexShrink: 0, color: token.colorTextSecondary }}>
                       {t("activity.undo")}
                     </Button>
                   )}
