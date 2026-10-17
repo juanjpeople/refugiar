@@ -9,10 +9,12 @@ import { SyncSummary } from "@/features/cloud/components/CloudDataPanel";
 import { useT } from "@/i18n";
 import { usePermission } from "@/lib/auth/hooks";
 import { useSyncStatus } from "@/lib/sync/status";
+import { usePwaStore } from "@/store/usePwaStore";
 import { useDeviceStore } from "@/store/useDeviceStore";
 
 export function SyncStatusButton() {
   const t = useT();
+  const online = usePwaStore(s => s.online);
   const mode = useDeviceStore(s => s.mode);
   const { phase, pending, error, lastSyncAt, rejected } = useSyncStatus();
   const canView = usePermission("inventory.view");
@@ -20,8 +22,8 @@ export function SyncStatusButton() {
   const [open, setOpen] = useState(false);
   if (!canView) return <OfflineBadge />;
   const cloud = mode === "cloud";
-  const state = !cloud ? "local" : error || phase === "error" || rejected > 0 ? "error" : phase === "offline" ? "offline" : phase === "synced" && pending === 0 && lastSyncAt ? "synced" : "waiting";
-  const label = !cloud ? t("syncNotice.local") : error ? t(`cloud.sync.errors.${error}`) : state === "error" ? t("cloud.sync.error") : pending > 0 ? t("syncNotice.pending", { count: pending }) : state === "synced" ? t("syncNotice.synced") : state === "offline" ? t("cloud.sync.offline") : t("syncNotice.checking");
+  const state = !online ? "offline" : !cloud ? "local" : error || phase === "error" || rejected > 0 ? "error" : phase === "offline" ? "offline" : phase === "synced" && pending === 0 && lastSyncAt ? "synced" : "waiting";
+  const label = state === "offline" ? t("pwa.offline.label") : !cloud ? t("syncNotice.local") : error ? t(`cloud.sync.errors.${error}`) : state === "error" ? t("cloud.sync.error") : pending > 0 ? t("syncNotice.pending", { count: pending }) : state === "synced" ? t("syncNotice.synced") : t("syncNotice.checking");
   return <>
     <SyncIndicator state={state} label={`${t("syncNotice.detail")}: ${label}`} pending={cloud ? pending : 0} onClick={() => setOpen(true)} />
     <Modal open={open} title={t("syncNotice.title")} onCancel={() => setOpen(false)} footer={null}>

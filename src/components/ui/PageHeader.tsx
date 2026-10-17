@@ -14,6 +14,8 @@ export const HeaderDensityContext = createContext<"comfortable" | "compact">("co
 export interface PageHeaderProps {
   title: ReactNode;
   description?: ReactNode;
+  /** Conserva datos esenciales (por ejemplo el código QR) también en modo compacto. */
+  keepDescription?: boolean;
   /** Texto chico arriba del título (sección, fecha, contexto). */
   eyebrow?: ReactNode;
   /** Ruta tocable arriba del título (PathCrumbs), en páginas anidadas. Reemplaza al eyebrow. */
@@ -30,14 +32,14 @@ export interface PageHeaderProps {
  * Encabezado estándar de toda página. Una sola por página. En modo compacto (siempre en el celular) queda solo el título,
  * más chico, y las acciones: la bajada y el eyebrow ceden su lugar a los datos.
  */
-export function PageHeader({ title, description, eyebrow, crumbs, extra, leading, dense }: PageHeaderProps) {
+export function PageHeader({ title, description, keepDescription = false, eyebrow, crumbs, extra, leading, dense }: PageHeaderProps) {
   const { token } = theme.useToken();
   const density = useContext(HeaderDensityContext);
   const screens = Grid.useBreakpoint();
   // En el celular, siempre compacto: la pantalla es para los datos, no para la bajada.
   const compact = dense ?? (density === "compact" || screens.md === false);
   if (compact) {
-    description = undefined;
+    if (!keepDescription) description = undefined;
     eyebrow = undefined;
   }
 

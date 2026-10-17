@@ -48,3 +48,5 @@ Detalle técnico: [PLAN_PRODUCCION.md](../PLAN_PRODUCCION.md) y [SECURITY.md](..
 ## Estado visible
 
 La cabecera muestra un indicador táctil: sólo en este dispositivo, sincronizando, al día, sin conexión o con error. Al tocarlo se ven los pendientes y el último éxito, con el reintento existente. Nunca se presenta como sincronizada una sesión que todavía no confirmó su primera sincronización. Los perfiles sin acceso al inventario conservan el aviso de conexión sin detalles de la casa.
+
+El indicador usa también el estado de conexión del dispositivo: una casa local muestra Sin conexión cuando corresponde, aunque no tenga sincronización en la nube. En escritorio conserva texto visible; en móvil mantiene el nombre accesible y el detalle al tocar.
