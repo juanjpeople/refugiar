@@ -4,7 +4,7 @@ import { App, Button, Flex, Input, Modal, Popover, Typography, theme } from "ant
 import { BookOpen, Search, SearchX, Tag, X } from "lucide-react";
 import { useId, useState } from "react";
 import { useI18n } from "@/i18n";
-import { CATALOG_CATEGORIES, catalogDefaults, searchCatalog, type CatalogCategory } from "../catalog";
+import { CATALOG_VERSION, CATALOG_CATEGORIES, catalogDefaults, searchCatalog, type CatalogCategory } from "../catalog";
 import type { NewInventoryItem } from "../domain";
 import { CATEGORY_APPEARANCE } from "../catalog-appearance";
 import { EmptyState, FilterChips, IconTile, VisualTile } from "@/components/ui";
@@ -29,7 +29,7 @@ export function CatalogPicker({ onSelect }: { onSelect: (values: NewInventoryIte
   return <>
     <Button icon={<BookOpen />} onClick={() => setOpen(true)}>{t("inventory.catalog.open")}</Button>
     <Modal open={open} title={t("inventory.catalog.title")} onCancel={close} footer={null} width={token.screenMD}>
-      <Reveal><Typography.Paragraph type="secondary">{t("inventory.catalog.hint")}</Typography.Paragraph></Reveal>
+      <Reveal><Typography.Paragraph type="secondary">{t("inventory.catalog.hint")} · {CATALOG_VERSION}</Typography.Paragraph></Reveal>
       <Flex vertical gap={token.marginSM}>
         <Input value={query} onChange={(event) => { setQuery(event.target.value); setReferenceId(null); }} prefix={<Search />} allowClear placeholder={t("inventory.catalog.search")} aria-label={t("inventory.catalog.search")} />
         <FilterChips<CatalogCategory | "all"> label={t("inventory.catalog.categoriesLabel")} value={category} onChange={(value) => { setCategory(value); setReferenceId(null); }} options={[
@@ -55,7 +55,7 @@ export function CatalogPicker({ onSelect }: { onSelect: (values: NewInventoryIte
                         <Typography.Text strong>{entry.name[locale]}</Typography.Text>
                         <Button id={`${referencePrefix}-close-${entry.id}`} type="text" icon={<X />} aria-label={t("common.close")} onClick={closeReference} />
                       </Flex>
-                      <ReferencePrice catalogId={entry.id} />
+                      <ReferencePrice catalogId={entry.referenceCatalogId ?? entry.id} />
                     </div>}>
                     <Button id={`${referencePrefix}-${entry.id}`} type="text" icon={<Tag />} aria-expanded={referenceId === entry.id} aria-label={t("inventory.catalog.referenceFor", { name: entry.name[locale] })}
                       onKeyDown={(event) => { if (event.key === "Escape" && referenceId === entry.id) { event.stopPropagation(); closeReference(); } }}

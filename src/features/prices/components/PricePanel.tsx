@@ -77,7 +77,7 @@ export function PricePanel({ itemId, itemName }: { itemId: string; itemName: str
         </Row>
       )}
 
-      {catalogProduct && <ReferencePrice catalogId={catalogProduct.id} />}
+      {catalogProduct && <ReferencePrice catalogId={catalogProduct.referenceCatalogId ?? catalogProduct.id} />}
 
       {canManage && (
         <Form

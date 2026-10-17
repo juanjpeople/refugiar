@@ -1,6 +1,8 @@
 import type { Messages } from "./es";
 
 export const en: Messages = {
+  connections: {"blocked": "Connection blocked. Review permissions in Settings → Data.", "consentTitle": "Connect to the server?", "consentText": "Your home is in local mode. Continuing allows account server access for this session. Your inventory is not uploaded and the mode stays unchanged until you link a home.", "allowSession": "Allow this connection", "stayLocal": "Stay in my local home", "scope": "Local mode blocks external services unless you enable them here. On the web, downloading the app and updates contacts its host. Use the local package or Android to work within your network. Permissions stay on this device, separate from the demo.", "products": "Look up products online", "productsHint": "Sends the barcode to Open Food Facts. The provider also receives your IP. Your inventory is not sent.", "weather": "Look up weather online", "weatherHint": "Requests MET Norway forecasts through the Refugiar server. Only the selected city is sent, not precise coordinates.", "news": "Look up news online", "newsHint": "Requests selected sources through the Refugiar server. Muted words are filtered on this device.", "adminOnly": "A home administrator can change connection permissions.", "node": "Home node", "nodeHint": "Save your server’s private address. Checking requests only its status, without credentials. Opening the node leads to its own home and requires signing in there. This home is not migrated or synced automatically. An untrusted certificate, HTTP or missing network permission may prevent the check.", "checkNode": "Save and check", "openNode": "Open local node", "forgetNode": "Forget node", "nodeState": {"idle": "Not checked.", "checking": "Checking connection…", "ready": "The node responded.", "failed": "Could not check the node. Review the address, certificate and network permissions.", "invalid": "Use a private IP address or localhost, without paths or credentials."}, "myHouse": "My home", "switchHouse": "Switch home", "switchHint": "Your home and the demo store data separately. Switching reloads the app. Saved changes are preserved."},
+  brief: {"title": "A glance outside", "refresh": "Refresh overview", "hint": "Saved information. Check its date before using it.", "error": "A source did not respond. Previous data is kept. Try again later.", "city": "Reference city", "cityHint": "Argentina. Choose a nearby city; this is not an exact forecast for your address. We do not use GPS.", "sources": "News sources", "muted": "Words to mute", "mutedHint": "Separate with commas. Hides matching titles. Does not change sources or rewrite news.", "automatic": "Refresh while viewing home", "automaticHint": "Only while visible and with active permissions. With saved data, checks hourly. Failed requests retry after at least 15 minutes. No alerts or background tasks.", "clear": "Clear saved overview", "forecast": "Forecast: {temperature} °C · next 24 h: {min}–{max} °C", "savedAt": "Saved: {date}", "noWeather": "No saved forecast yet.", "noNews": "No saved headlines match your selection.", "end": "That is the overview. Open the sources whenever you want.", "weatherCredit": "Summarized forecast from MET Norway · CC BY 4.0"},
   kitchen: {"duration": "Step time (minutes; 0 = no timer)", "suggest": "Use {seconds} minutes from the text", "notify": "Notify me when new timers finish", "start": "Start {seconds}-second timer", "step": "Step {step}", "done": "Timer finished", "channel": "Kitchen timers", "error": "Could not save the timer or schedule the alert. Check notification permission.", "hint": "Times are approximate. Android battery saving may delay alerts. Timers continue after closing this mode.", "undo": "Undo the entire cooking session"},
   emails: {
     subject: "Refugiar: security notification",
@@ -215,6 +217,7 @@ export const en: Messages = {
     back: "Back",
   },
   demo: {
+    tour: {"title": "Explore the demo house", "text": "These are fictional records, separate from your home. Pancakes show guided steps, timers and confirmed consumption. The omelette has a shortage and the pizza an out-of-stock ingredient.", "recipes": "Cook with what is available", "shopping": "Store a purchase in inventory", "meals": "View the weekly menu", "school": "Explore school", "settings": "Connections and overview", "design": "View the design system"},
     badge: "Demo",
     testsBadge: "Tests",
     add: "Add more examples",
@@ -478,7 +481,7 @@ export const en: Messages = {
       privacy: "Privacy",
       settings: "Settings",
       design: "Design system",
-      values: "Our values",
+      values: "About the project",
     },
   },
   shell: {
@@ -1371,6 +1374,7 @@ export const en: Messages = {
   reminders: {"save": "Save reminders", "title": "Reminders on this device", "hint": "Choose the events to remember. Clear all and save to turn them off. All-day events notify at 9 am.", "events": "Events", "before": "When to notify", "minutes": "{count} minutes before", "atTime": "At event time", "limits": "Up to 64 reminders are scheduled for the next 30 days. Open the app to renew them. Android battery saving may delay reminders. Switching profiles cancels the previous profile’s reminders.", "androidOnly": "Local reminders are available in the Android app outside the demo house. No cloud notification service is needed.", "saved": "Preferences saved. Reminders are updated on this device.", "denied": "Android notifications are disabled. Enable them in app settings and save again.", "error": "Could not update reminders. Save again to retry.", "notificationTitle": "Refugiar · Calendar", "notificationBody": "An event is coming up. Open the calendar to see it."},
   meals: { title: "Weekly menu", description: "Choose saved recipes and gather the week's missing ingredients.", add: "Plan a meal", empty: "No meal planned yet.", recipe: "Recipe", day: "Day", servings: "Servings", save: "Add to menu", remove: "Remove meal", removeConfirm: "Remove this meal? Repeating meals are removed as a whole series.", previous: "Previous week", next: "Next week", missing: "Review this week's shopping", hint: "Planning does not reserve or consume stock. Missing ingredients add up all meals in the selected week. They go to the shared household list.", unavailable: "This recipe is no longer available.", planned: "Meal added to menu", noRecipes: "Save a recipe to start planning." },
   recipes: {
+    exampleImage: "Generated illustrative image of {name}",
     mode: { open: "Cooking mode", title: "Cooking {name}", ingredients: "Prepared ingredients", step: "Step {current} of {total}", next: "Next", previous: "Previous", finish: "Finished: review consumption", close: "Save progress and leave", reset: "Start again", hint: "Checking ingredients or steps does not reduce stock. Review consumption when you finish.", saved: "Progress is saved on this device for your profile.", noSteps: "This recipe has no steps yet.", awake: "Keep screen awake", unavailable: "This device could not keep the screen awake.", storageError: "Progress could not be saved on this device.", complete: "Step done", resetTitle: "Clear progress for this preparation?" },
     substitutions: "Choose another ingredient as a substitute",
     source: "Use {name} from…",
@@ -1553,7 +1557,7 @@ export const en: Messages = {
     free: "Free",
     soonButton: "We're finishing it",
     back: "Back",
-    values: "Our values",
+    values: "About the project",
     security: {
       title: "Your home, your data",
       text: "On your device it's free, no account needed. If you share it in the cloud, it's stored end-to-end encrypted: only your family can read it, not even {app}. You choose what's shared with everyone, what only with the adults, and what's just yours.",
@@ -2244,7 +2248,7 @@ export const en: Messages = {
     about: {
       text: "{app} is open source, offline-first and runs on your own hardware.",
       version: "Version {version}",
-      values: "Our values",
+      values: "About the project",
     },
   },
   backup: {

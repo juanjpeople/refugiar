@@ -1,3 +1,4 @@
+import { weatherBrief, newsBrief } from "./brief";
 /**
  * Worker de Refugiar: sirve la app (archivos estáticos) y la API en el mismo origen (`/api/*`),
  * así las cookies de sesión son de primera parte: sin CORS ni cookies de terceros en producción.
@@ -128,7 +129,7 @@ app.use("*", async (c, next) => {
 app.use("*", async (c, next) => {
   const dev = (c.env.DEV_ORIGINS ?? "").split(",").map((origin) => origin.trim()).filter(Boolean);
   if (dev.length === 0) return next();
-  return cors({ origin: dev, credentials: true, allowHeaders: ["Content-Type"], allowMethods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"] })(c, next);
+  return cors({ origin: dev, credentials: true, allowHeaders: ["Content-Type", "X-Refugiar-External"], allowMethods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"] })(c, next);
 });
 
 // CSRF: todo lo que cambia algo tiene que venir de la app (Origin conocido). Better Auth valida lo suyo.
@@ -177,6 +178,18 @@ async function licenseAvailable(env: Env, code: string) {
 }
 
 app.get("/health", (c) => c.json({ ok: true }));
+
+
+// Only explicit, individually permitted requests reach the optional public sources.
+app.get("/brief/:kind/:id", async (c) => {
+  if (c.req.header("X-Refugiar-External") !== "granted") return c.json({ error: "permission-required" }, 403);
+  try {
+    const value = c.req.param("kind") === "weather" ? await weatherBrief(c.req.param("id"))
+      : c.req.param("kind") === "news" ? await newsBrief(c.req.param("id")) : null;
+    return value ? c.json(value) : c.json({ error: "not-found" }, 404);
+  } catch { return c.json({ error: "provider-unavailable" }, 503); }
+});
+
 
 app.get("/social-providers", (c) => {
   c.header("Cache-Control", "no-store");

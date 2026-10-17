@@ -19,7 +19,7 @@ test('la casa demo conserva relaciones válidas, perfiles y ejemplos locales', (
   assert.equal(t.recipes.length,15);
   assert.equal(t.comments.length,47);
   for (const comment of t.comments) { assert(t.recipes.some(r=>r.id===comment.ownerId)); assert(t.members.some(m=>m.id===comment.authorId)); }
-  assert.equal(t.inventory.length,84);
+  assert.equal(t.inventory.length,95);
   assert.equal(t.members.filter(m=>m.role==='admin').length,1);
   assert.equal(new Set(t.containers.map(c=>c.code)).size,t.containers.length);
   for(const space of t.spaces) parseSpace(space as Parameters<typeof parseSpace>[0]);
@@ -86,7 +86,7 @@ test('cada visitante conserva su copia; abrirla de nuevo no repuebla ni pisa cam
     await a.table('inventory').update(item.id,{quantity:999});
     assert.notEqual((await b.table('inventory').get(item.id)).quantity,999);
     await a.transaction("rw", a.tables, populateDemo);
-    assert.equal(await a.table("inventory").count(),84);
+    assert.equal(await a.table("inventory").count(),95);
     a.close();await a.open();
     assert.equal((await a.table('inventory').get(item.id)).quantity,999);
     const photo=await a.table('photos').toCollection().first();

@@ -1,0 +1,425 @@
+{
+  "2c52e157-a016-4a53-8a30-7b922edd666c": {
+    "name": "Manzanas al horno",
+    "steps": [
+      "Retirar el centro de las manzanas.",
+      "Espolvorear con azúcar y canela.",
+      "Hornear a 180 °C con un poco de agua en la fuente hasta tiernas."
+    ],
+    "ingredients": [
+      {
+        "name": "Manzana",
+        "quantity": 4,
+        "unit": "unidades"
+      },
+      {
+        "name": "Canela",
+        "quantity": 1,
+        "unit": "cucharadita"
+      },
+      {
+        "name": "Azúcar",
+        "quantity": 2,
+        "unit": "cucharadas"
+      }
+    ],
+    "minutes": 40,
+    "servings": 4
+  },
+  "53b9f67b-7b44-45bd-89a1-bd32154e8aa1": {
+    "name": "Galletitas de avena",
+    "steps": [
+      "Pisar las bananas y mezclar con avena y pasas.",
+      "Formar galletitas sobre una placa.",
+      "Hornear a 180 °C hasta que estén firmes y doradas."
+    ],
+    "ingredients": [
+      {
+        "name": "Avena",
+        "quantity": 200,
+        "unit": "g"
+      },
+      {
+        "name": "Banana",
+        "quantity": 2,
+        "unit": "unidades"
+      },
+      {
+        "name": "Pasas",
+        "quantity": 50,
+        "unit": "g"
+      }
+    ],
+    "minutes": 25,
+    "servings": 8
+  },
+  "55b0d7cd-8fde-4488-9c73-274f9af57a2d": {
+    "name": "Ensalada de lentejas",
+    "steps": [
+      "Cocinar las lentejas hasta que estén tiernas.",
+      "Dejar enfriar y mezclar con las verduras cortadas.",
+      "Condimentar a gusto."
+    ],
+    "ingredients": [
+      {
+        "itemId": "d00756c4-eff7-4596-9a08-5b8952d095a8",
+        "name": "Lentejas secas 400 g",
+        "quantity": 1,
+        "unit": "paquetes"
+      },
+      {
+        "name": "Tomate fresco",
+        "quantity": 2,
+        "unit": "unidades"
+      },
+      {
+        "name": "Zanahoria",
+        "quantity": 1,
+        "unit": "unidades"
+      }
+    ],
+    "minutes": 35,
+    "servings": 4
+  },
+  "614a5b54-6107-4519-b242-b55541892786": {
+    "name": "Budín de limón",
+    "steps": [
+      "Batir huevos, azúcar, aceite, leche, jugo y ralladura.",
+      "Incorporar harina y polvo de hornear.",
+      "Hornear en molde a 170 °C hasta que un palillo salga limpio."
+    ],
+    "ingredients": [
+      {
+        "name": "Harina",
+        "quantity": 250,
+        "unit": "g"
+      },
+      {
+        "name": "Azúcar",
+        "quantity": 150,
+        "unit": "g"
+      },
+      {
+        "name": "Huevos",
+        "quantity": 2,
+        "unit": "unidades"
+      },
+      {
+        "name": "Leche",
+        "quantity": 100,
+        "unit": "ml"
+      },
+      {
+        "name": "Aceite",
+        "quantity": 80,
+        "unit": "ml"
+      },
+      {
+        "name": "Limón",
+        "quantity": 1,
+        "unit": "unidad"
+      },
+      {
+        "name": "Polvo de hornear",
+        "quantity": 10,
+        "unit": "g"
+      }
+    ],
+    "minutes": 55,
+    "servings": 8
+  },
+  "71fdd246-d49d-4df8-9c8f-431efd516cf3": {
+    "name": "Fideos con salsa rápida",
+    "steps": [
+      "Rehogar la cebolla y agregar el tomate.",
+      "Cocinar la salsa a fuego bajo.",
+      "Hervir los fideos según el envase y mezclar con la salsa."
+    ],
+    "ingredients": [
+      {
+        "name": "Fideos secos",
+        "quantity": 400,
+        "unit": "g"
+      },
+      {
+        "name": "Tomate triturado",
+        "quantity": 500,
+        "unit": "g"
+      },
+      {
+        "name": "Cebolla",
+        "quantity": 1,
+        "unit": "unidad"
+      }
+    ],
+    "minutes": 25,
+    "servings": 4
+  },
+  "800fbbfe-1384-401b-b409-392dcdbb018e": {
+    "name": "Omelette de queso",
+    "steps": [
+      "Batir los huevos.",
+      "Verter en sartén caliente ligeramente aceitada.",
+      "Agregar el queso, doblar y cocinar hasta cuajar."
+    ],
+    "ingredients": [
+      {
+        "name": "Huevos",
+        "quantity": 2,
+        "unit": "unidades"
+      },
+      {
+        "name": "Queso",
+        "quantity": 40,
+        "unit": "g"
+      }
+    ],
+    "minutes": 10,
+    "servings": 1
+  },
+  "834dd758-d5bc-4f20-84e9-70865a5a8fc3": {
+    "name": "Arroz con tomate — 10 porciones",
+    "steps": [
+      "Ejemplo para probar el vínculo de ingredientes con el inventario.",
+      "Revisar los ingredientes disponibles antes de usar la acción Cocinar."
+    ],
+    "ingredients": [
+      {
+        "itemId": "d654e8bf-3da8-4bc5-9a16-ced10c8d52a2",
+        "name": "Arroz largo fino 1 kg",
+        "quantity": 1,
+        "unit": "paquetes"
+      },
+      {
+        "itemId": "c3f36c1d-c84d-4938-aed6-3499800ec8aa",
+        "name": "Tomate triturado 520 g",
+        "quantity": 1,
+        "unit": "unidades"
+      }
+    ],
+    "minutes": 25,
+    "servings": 10
+  },
+  "85eb75c1-3075-41ea-8e9f-104c122a795d": {
+    "name": "Sopa de calabaza",
+    "steps": [
+      "Rehogar la cebolla.",
+      "Agregar calabaza en cubos y caldo.",
+      "Cocinar hasta ablandar y licuar con cuidado."
+    ],
+    "ingredients": [
+      {
+        "name": "Calabaza",
+        "quantity": 800,
+        "unit": "g"
+      },
+      {
+        "name": "Cebolla",
+        "quantity": 1,
+        "unit": "unidad"
+      },
+      {
+        "name": "Caldo de verduras",
+        "quantity": 750,
+        "unit": "ml"
+      }
+    ],
+    "minutes": 35,
+    "servings": 4
+  },
+  "8e500411-41aa-4b67-b54f-2885677ef153": {
+    "name": "Hummus casero",
+    "steps": [
+      "Procesar los garbanzos con tahini y limón.",
+      "Agregar agua de a poco hasta lograr una crema.",
+      "Servir con aceite de oliva y pimentón."
+    ],
+    "ingredients": [
+      {
+        "name": "Garbanzos cocidos",
+        "quantity": 400,
+        "unit": "g"
+      },
+      {
+        "name": "Tahini",
+        "quantity": 2,
+        "unit": "cucharadas"
+      },
+      {
+        "name": "Jugo de limón",
+        "quantity": 2,
+        "unit": "cucharadas"
+      }
+    ],
+    "minutes": 15,
+    "servings": 6
+  },
+  "9097b101-a965-4bf5-a5bc-2f121056491a": {
+    "name": "Guiso de lentejas y verduras",
+    "steps": [
+      "Enjuagar las lentejas.",
+      "Rehogar las verduras cortadas, agregar lentejas y cubrir con agua.",
+      "Cocinar hasta que todo esté tierno, reponiendo agua si hace falta."
+    ],
+    "ingredients": [
+      {
+        "name": "Lentejas secas",
+        "quantity": 300,
+        "unit": "g"
+      },
+      {
+        "name": "Zanahoria",
+        "quantity": 2,
+        "unit": "unidades"
+      },
+      {
+        "name": "Papa",
+        "quantity": 2,
+        "unit": "unidades"
+      }
+    ],
+    "minutes": 50,
+    "servings": 6
+  },
+  "973e9bc2-2fdd-453d-8f41-692dc9fa6ec0": {
+    "name": "Ensalada de garbanzos",
+    "steps": [
+      "Escurrir los garbanzos.",
+      "Cortar las verduras y mezclar.",
+      "Aliñar con aceite, limón y sal."
+    ],
+    "ingredients": [
+      {
+        "name": "Garbanzos cocidos",
+        "quantity": 400,
+        "unit": "g"
+      },
+      {
+        "name": "Pepino",
+        "quantity": 1,
+        "unit": "unidad"
+      },
+      {
+        "name": "Tomate",
+        "quantity": 2,
+        "unit": "unidades"
+      }
+    ],
+    "minutes": 15,
+    "servings": 4
+  },
+  "be96cab3-e5f7-4292-b4e3-583d614d03df": {
+    "name": "Pizza de la familia",
+    "steps": [
+      "Amasar harina, levadura, agua y una pizca de sal.",
+      "Dejar leudar hasta duplicar el volumen.",
+      "Estirar, cubrir con salsa y queso, y hornear hasta dorar."
+    ],
+    "ingredients": [
+      {
+        "name": "Harina",
+        "quantity": 500,
+        "unit": "g"
+      },
+      {
+        "name": "Levadura seca",
+        "quantity": 7,
+        "unit": "g"
+      },
+      {
+        "name": "Agua",
+        "quantity": 300,
+        "unit": "ml"
+      },
+      {
+        "name": "Queso",
+        "quantity": 250,
+        "unit": "g"
+      }
+    ],
+    "minutes": 90,
+    "servings": 4
+  },
+  "cd11b372-b489-400e-8165-4d152ace769c": {
+    "name": "Polenta cremosa",
+    "steps": [
+      "Hervir el agua con sal.",
+      "Agregar polenta en lluvia y revolver el tiempo indicado en el envase.",
+      "Terminar con el queso y servir caliente."
+    ],
+    "ingredients": [
+      {
+        "name": "Polenta",
+        "quantity": 250,
+        "unit": "g"
+      },
+      {
+        "name": "Agua",
+        "quantity": 1000,
+        "unit": "ml"
+      },
+      {
+        "name": "Queso rallado",
+        "quantity": 50,
+        "unit": "g"
+      }
+    ],
+    "minutes": 20,
+    "servings": 4
+  },
+  "d42d88a0-998f-462a-8b7f-6f88b972b0c0": {
+    "name": "Tortilla de papas",
+    "steps": [
+      "Cortar las papas y la cebolla en rodajas finas.",
+      "Cocinar hasta que estén tiernas, mezclar con los huevos batidos y salar.",
+      "Cuajar en sartén a fuego moderado y dar vuelta con cuidado."
+    ],
+    "ingredients": [
+      {
+        "name": "Papa",
+        "quantity": 600,
+        "unit": "g"
+      },
+      {
+        "name": "Huevos",
+        "quantity": 4,
+        "unit": "unidades"
+      },
+      {
+        "name": "Cebolla",
+        "quantity": 1,
+        "unit": "unidad"
+      }
+    ],
+    "minutes": 40,
+    "servings": 4
+  },
+  "f64a28c1-f5df-43f1-8eb2-0e7872de7ef9": {
+    "name": "Panqueques caseros",
+    "steps": [
+      "Batir los huevos con la leche.",
+      "Agregar la harina de a poco y mezclar.",
+      "Cocinar porciones finas de ambos lados en una sartén."
+    ],
+    "ingredients": [
+      {
+        "itemId": "9f6d6950-2b69-40a0-998a-23bdf0a52fd7",
+        "name": "Huevos",
+        "quantity": 2,
+        "unit": "unidades"
+      },
+      {
+        "name": "Harina",
+        "quantity": 200,
+        "unit": "g"
+      },
+      {
+        "name": "Leche",
+        "quantity": 500,
+        "unit": "ml"
+      }
+    ],
+    "minutes": 30,
+    "servings": 4
+  }
+}

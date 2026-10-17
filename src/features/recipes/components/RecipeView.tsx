@@ -95,7 +95,7 @@ export function RecipeView() {
         <Row gutter={[32, 24]} align="middle" style={{ marginBottom: 32 }}>
           <Col xs={24} md={11}>
             <motion.div initial={{ opacity: 0, scale: 0.97 }} animate={{ opacity: 1, scale: 1 }} transition={SPRING.soft}>
-              <RecipeCover recipeId={recipe.id} photoId={recipe.coverPhotoId} variant="blob" aspectRatio="4 / 3" radius={token.borderRadiusLG * 2} style={{ boxShadow: token.boxShadowSecondary }} />
+              <RecipeCover name={recipe.name} recipeId={recipe.id} photoId={recipe.coverPhotoId} variant="blob" aspectRatio="4 / 3" radius={token.borderRadiusLG * 2} style={{ boxShadow: token.boxShadowSecondary }} />
             </motion.div>
           </Col>
           <Col xs={24} md={13}>

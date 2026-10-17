@@ -226,6 +226,12 @@ export function declareSchema(target: Dexie, upTo = Infinity) {
     const { addDemoSchool } = await Dexie.waitFor(import("@/features/demo/seed"));
     await addDemoSchool(tx);
   });
+  // New cooking examples, only in the two isolated sample houses.
+  if (upTo >= 16) target.version(16).stores({}).upgrade(async (tx) => {
+    if (!["RefugiarDemoDB", "RefugiarTestDB"].includes(target.name)) return;
+    const { upgradeDemoCooking } = await Dexie.waitFor(import("@/features/demo/seed"));
+    await upgradeDemoCooking(tx);
+  });
 }
 
 declareSchema(db);

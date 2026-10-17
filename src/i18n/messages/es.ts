@@ -6,6 +6,8 @@
  * - Plurales: un objeto `{ one, other }` se elige con `Intl.PluralRules` según `count`.
  */
 export const es = {
+  connections: {"blocked": "Conexión bloqueada. Revisá los permisos en Ajustes → Datos.", "consentTitle": "¿Querés conectarte al servidor?", "consentText": "Tu casa está en modo local. Continuar permite acceder al servidor de cuentas durante esta sesión. No sube tu inventario ni cambia de modo hasta que elijas vincular una casa.", "allowSession": "Permitir esta conexión", "stayLocal": "Seguir en mi casa local", "scope": "Modo local: los servicios externos quedan bloqueados salvo los permisos que actives acá. En la web, descargar la app y sus actualizaciones requiere contactar su alojamiento. Para funcionar dentro de tu red usá el paquete local o Android. Los permisos se guardan en este dispositivo, separados de la demo.", "products": "Consultar productos en Internet", "productsHint": "Permite enviar el código de barras a Open Food Facts. El proveedor también recibe tu IP. No envía tu inventario.", "weather": "Consultar clima en Internet", "weatherHint": "Permite consultar MET Norway mediante el servidor de Refugiar. Solo se envía la ciudad elegida, sin ubicación precisa.", "news": "Consultar noticias en Internet", "newsHint": "Permite consultar las fuentes elegidas mediante el servidor de Refugiar. Las palabras silenciadas se filtran en este dispositivo.", "adminOnly": "Un administrador de la casa puede cambiar los permisos de conexión.", "node": "Nodo de tu casa", "nodeHint": "Guardá la dirección privada de tu servidor. Comprobar solo consulta su estado; no envía credenciales. Abrir nodo lleva a su propia casa y requiere iniciar sesión allí. No migra ni sincroniza automáticamente esta casa. Un certificado no confiable, HTTP o falta de permiso de red puede impedir la comprobación.", "checkNode": "Guardar y comprobar", "openNode": "Abrir nodo local", "forgetNode": "Olvidar nodo", "nodeState": {"idle": "Sin comprobar.", "checking": "Comprobando conexión…", "ready": "El nodo respondió.", "failed": "No pudimos comprobar el nodo. Revisá dirección, certificado y permisos de red.", "invalid": "Usá una dirección IP privada o localhost, sin rutas ni credenciales."}, "myHouse": "Mi casa", "switchHouse": "Cambiar de casa", "switchHint": "Tu casa y la demo guardan sus datos por separado. El cambio recarga la app. Los cambios ya guardados se conservan."},
+  brief: {"title": "Un vistazo afuera", "refresh": "Actualizar resumen", "hint": "Información guardada. Revisá la fecha antes de usarla.", "error": "Alguna fuente no respondió. Conservamos los datos anteriores. Podés volver a intentar más tarde.", "city": "Ciudad de referencia", "cityHint": "Argentina. Elegí una ciudad cercana; no representa el pronóstico exacto de tu domicilio. No usamos GPS.", "sources": "Fuentes de noticias", "muted": "Palabras que querés silenciar", "mutedHint": "Separalas con comas. Oculta títulos que las contienen. No cambia las fuentes ni reescribe noticias.", "automatic": "Actualizar mientras miro el inicio", "automaticHint": "Solo con la app visible y permisos activos. Con datos guardados, consulta cada hora. Si falla, reintenta a partir de los 15 minutos. Sin avisos ni tareas en segundo plano.", "clear": "Borrar el resumen guardado", "forecast": "Pronóstico: {temperature} °C · próximas 24 h: {min}–{max} °C", "savedAt": "Guardado: {date}", "noWeather": "Todavía no hay un pronóstico guardado.", "noNews": "No hay titulares guardados que coincidan con tu selección.", "end": "Hasta acá el resumen. Podés abrir las fuentes cuando quieras.", "weatherCredit": "Pronóstico resumido de MET Norway · CC BY 4.0"},
   kitchen: {"duration": "Tiempo del paso (minutos; 0 = sin tiempo)", "suggest": "Usar {seconds} minutos del texto", "notify": "Avisarme al terminar los próximos temporizadores", "start": "Iniciar temporizador de {seconds} segundos", "step": "Paso {step}", "done": "Terminó el temporizador", "channel": "Temporizadores de cocina", "error": "No se pudo guardar el temporizador o programar el aviso. Revisá el permiso de notificaciones.", "hint": "Los tiempos son orientativos. Android puede demorar el aviso al ahorrar batería. Los temporizadores siguen al cerrar este modo.", "undo": "Deshacer la cocinada completa"},
   emails: {
     subject: "Refugiar: aviso de seguridad",
@@ -220,6 +222,7 @@ export const es = {
     back: "Volver",
   },
   demo: {
+    tour: {"title": "Probá la casa demo", "text": "Son datos ficticios, separados de tu casa. En panqueques podés preparar paso a paso, iniciar tiempos y confirmar el consumo. El omelette muestra un faltante y la pizza, un ingrediente agotado.", "recipes": "Cocinar y usar lo que hay", "shopping": "Guardar una compra en inventario", "meals": "Ver el menú semanal", "school": "Explorar la escuela", "settings": "Conexiones y resumen", "design": "Ver el sistema visual"},
     badge: "Demo",
     testsBadge: "Pruebas",
     add: "Cargar más ejemplos",
@@ -483,7 +486,7 @@ export const es = {
       privacy: "Privacidad",
       settings: "Ajustes",
       design: "Sistema de diseño",
-      values: "Nuestros valores",
+      values: "Acerca del proyecto",
     },
   },
   shell: {
@@ -1376,6 +1379,7 @@ export const es = {
   reminders: {"save": "Guardar recordatorios", "title": "Recordatorios en este dispositivo", "hint": "Elegí los eventos que querés recordar. Para apagarlos, quitá todos y guardá. Los eventos de todo el día avisan a las 9.", "events": "Eventos", "before": "Cuándo avisar", "minutes": "{count} minutos antes", "atTime": "A la hora del evento", "limits": "Se programan hasta 64 avisos de los próximos 30 días. Abrí la app para renovar la agenda. Android puede demorar avisos por ahorro de batería. Cambiar de perfil cancela los del anterior.", "androidOnly": "Los avisos locales están disponibles en la app Android, fuera de la casa demo. No necesitan un servicio de notificaciones en la nube.", "saved": "Preferencias guardadas. Los avisos se actualizan en este dispositivo.", "denied": "Android no permite notificaciones. Habilitalas en los ajustes de la app y volvé a guardar.", "error": "No pudimos actualizar los recordatorios. Volvé a guardar para reintentar.", "notificationTitle": "Refugiar · Calendario", "notificationBody": "Tenés un evento próximo. Abrí el calendario para verlo."},
   meals: { title: "Menú semanal", description: "Elegí recetas guardadas y reuní los faltantes de la semana.", add: "Planear una comida", empty: "Todavía no hay una comida planeada.", recipe: "Receta", day: "Día", servings: "Porciones", save: "Agregar al menú", remove: "Quitar comida", removeConfirm: "¿Quitar esta comida? Si se repite, se quita toda la serie.", previous: "Semana anterior", next: "Semana siguiente", missing: "Revisar compras de la semana", hint: "El menú no reserva ni descuenta stock. Los faltantes suman todas las comidas de la semana seleccionada. Se agregan a la lista compartida de la casa.", unavailable: "La receta ya no está disponible.", planned: "Comida agregada al menú", noRecipes: "Guardá una receta para empezar a planear." },
   recipes: {
+    exampleImage: "Imagen ilustrativa generada de {name}",
     mode: { open: "Modo cocina", title: "Cocinando {name}", ingredients: "Ingredientes preparados", step: "Paso {current} de {total}", next: "Siguiente", previous: "Anterior", finish: "Terminé: revisar consumo", close: "Guardar avance y salir", reset: "Empezar de nuevo", hint: "Marcar ingredientes o pasos no descuenta stock. Revisás el consumo al terminar.", saved: "El avance se guarda en este dispositivo para tu perfil.", noSteps: "Esta receta todavía no tiene pasos.", awake: "Mantener pantalla encendida", unavailable: "El dispositivo no pudo mantener la pantalla encendida.", storageError: "No se pudo guardar el avance en este dispositivo.", complete: "Paso listo", resetTitle: "¿Borrar el avance de esta preparación?" },
     substitutions: "Elegir otro alimento como sustituto",
     source: "Descontar {name} de…",
@@ -1558,7 +1562,7 @@ export const es = {
     free: "Gratis",
     soonButton: "Estamos terminándolo",
     back: "Volver",
-    values: "Nuestros valores",
+    values: "Acerca del proyecto",
     security: {
       title: "Tu casa, tus datos",
       text: "En tu dispositivo es gratis y sin cuenta. Si la compartís en la nube, se guarda cifrada de extremo a extremo: solo tu familia puede leerla, ni siquiera {app}. Vos elegís qué se comparte con todos, qué solo con los adultos y qué es solo tuyo.",
@@ -2249,7 +2253,7 @@ export const es = {
     about: {
       text: "{app} es código abierto, offline-first y corre en tu propio hardware.",
       version: "Versión {version}",
-      values: "Nuestros valores",
+      values: "Acerca del proyecto",
     },
   },
   backup: {

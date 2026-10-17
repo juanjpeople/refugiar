@@ -19,6 +19,7 @@ import { productCodesSupported } from "@/features/storage/qr-reader";
 import { useCameraScanner } from "@/features/storage/useCameraScanner";
 import { INVENTORY_LIMITS, isBarcode } from "../domain";
 import { useInventoryActions } from "../hooks";
+import { useNetworkPolicy } from "@/lib/network/policy";
 import { lookupProductName } from "../product-lookup";
 import { knownBarcodeName } from "../service";
 
@@ -52,6 +53,7 @@ function BarcodeLoaderView() {
   const hydrated = useHydrated();
   const containerId = useSearchParams().get("id") ?? undefined;
   const container = useContainer(containerId);
+  const productsAllowed = useNetworkPolicy(s => s.products);
   const { productLookup } = usePreferences();
   const setPreference = useSetPreference();
   const { addScanned } = useInventoryActions();
@@ -63,8 +65,8 @@ function BarcodeLoaderView() {
   const lastSeen = useRef(new Map<string, number>());
   // Códigos ya en la lista: el primero de cada uno busca su nombre una sola vez.
   const listed = useRef(new Set<string>());
-  const lookup = useRef(productLookup);
-  useEffect(() => { lookup.current = productLookup; }, [productLookup]);
+  const lookup = useRef(productLookup && productsAllowed);
+  useEffect(() => { lookup.current = productLookup && productsAllowed; }, [productLookup, productsAllowed]);
   useEffect(() => { void productCodesSupported().then(setSupported); }, []);
 
   async function resolveName(barcode: string) {
@@ -191,6 +193,7 @@ function BarcodeLoaderView() {
               <label htmlFor="product-lookup" style={{ cursor: "pointer" }}>
                 <Typography.Text strong style={{ display: "block" }}>{t("inventory.scanned.lookup")}</Typography.Text>
                 <Typography.Text type="secondary">{t("inventory.scanned.lookupHint")}</Typography.Text>
+                {productLookup && !productsAllowed && <Typography.Text type="warning" style={{ display: "block" }}>{t("connections.blocked")}</Typography.Text>}
               </label>
             </Flex>
           </Flex>

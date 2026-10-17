@@ -1,5 +1,15 @@
 # Refugiar: hoja de ruta
 
+## Tanda: navegación, conexiones y ejemplos (17 de octubre de 2026)
+
+- ✅ Hecho: selector de casa/demo, búsqueda en Más para celular, popover con altura acotada y transiciones que respetan movimiento reducido. Menú «Acerca del proyecto».
+- ✅ Hecho: conexiones externas optativas por dispositivo, acceso explícito a cuentas desde una casa local y comprobación de nodo privado sin enviar credenciales. La limpieza de la demo conserva preferencias y bóveda reales.
+- ✅ Hecho: catálogo argentino incluido con variantes comerciales y varias referencias por alimento, fuente y fecha. No son precios en vivo.
+- ✅ Hecho: resumen opcional de clima y titulares, permisos separados, caché, fuentes elegidas y palabras silenciadas. Sin notificaciones ni tareas en segundo plano. → [Resumen](docs/features/resumen.md)
+- ✅ Hecho: 15 imágenes ilustrativas incluidas, recetas demo con pasos y tiempos, 95 productos, menú semanal y una compra para guardar en inventario. Migración conservadora de recetas demo sin editar. → [Recetas](docs/features/recetas.md)
+- Pendiente: integración del nodo como servidor de la app Android, administración del ESP real y catálogo/precios actualizados automáticamente desde SEPA u otros proveedores. Esta tanda no los presenta como implementados.
+- Validación visual y física a cargo del dueño: cambio de casa, modos claros/oscuros, tamaños de pantalla, temporizadores Android y acceso a un nodo de su red.
+
 Qué hay, qué se está haciendo y qué ideas quedan anotadas. Sin fechas ni promesas.
 El detalle de cada funcionalidad está en [docs/features](docs/features/).
 
@@ -26,7 +36,7 @@ El detalle de cada funcionalidad está en [docs/features](docs/features/).
 - **Android autónomo**: recursos dentro del APK, datos propios, arranque y desbloqueo sin internet; conservar sincronización web. Ya pasó en emulador; falta probarlo en un teléfono real antes de publicar.
 - **Resiliencia**: conservar pendientes y reintentos sin duplicar cambios al reconectar.
 - **Familia en cuatro ventanas**: cerrar el laboratorio local existente con dos admins y dos chicos.
-- **Distribución Android**: versión 16 publicada en Prueba interna de Play. Conservar los pendientes de validación física antes de promover a producción.
+- **Distribución Android**: versión 18 publicada en Prueba interna de Play. Conservar los pendientes de validación física antes de promover a producción.
 
 Orden, dependencias, estados y criterios de aceptación: [Cimientos del MVP](docs/CIMIENTOS_MVP.md).
 

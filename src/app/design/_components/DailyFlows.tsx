@@ -1,8 +1,9 @@
 "use client";
 
+import { RecipeCover } from "@/features/recipes/components/RecipeBits";
 import { App, Flex } from "antd";
 import { useState } from "react";
-import { StepTime, KitchenTimers, ReminderPreferences, WeeklyMenu, CookingGuide, PurchaseDestination, SyncIndicator, type CookingProgress } from "@/components/ui";
+import { QuietSummary, ConnectionConsent, StepTime, KitchenTimers, ReminderPreferences, WeeklyMenu, CookingGuide, PurchaseDestination, SyncIndicator, type CookingProgress } from "@/components/ui";
 import { DemoBlock } from "./DemoBlock";
 
 export function DailyFlows() {
@@ -11,6 +12,9 @@ export function DailyFlows() {
   const [seconds, setSeconds] = useState(120);
   const [reminders, setReminders] = useState({ events: ["evento"], minutes: 15 });
   return <>
+    <DemoBlock id="portadas-recetas" title="RecipeCover" description="Fotografía ilustrativa generada, incluida en la app. La foto personal tiene prioridad. Miniatura liviana para la lista y versión completa para el detalle."><RecipeCover recipeId="f64a28c1-f5df-43f1-8eb2-0e7872de7ef9" name="Panqueques caseros" style={{ maxWidth: 400 }} /></DemoBlock>
+    <DemoBlock id="resumen-tranquilo" title="QuietSummary" description="Resumen finito, fecha visible, actualización optativa y sin contenido remoto incrustado."><QuietSummary title="Un vistazo afuera" status="Guardado ayer. Revisá la fecha." busy={false} onRefresh={() => message.info("Actualización de ejemplo.")}>Hasta seis titulares de las fuentes elegidas.</QuietSummary></DemoBlock>
+    <DemoBlock id="conexion-explicita" title="ConnectionConsent" description="Antes de contactar cuentas desde una casa local. No cambia el modo ni sube datos."><ConnectionConsent onAllow={() => message.info("Permiso de ejemplo.")} onBack={() => message.info("Volver de ejemplo.")} /></DemoBlock>
     <DemoBlock id="tiempos-cocina" title="Tiempos por paso: StepTime y KitchenTimers" description="Tiempo explícito en segundos, sugerido sólo si está escrito. Varios timers, fecha de finalización persistida y avisos Android optativos; sin prometer precisión de alarma.">
       <StepTime seconds={seconds} suggestion={300} onChange={setSeconds} />
       <KitchenTimers seconds={seconds} timers={[{ id: 1, step: 0, remaining: 90 }, { id: 2, step: 1, remaining: 0 }]} onStart={() => message.info("Temporizador de ejemplo.")} onCancel={() => message.info("Cancelación de ejemplo.")} />

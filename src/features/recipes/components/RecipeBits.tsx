@@ -6,6 +6,7 @@ import type { CSSProperties } from "react";
 import { useObjectUrl, usePhoto } from "@/features/media/hooks";
 import { useI18n } from "@/i18n";
 import { APPEARANCE_COLORS, tint } from "@/lib/appearance";
+import { exampleCover } from "../example-covers";
 import type { Availability } from "../domain";
 
 /** Color estable por receta (para la portada sin foto): siempre el mismo para la misma receta. */
@@ -17,6 +18,7 @@ function colorFor(id: string) {
 
 interface RecipeCoverProps {
   recipeId: string;
+  name?: string;
   photoId?: string;
   /** Miniatura para tarjetas; la foto completa para el detalle. */
   variant?: "thumb" | "blob";
@@ -26,10 +28,13 @@ interface RecipeCoverProps {
 }
 
 /** Portada: la foto elegida o, sin foto, un fondo de color con una olla. */
-export function RecipeCover({ recipeId, photoId, variant = "thumb", aspectRatio = "16 / 10", radius, style }: RecipeCoverProps) {
+export function RecipeCover({ recipeId, name, photoId, variant = "thumb", aspectRatio = "16 / 10", radius, style }: RecipeCoverProps) {
   const { token } = theme.useToken();
+  const { t } = useI18n();
   const blob = usePhoto(photoId, variant);
   const url = useObjectUrl(blob, `${photoId}:${variant}`);
+  const illustration = !photoId ? exampleCover(recipeId, name, variant === "thumb") : undefined;
+  const source = url ?? illustration;
   const palette = tint(token, colorFor(recipeId));
 
   return (
@@ -43,9 +48,9 @@ export function RecipeCover({ recipeId, photoId, variant = "thumb", aspectRatio 
         ...style,
       }}
     >
-      {url ? (
+      {source ? (
         // eslint-disable-next-line @next/next/no-img-element -- Blob local (IndexedDB): next/image no aplica.
-        <img src={url} alt="" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }} />
+        <img src={source} loading="lazy" decoding="async" alt={illustration ? t("recipes.exampleImage", { name: name ?? "" }) : ""} title={illustration ? t("recipes.exampleImage", { name: name ?? "" }) : undefined} style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }} />
       ) : (
         <span style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", color: palette.solid, opacity: 0.55, fontSize: "clamp(32px, 22%, 72px)" }}>
           <CookingPot />

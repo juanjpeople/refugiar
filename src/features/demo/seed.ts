@@ -2,6 +2,8 @@ import type { Transaction } from "dexie";
 import type { InventoryItem } from "@/features/inventory/domain";
 import fixture from "./house.json" with { type: "json" };
 import { demoSchool } from "./school";
+import previousRecipes from "./recipes-previous.json" with { type: "json" };
+import type { Recipe } from "@/features/recipes/domain";
 
 /** Datos públicos y ficticios. No se consulta una cuenta ni se descarga contenido remoto. */
 export function demoData(now = Date.now()) {
@@ -59,4 +61,28 @@ export async function backfillDemoTools(tx: Transaction) {
       item.autoSuggest ??= false;
     }
   });
+}
+
+/** v16: only unchanged demo recipes; personal houses and edits are never overwritten. */
+export async function upgradeDemoCooking(tx: Transaction) {
+  const data = demoData();
+  const containers = new Set(await tx.table("containers").toCollection().primaryKeys());
+  // Only the new sample products, not things a visitor previously removed.
+  for (const row of data.tables.inventory.slice(84)) {
+    if (containers.has(row.containerId) && !await tx.table("inventory").get(row.id)) await tx.table("inventory").add(row);
+  }
+  const inventory = new Set(await tx.table("inventory").toCollection().primaryKeys());
+  for (const row of data.tables.recipes) {
+    const current = await tx.table<Recipe>("recipes").get(row.id);
+    const previous = previousRecipes[row.id as keyof typeof previousRecipes];
+    if (!current || !previous || current.stepSeconds !== undefined) continue;
+    if (Object.entries(previous).some(([key, value]) => JSON.stringify(current[key as keyof Recipe]) !== JSON.stringify(value))) continue;
+    if (row.ingredients.some(ingredient => "itemId" in ingredient && !inventory.has(ingredient.itemId))) continue;
+    await tx.table("recipes").update(row.id, { steps: row.steps, stepSeconds: row.stepSeconds, ingredients: row.ingredients, updatedAt: Date.now() });
+  }
+  const purchase = data.tables.shoppingList.find(row => row.id === "demo-bought-flour");
+  if (purchase && await tx.table("shoppingLists").get(purchase.listId) && !await tx.table("shoppingList").get(purchase.id)) await tx.table("shoppingList").add(purchase);
+  for (const event of data.tables.events.filter(event => event.id.startsWith("demo-meal-"))) {
+    if ("meal" in event && event.meal && await tx.table("recipes").get(event.meal.recipeId) && !await tx.table("events").get(event.id)) await tx.table("events").add(event);
+  }
 }

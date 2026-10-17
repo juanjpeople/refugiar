@@ -1,6 +1,7 @@
 "use client";
 
-import { motion, type HTMLMotionProps, type Variants } from "framer-motion";
+import { MotionConfigContext, useReducedMotion, motion, type HTMLMotionProps, type Variants } from "framer-motion";
+import { useContext } from "react";
 import { DURATION, EASE_OUT, STAGGER } from "@/lib/motion";
 
 const item: Variants = {
@@ -18,11 +19,14 @@ interface StaggerProps extends HTMLMotionProps<"div"> {
  * Los ítems pueden estar anidados dentro de otros componentes (ej. `Row` > `Col` > `StaggerItem`).
  */
 export function Stagger({ delay = 0, stagger = STAGGER, children, ...rest }: StaggerProps) {
+  const systemReduced = useReducedMotion();
+  const config = useContext(MotionConfigContext);
+  const reduced = config.reducedMotion === "always" || (config.reducedMotion !== "never" && systemReduced);
   return (
     <motion.div
-      initial="hidden"
+      initial={reduced ? false : "hidden"}
       animate="show"
-      variants={{ hidden: {}, show: { transition: { staggerChildren: stagger, delayChildren: delay } } }}
+      variants={{ hidden: {}, show: { transition: { staggerChildren: reduced ? 0 : stagger, delayChildren: reduced ? 0 : Math.min(delay, 0.15) } } }}
       {...rest}
     >
       {children}
