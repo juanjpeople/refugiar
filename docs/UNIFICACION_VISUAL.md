@@ -523,3 +523,7 @@ Para que una función nueva no rehaga su página de lista ni su página de detal
 ✅ MobileHeader y la barra de cinco destinos están documentados en /design
 (PanesSection). Más reutiliza Navigation con permisos. Queda la revisión visual
 del dueño en el teléfono.
+
+## Tanda de uso diario (2026-10)
+
+✅ Hecho: PurchaseDestination, SyncIndicator, CookingGuide, WeeklyMenu y ReminderPreferences exportados desde UI y demostrados en `/design`. Títulos móviles conservan jerarquía semántica; contexto compacto sin texto largo en cabecera; navegación activa usa texto de alto contraste. La revisión visual por el dueño en Android queda pendiente.

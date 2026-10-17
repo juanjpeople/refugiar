@@ -27,8 +27,7 @@ solos una configuración real de producción. El despliegue queda manual.
 | Seguridad y costos | Mantener revisión de permisos, límites de recursos e intentos, auditoría de dependencias y pruebas de aislamiento. Probar cuotas y fallos de proveedores antes de activar nuevas funciones; no prometer inmunidad a ataques ni gasto nulo. |
 | Suscripciones, multimedia y soporte | Continúan como entregas futuras detalladas abajo. Proveedores, políticas vigentes y pruebas reales pendientes; las propuestas históricas no son capacidades habilitadas. |
 
-Los PRs se revisan e integran gradualmente. Una integración no publica automáticamente
-la app: distinguir siempre código disponible, pruebas aprobadas y función operativa.
+Una tanda se integra en un solo PR. La conexión actual de Cloudflare publica al cambiar `main`, independientemente de cuándo terminen los checks de GitHub. Está pendiente hacer que espere a CI completo. No duplicar esa publicación con otro workflow. Ver [previews y builds](SIN_PREVIEW.md). Distinguir código disponible, pruebas aprobadas y función operativa.
 
 ## Contexto
 

@@ -18,6 +18,7 @@ import { usePermission } from "@/lib/auth/hooks";
 import { DURATION, EASE_OUT } from "@/lib/motion";
 import type { CalendarEvent, Occurrence } from "../domain";
 import { useOccurrences } from "../hooks";
+import { ReminderButton } from "./ReminderButton";
 import { EventModal } from "./EventModal";
 import { CalendarSettingsButton } from "./CalendarOptions";
 
@@ -87,12 +88,15 @@ export function CalendarPage() {
         title={t("calendar.title")}
         description={t("calendar.description")}
         extra={
+          <>
+          <ReminderButton />
           <Can perform="calendar.manage">
             <CalendarSettingsButton />
             <Button type="primary" icon={<Plus />} onClick={() => setModal({ day: cursor })}>
               {t("calendar.newEvent")}
             </Button>
           </Can>
+          </>
         }
       />
 

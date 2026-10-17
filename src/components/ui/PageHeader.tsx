@@ -56,7 +56,7 @@ export function PageHeader({ title, description, eyebrow, crumbs, extra, leading
                 {eyebrow}
               </Typography.Text>
             )}
-            <Typography.Title level={compact ? 4 : 2} style={{ margin: eyebrow && !crumbs ? "4px 0 0" : 0, letterSpacing: "-0.025em", overflowWrap: "anywhere" }}>
+            <Typography.Title level={2} style={{ fontSize: compact ? token.fontSizeHeading4 : token.fontSizeHeading2, margin: eyebrow && !crumbs ? "4px 0 0" : 0, letterSpacing: "-0.025em", overflowWrap: "anywhere" }}>
               {title}
             </Typography.Title>
             {description && (
