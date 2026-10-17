@@ -4,7 +4,10 @@ import { Button, Card, Flex, Segmented, Tag, Typography, theme } from "antd";
 import { motion } from "framer-motion";
 import { ChefHat, Clock, Plus, Users } from "lucide-react";
 import Link from "next/link";
-import { useState } from "react";
+import { useSearchParams } from "next/navigation";
+import { useInventoryOptions } from "@/features/shopping/hooks";
+import { usePermission } from "@/lib/auth/hooks";
+import { formatQuantity } from "@/features/inventory/format";
 import { Can } from "@/components/auth/Can";
 import { RequirePermission } from "@/components/auth/RequirePermission";
 import { IngredientPicker, ListPage, PrivacyBadge } from "@/components/ui";
@@ -22,14 +25,33 @@ function normalize(text: string) {
 }
 
 export function RecipesPage() {
-  const { t } = useI18n();
+  const { t, format } = useI18n();
   const { token } = theme.useToken();
   const recipes = useRecipes();
-  const [show, setShow] = useState<Show>("all");
-  const [tags, setTags] = useState<RecipeTag[]>([]);
-  const [query, setQuery] = useState("");
-  const [wanted, setWanted] = useState<string[]>([]);
-  const options = [...new Map((recipes ?? []).flatMap((recipe) => recipe.ingredients.map((ingredient) => [normalizeIngredient(ingredient.name), ingredient.name] as const))).values()].sort((a, b) => a.localeCompare(b)).map((name) => ({ value: name, label: name }));
+  const params = useSearchParams();
+  const show: Show = params.get("show") === "ready" ? "ready" : "all";
+  const tags = params.getAll("tag").filter((tag): tag is RecipeTag => RECIPE_TAGS.includes(tag as RecipeTag));
+  const query = params.get("q") ?? "";
+  const wanted = params.getAll("use");
+  function setFilter(key: string, values: string[]) {
+    const next = new URL(window.location.href);
+    next.searchParams.delete(key);
+    for (const value of values.filter(Boolean)) next.searchParams.append(key, value);
+    window.history.replaceState(null, "", `${next.pathname}${next.search}${next.hash}`);
+  }
+  const setShow = (value: Show) => setFilter("show", value === "all" ? [] : [value]);
+  const setQuery = (value: string) => setFilter("q", [value]);
+  const setWanted = (values: string[]) => setFilter("use", [...new Map(values.map((value) => [normalizeIngredient(value), value.trim()])).values()]);
+  const canViewInventory = usePermission("inventory.view");
+  const inventory = useInventoryOptions(canViewInventory);
+  const pantry = canViewInventory ? (inventory ?? []).filter(({ item }) => !item.reusable && item.quantity > 0) : [];
+  const names = new Map((recipes ?? []).flatMap((recipe) => recipe.ingredients.map((ingredient) => [normalizeIngredient(ingredient.name), ingredient.name] as const)));
+  for (const { item } of pantry) names.set(normalizeIngredient(item.name), item.name);
+  const options = [...names.values()].map((name) => {
+    const matches = pantry.filter(({ item }) => normalizeIngredient(item.name) === normalizeIngredient(name));
+    const stock = matches.map(({ item, place }) => `${formatQuantity(t, item.quantity, item.unit, format.number)} · ${place}`).join("; ");
+    return { value: name, label: stock ? `${name} — ${stock}` : name, available: matches.length > 0 };
+  }).sort((a, b) => Number(b.available) - Number(a.available) || a.value.localeCompare(b.value));
 
   const words = normalize(query).split(/\s+/).filter(Boolean);
   const visible = rankRecipes(recipes ?? [], wanted).filter((recipe) => {
@@ -81,7 +103,7 @@ export function RecipesPage() {
                 <Tag.CheckableTag
                   key={tag}
                   checked={tags.includes(tag)}
-                  onChange={(checked) => setTags((current) => (checked ? [...current, tag] : current.filter((value) => value !== tag)))}
+                  onChange={(checked) => setFilter("tag", checked ? [...tags, tag] : tags.filter((value) => value !== tag))}
                   style={{ margin: 0, paddingBlock: 2, border: `1px solid ${tags.includes(tag) ? "transparent" : token.colorBorderSecondary}` }}
                 >
                   {t(`recipes.tags.${tag}`)}

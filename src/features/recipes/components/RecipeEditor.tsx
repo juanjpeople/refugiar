@@ -1,6 +1,6 @@
 "use client";
 
-import { AutoComplete, Button, Card, Col, Flex, Grid, Input, InputNumber, Row, Tag, Tooltip, Typography, theme } from "antd";
+import { AutoComplete, Button, Card, Col, Flex, Grid, Input, InputNumber, Row, Select, Tag, Tooltip, Typography, theme } from "antd";
 import { AnimatePresence, motion } from "framer-motion";
 import { ArrowDown, ArrowUp, ImagePlus, Link2, Plus, Save, Trash2, X } from "lucide-react";
 import Link from "next/link";
@@ -360,6 +360,7 @@ function IngredientField({
     const item = options.find((option) => option.item.id === ingredient.itemId)?.item;
     onChange({ unit, ...(item && convertQuantity(1, unit, item.unit) === null ? { itemId: undefined } : {}) });
   }
+  const linkedItem = options.find((option) => option.item.id === ingredient.itemId)?.item;
   const unitOptions = UNITS.map((unit) => ({ value: unit, label: t(`inventory.units.${unit}`, { count: 2 }) }));
 
   return (
@@ -414,14 +415,20 @@ function IngredientField({
         onChange={(value) => onChange({ quantity: value })}
         style={{ width: 90 }}
       />
-      <AutoComplete
+      {linked && linkedItem ? <Select
+        value={ingredient.unit}
+        aria-label={t("inventory.form.unit")}
+        options={[...UNITS, "ml"].filter((unit) => convertQuantity(1, unit, linkedItem.unit) !== null).map((unit) => ({ value: unit, label: isUnit(unit) ? t(`inventory.units.${unit}`, { count: 2 }) : unit }))}
+        onChange={changeUnit}
+        style={{ width: 120 }}
+      /> : <AutoComplete
         value={isUnit(ingredient.unit) ? t(`inventory.units.${ingredient.unit}`, { count: 2 }) : ingredient.unit}
         options={unitOptions}
         aria-label={t("inventory.form.unit")}
         onChange={(value: string) => changeUnit(UNITS.find((unit) => t(`inventory.units.${unit}`, { count: 2 }) === value) ?? value)}
         onSelect={(value: string) => changeUnit(value)}
         style={{ width: 120 }}
-      />
+      />}
       <Button type="text" danger aria-label={t("recipes.editor.removeIngredient")} icon={<Trash2 />} onClick={onRemove} />
     </Flex>
   );

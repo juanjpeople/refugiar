@@ -191,12 +191,13 @@ export function useShoppingCounts() {
 }
 
 /** Productos del inventario para autocompletar al anotar algo (y vincularlo). */
-export function useInventoryOptions() {
+export function useInventoryOptions(enabled = true) {
   return useLiveQuery(async () => {
+    if (!enabled) return [];
     const items = await db.inventory.orderBy("name").toArray();
     const places = await placesOf(items.map((item) => item.id));
     return items.map((item) => places.get(item.id)!).filter(Boolean);
-  });
+  }, [enabled]);
 }
 
 export function useShoppingActions() {

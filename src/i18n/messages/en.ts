@@ -1364,6 +1364,7 @@ export const en: Messages = {
     },
   },
   recipes: {
+    substitutions: "Choose another ingredient as a substitute",
     source: "Use {name} from…",
     want: { title: "I want to use…", placeholder: "Choose or type ingredients", hint: "Search your saved recipes. Recipes using more of your chosen ingredients appear first.", matches: "Uses {count} of {total} chosen ingredients" },
     review: { title: "Review what is missing", hint: "Select what you need to buy. Ingredients with unknown stock start unchecked.", confirm: "Add to Shopping" },

@@ -1369,6 +1369,7 @@ export const es = {
     },
   },
   recipes: {
+    substitutions: "Elegir otro alimento como sustituto",
     source: "Descontar {name} de…",
     want: { title: "Quiero usar…", placeholder: "Elegí o escribí alimentos", hint: "Buscá en tus recetas guardadas. Primero aparecen las que usan más alimentos elegidos.", matches: "Usa {count} de {total} alimentos elegidos" },
     review: { title: "Revisá qué falta", hint: "Marcá lo que necesitás comprar. Los ingredientes sin stock conocido empiezan desmarcados.", confirm: "Agregar a Compras" },

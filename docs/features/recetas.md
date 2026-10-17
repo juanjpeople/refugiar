@@ -5,11 +5,11 @@ Qué cocinar con los alimentos que querés aprovechar.
 ## Qué hace
 
 - Recetas guardadas de la casa con ingredientes, pasos, etiquetas, porciones, fotos y opiniones.
-- **Quiero usar…** permite elegir varios alimentos del recetario o escribir otros. Muestra recetas que usan al menos uno y cuántos coinciden. Ordena primero por coincidencias; después por disponibilidad, faltantes y tiempo.
+- **Quiero usar…** permite elegir varios alimentos del recetario o escribir otros. Para adultos con acceso a Inventario, destaca primero los productos disponibles con cantidad y ubicación. Los filtros quedan en la URL al abrir una receta y volver. Muestra recetas que usan al menos uno y cuántos coinciden. Ordena primero por coincidencias; después por disponibilidad, faltantes y tiempo.
 - **Disponibilidad** calcula las porciones pedidas y suma los ingredientes repetidos antes de comparar con el stock. Solo dice que hay todo cuando todos los ingredientes se pudieron verificar. Los ingredientes sueltos, productos borrados y medidas incompatibles quedan por revisar.
-- **Medidas**: convierte gramos/kilos y mililitros/litros. Las medidas vinculadas conservan hasta tres decimales; las unidades contables vinculadas se redondean hacia arriba al cambiar porciones.
+- **Medidas**: convierte gramos/kilos y mililitros/litros. El editor ofrece solo unidades compatibles mientras hay un vínculo. Las medidas vinculadas conservan hasta tres decimales; las unidades contables vinculadas se redondean hacia arriba al cambiar porciones.
 - **Pegar** carga un ingrediente o paso por renglón. Vincula automáticamente solo cuando hay un único producto del mismo nombre con medida compatible; los casos ambiguos se eligen a mano.
-- **Cociné esto** permite ajustar cantidades y elegir el producto del que se descuenta, con su ubicación. Suma los consumos que terminan en el mismo producto. El stock, historial y sugerencias se actualizan juntos. Los consumos se pueden deshacer desde el historial del producto.
+- **Cociné esto** permite ajustar cantidades y elegir el producto del que se descuenta, con su ubicación. Prioriza el mismo alimento; elegir otro exige activar explícitamente las sustituciones. Suma los consumos que terminan en el mismo producto. El stock, historial y sugerencias se actualizan juntos. Los consumos se pueden deshacer desde el historial del producto.
 - **Agregar lo que falta** abre una revisión. Los faltantes conocidos empiezan marcados; los ingredientes sin stock conocido se marcan a mano. Anota en la lista de la casa solo lo que todavía no estaba pendiente de compra.
 
 ## Cómo se usa

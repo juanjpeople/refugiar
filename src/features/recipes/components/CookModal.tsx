@@ -2,7 +2,7 @@
 
 import { formatUnit } from "@/features/inventory/format";
 
-import { Alert, App, Button, Flex, InputNumber, Modal, Select, Typography, theme } from "antd";
+import { Alert, App, Button, Flex, InputNumber, Modal, Select, Switch, Typography, theme } from "antd";
 import { ChefHat } from "lucide-react";
 import { useRef, useState } from "react";
 import { IconTile, QuantityStepper } from "@/components/ui";
@@ -10,7 +10,7 @@ import { convertQuantity, roundQuantity } from "@/features/inventory/quantity";
 import { useInventoryOptions } from "@/features/shopping/hooks";
 import { type InventoryItem } from "@/features/inventory/domain";
 import { useI18n } from "@/i18n";
-import { checkAvailability, RECIPE_LIMITS, type Recipe } from "../domain";
+import { checkAvailability, normalizeIngredient, RECIPE_LIMITS, type Recipe } from "../domain";
 import type { Consumption } from "../service";
 import { useRecipeActions } from "../hooks";
 
@@ -56,6 +56,7 @@ export function CookForm({ recipe, items, initialServings, onClose, onCook, onBu
   const [amounts, setAmounts] = useState<Record<string, number>>(() => defaults(initialServings));
   const [saving, setSaving] = useState(false);
   const [sources, setSources] = useState<Record<string, string>>({});
+  const [substitutions, setSubstitutions] = useState(false);
   const unit = (item: InventoryItem, count: number) => (formatUnit(t, count, item.unit));
   const totals = new Map<string, number>();
   for (const [source, amount] of Object.entries(amounts)) {
@@ -113,6 +114,10 @@ export function CookForm({ recipe, items, initialServings, onClose, onCook, onBu
         <QuantityStepper disabled={saving} value={servings} min={1} unit={t("recipes.servings", { count: servings })} onStep={(delta) => changeServings(Math.min(RECIPE_LIMITS.maxServings, servings + delta))} />
       </Flex>
 
+      <Flex align="center" gap={token.marginSM}>
+        <Switch checked={substitutions} disabled={saving} aria-label={t("recipes.substitutions")} onChange={(value) => { setSubstitutions(value); setSources({}); setAmounts(defaults(servings)); }} />
+        <Typography.Text>{t("recipes.substitutions")}</Typography.Text>
+      </Flex>
       {report.checks.some((check) => check.state === "unlinked") && <Alert type="info" showIcon title={t("recipes.cookReview")} />}
       {linked.length === 0 ? (
         <Alert type="info" showIcon title={t("recipes.cook.nothingLinked")} />
@@ -133,7 +138,7 @@ export function CookForm({ recipe, items, initialServings, onClose, onCook, onBu
                   <Select
                     aria-label={t("recipes.source", { name: ingredient.name })}
                     value={item.id} disabled={saving} style={{ width: "100%", minWidth: 0 }}
-                    options={[...items.values()].filter((entry) => !entry.reusable && convertQuantity(1, item.unit, entry.unit) !== null).map((entry) => ({ value: entry.id, label: [entry.name, places[entry.id]].filter(Boolean).join(" · ") }))}
+                    options={[...items.values()].filter((entry) => !entry.reusable && (substitutions || entry.id === sourceId || normalizeIngredient(entry.name) === normalizeIngredient(ingredient.name)) && convertQuantity(1, item.unit, entry.unit) !== null).map((entry) => ({ value: entry.id, label: [entry.name, places[entry.id]].filter(Boolean).join(" · ") }))}
                     onChange={(id) => {
                       const next = items.get(id)!;
                       setSources((current) => ({ ...current, [sourceId]: id }));
