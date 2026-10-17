@@ -45,3 +45,5 @@ Detalle de navegación y cámara: [INVENTARIO.md](../INVENTARIO.md).
 
 Escanear QR se abre desde Inventario. Las pantallas de cámara ocultan la barra
 inferior y permiten volver desde la cabecera.
+
+El código de una caja permanece visible también en la cabecera compacta del celular. Es información operativa para etiquetas y búsqueda, no una descripción prescindible.

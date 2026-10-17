@@ -127,6 +127,7 @@ export function ContainerPage() {
           ),
           leading: <ContainerScene container={container} compact open key={container.id} />,
           title: container.name,
+          keepDescription: true,
           description: (
             <>
               {t(`storage.containerKinds.${container.kind}`)} · {t("storage.code")}{" "}

@@ -5,7 +5,9 @@ import { settleCapture } from "./visual-capture";
 // reviewable captures, not pixel assertions against a machine-specific font.
 for (const colorScheme of ["light", "dark"] as const) {
   test(`recorrido visual · ${colorScheme}`, async ({ page }, testInfo) => {
-    test.setTimeout(180_000);
+    // El recorrido completo incluye decenas de capturas; el límite anterior vencía
+    // en las últimas páginas aun cuando cada comprobación individual respondía.
+    test.setTimeout(300_000);
     await page.emulateMedia({ colorScheme, reducedMotion: "reduce" });
     const capture = async (name: string) => {
       await settleCapture(page);
