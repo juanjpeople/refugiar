@@ -2,14 +2,19 @@
 
 import { App, Flex } from "antd";
 import { useState } from "react";
-import { ReminderPreferences, WeeklyMenu, CookingGuide, PurchaseDestination, SyncIndicator, type CookingProgress } from "@/components/ui";
+import { StepTime, KitchenTimers, ReminderPreferences, WeeklyMenu, CookingGuide, PurchaseDestination, SyncIndicator, type CookingProgress } from "@/components/ui";
 import { DemoBlock } from "./DemoBlock";
 
 export function DailyFlows() {
   const { message } = App.useApp();
   const [progress, setProgress] = useState<CookingProgress>({ step: 0, ingredients: [], steps: [] });
+  const [seconds, setSeconds] = useState(120);
   const [reminders, setReminders] = useState({ events: ["evento"], minutes: 15 });
   return <>
+    <DemoBlock id="tiempos-cocina" title="Tiempos por paso: StepTime y KitchenTimers" description="Tiempo explícito en segundos, sugerido sólo si está escrito. Varios timers, fecha de finalización persistida y avisos Android optativos; sin prometer precisión de alarma.">
+      <StepTime seconds={seconds} suggestion={300} onChange={setSeconds} />
+      <KitchenTimers seconds={seconds} timers={[{ id: 1, step: 0, remaining: 90 }, { id: 2, step: 1, remaining: 0 }]} onStart={() => message.info("Temporizador de ejemplo.")} onCancel={() => message.info("Cancelación de ejemplo.")} />
+    </DemoBlock>
     <DemoBlock id="flujo-recordatorios" title="Recordatorios locales: ReminderPreferences" description="Optativos, por perfil y dispositivo. Sólo Android agenda avisos; nunca se pide permiso al entrar. La demo no crea notificaciones."><ReminderPreferences events={[{ value: "evento", label: "Preparar la cena" }]} selected={reminders.events} minutes={reminders.minutes} busy={false} onChange={setReminders} onSave={() => message.info("Preferencias de ejemplo.")} /></DemoBlock>
     <DemoBlock id="flujo-menu-semanal" title="Menú semanal: WeeklyMenu" description="Las comidas viven en Calendario con la privacidad de su receta. La compra suma porciones antes de mirar el stock."><WeeklyMenu days={[{ id: "hoy", label: "Hoy", meals: [{ id: "comida", label: "Panqueques", servings: 4 }] }, { id: "manana", label: "Mañana", meals: [] }]} onAdd={() => message.info("Elegí una receta guardada.")} /></DemoBlock>
     <DemoBlock id="flujo-guardar-compra" title="Guardar una compra: PurchaseDestination" description="La compra ya está marcada. Elegí el producto o una caja, confirmá medida y cantidad. El inventario es compartido; guardar y vincular ocurren juntos y no se repiten por doble clic.">

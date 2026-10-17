@@ -117,13 +117,13 @@ export async function consumeInventoryItem(actor: Actor | null, id: string, amou
  * Consumo dentro de la transacción de otro servicio (ej. "Cociné esto"), que debe incluir
  * `QUANTITY_TABLES`. Mismas reglas que `consumeInventoryItem`; si el producto ya no existe, no hace nada.
  */
-export async function consumeWithin(actor: Actor, id: string, amount: number): Promise<ConsumptionPlan | null> {
+export async function consumeWithin(actor: Actor, id: string, amount: number): Promise<(ConsumptionPlan & { entryId: string | null }) | null> {
   const item = await db.inventory.get(id);
   if (!item) return null;
   if (item.reusable) throw new ValidationError("errors.validation.reusableConsumption");
   const plan = planConsumption(item.quantity, amount);
-  if (plan.consumed > 0) await writeQuantity(actor, item, plan.quantity, "consume");
-  return plan;
+  const entryId = plan.consumed > 0 ? (await writeQuantity(actor, item, plan.quantity, "consume")).entryId : null;
+  return { ...plan, entryId };
 }
 
 /**

@@ -6,6 +6,7 @@
  * - Plurales: un objeto `{ one, other }` se elige con `Intl.PluralRules` según `count`.
  */
 export const es = {
+  kitchen: {"duration": "Tiempo del paso (minutos; 0 = sin tiempo)", "suggest": "Usar {seconds} minutos del texto", "notify": "Avisarme al terminar los próximos temporizadores", "start": "Iniciar temporizador de {seconds} segundos", "step": "Paso {step}", "done": "Terminó el temporizador", "channel": "Temporizadores de cocina", "error": "No se pudo guardar el temporizador o programar el aviso. Revisá el permiso de notificaciones.", "hint": "Los tiempos son orientativos. Android puede demorar el aviso al ahorrar batería. Los temporizadores siguen al cerrar este modo.", "undo": "Deshacer la cocinada completa"},
   emails: {
     subject: "Refugiar: aviso de seguridad",
     password: "Se cambió la contraseña de tu cuenta.",
