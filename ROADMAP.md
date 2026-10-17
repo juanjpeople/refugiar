@@ -5,6 +5,11 @@ El detalle de cada funcionalidad está en [docs/features](docs/features/).
 
 **Estados:** 🔨 Ahora · ⏭️ Después · 💡 Ideas · ✅ Hecho · 🗑️ Descartado
 
+## ✅ Correcciones de CI antes del merge
+
+- ✅ Hecho: CI completo (escritorio, celular, demo y paquete local) y Android corren en el PR antes de integrar.
+- ✅ Hecho: el recorrido de Privacidad espera el contenido de destino antes de medir contraste; el de anotaciones centra el botón antes de enviarlo para evitar la barra móvil. Se mantienen las aserciones de contraste, guardado y búsqueda.
+
 ## 🔨 Ahora
 
 - **Costos de builds**: apagar builds de ramas no productivas en el panel de Cloudflare. URLs preview ya apagadas; acceso a Builds pendiente. → [instructivo](docs/SIN_PREVIEW.md)

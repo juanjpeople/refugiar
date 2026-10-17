@@ -10,8 +10,8 @@ import { defineConfig, devices } from "@playwright/test";
 const PORT = 4173;
 
 /**
- * En CI corre al mergear a main, con E2E_FULL=1: todo, en escritorio y celular. Los PR no esperan
- * a Playwright. Con CI=1 y sin E2E_FULL queda lo esencial en escritorio (entrar, armar la casa,
+ * En CI corre en cada PR y en main, con E2E_FULL=1: todo, en escritorio y celular.
+ * Con CI=1 y sin E2E_FULL queda lo esencial en escritorio (entrar, armar la casa,
  * inventario, escanear, compras, recetas, respaldo, sin conexión y compartir), para una pasada rápida.
  */
 const FULL = !process.env.CI || process.env.E2E_FULL === "1";

@@ -43,6 +43,9 @@ for (const theme of ["light", "dark"] as const) {
       await selected.click();
       await page.getByRole("main").getByRole("link", { name: "Privacidad", exact: true }).click();
     }
+    // El clic inicia la navegación: esperar el contenido de destino antes de medir estilos.
+    // Un nodo de Más que acaba de desmontarse devuelve un color vacío.
+    await expect(project).toBeVisible();
     const eyebrow = await page.getByRole("main").locator("strong").first().evaluate(element => getComputedStyle(element).color);
     expect(contrast(eyebrow, colors.background)).toBeGreaterThanOrEqual(4.5);
     expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(page.viewportSize()!.width);

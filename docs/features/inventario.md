@@ -46,4 +46,6 @@ Detalle de navegación y cámara: [INVENTARIO.md](../INVENTARIO.md).
 Escanear QR se abre desde Inventario. Las pantallas de cámara ocultan la barra
 inferior y permiten volver desde la cabecera.
 
+El recorrido de anotaciones en CI desplaza el botón Anotar al centro antes de tocarlo: evita que el scroll del campo lo deje detrás de la barra inferior. Sigue comprobando el guardado visible y la búsqueda sin tildes.
+
 El código de una caja permanece visible también en la cabecera compacta del celular. Es información operativa para etiquetas y búsqueda, no una descripción prescindible.
