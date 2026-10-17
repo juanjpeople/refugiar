@@ -14,7 +14,7 @@ export function useKitchenTimers(key: string) {
   const [timers, setTimers] = useState<KitchenTimer[]>(() => {
     try {
       const value: unknown = JSON.parse(localStorage.getItem(key) ?? "[]");
-      return Array.isArray(value) ? value.filter((v): v is KitchenTimer => v && Number.isInteger(v.id) && v.id > 0 && v.id < 1000000000 && Number.isInteger(v.step) && v.step >= 0 && v.step < 40 && Number.isFinite(v.endAt) && v.endAt > Date.now() - 86400000 && Number.isInteger(v.seconds) && v.seconds > 0 && v.seconds <= 86400).slice(0, 40) : [];
+      return Array.isArray(value) ? value.filter((v): v is KitchenTimer => v && Number.isInteger(v.id) && v.id > 0 && v.id <= 0x3fffffff && Number.isInteger(v.step) && v.step >= 0 && v.step < 40 && Number.isFinite(v.endAt) && v.endAt > Date.now() - 86400000 && Number.isInteger(v.seconds) && v.seconds > 0 && v.seconds <= 86400).slice(0, 40) : [];
     } catch { return []; }
   });
   const [notifications, setNotifications] = useState(() => {
@@ -42,7 +42,10 @@ export function useKitchenTimers(key: string) {
     if (pending.current || !Number.isInteger(seconds) || seconds <= 0 || seconds > 86400 || timers.length >= 40) return;
     pending.current = true; setBusy(true); setError(false);
     try {
-      const id = crypto.getRandomValues(new Uint32Array(1))[0] % 999999999 + 1;
+      // A power-of-two mask keeps uniform IDs, outside Calendar's reserved range.
+      let id: number;
+      do { id = crypto.getRandomValues(new Uint32Array(1))[0] & 0x3fffffff; }
+      while (id === 0 || timers.some(timer => timer.id === id));
       const timer = { id, step, seconds, endAt: Date.now() + seconds * 1000 };
       save([...timers, timer]);
       if (notifications && isAndroidApp()) {
