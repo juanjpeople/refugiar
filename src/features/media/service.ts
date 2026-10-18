@@ -4,14 +4,15 @@
  */
 import { assertCan, type Actor, type Permission } from "@/lib/auth/permissions";
 import { db } from "@/lib/db";
-import { NotFoundError, ValidationError } from "@/lib/errors";
+import { canSee } from "@/lib/sync/scope";
+import { PermissionError, NotFoundError, ValidationError } from "@/lib/errors";
 import { createId } from "@/lib/id";
 import { compressImage } from "@/lib/images";
 import { getSyncLink } from "@/lib/sync/middleware";
 import { newPhotoKey, queuePhotoDeletes } from "@/lib/sync/photos";
 import { PHOTO_LIMITS, type PhotoOwner } from "./domain";
 
-const MANAGE: Record<PhotoOwner, Permission> = { recipe: "recipes.manage", container: "storage.manage" };
+const MANAGE: Record<PhotoOwner, Permission> = { recipe: "recipes.manage", container: "storage.manage", project: "projects.manage" };
 
 /** Comprime y guarda fotos. Devuelve los ids, en el mismo orden. */
 export async function addPhotos(actor: Actor | null, ownerType: PhotoOwner, ownerId: string, files: File[]) {
@@ -44,8 +45,9 @@ export async function addPhotos(actor: Actor | null, ownerType: PhotoOwner, owne
     createdBy: actor.id,
     createdAt: now + index,
   }));
-  await db.transaction("rw", db.photos, db.recipes, db.containers, async () => {
-    const owner = ownerType === "container" ? await db.containers.get(ownerId) : await db.recipes.get(ownerId);
+  await db.transaction("rw", db.photos, db.recipes, db.containers, db.projects, async () => {
+    const owner = ownerType === "project" ? await db.projects.get(ownerId) : ownerType === "container" ? await db.containers.get(ownerId) : await db.recipes.get(ownerId);
+    if (ownerType === "project" && owner && !canSee(actor, owner as { privacy?: unknown; createdBy?: string })) throw new PermissionError("projects.manage");
     if (!owner) throw new NotFoundError(ownerType === "container" ? "errors.notFound.container" : "errors.notFound.recipe");
     // Revalidar dentro de la transacción: otra pestaña pudo agregar fotos mientras se comprimían.
     const count = await db.photos.where("[ownerType+ownerId]").equals([ownerType, ownerId]).count();
@@ -59,6 +61,7 @@ export async function deletePhoto(actor: Actor | null, id: string) {
   const photo = await db.photos.get(id);
   if (!photo) return;
   assertCan(actor, MANAGE[photo.ownerType]);
+  if(photo.ownerType === "project") {const project=await db.projects.get(photo.ownerId);if(project&&!canSee(actor,project))throw new PermissionError("projects.manage");}
   await db.transaction("rw", db.photos, db.recipes, db.photoDeletes, async () => {
     await queuePhotoDeletes([id]);
     await db.photos.delete(id);

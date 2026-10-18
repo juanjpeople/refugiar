@@ -37,8 +37,8 @@ test('demo: acceso sin cuenta, datos completos, aislamiento, persistencia y rein
   await expect(page.getByText('Anotación exclusiva del visitante A',{exact:true})).toHaveCount(0);
   await expect(page.getByText('Tres cables USB viejos para revisar',{exact:true})).toBeVisible();
   await page.goto('/proyectos');
-  await expect(page.getByText('Ordenar el taller — DEMO',{exact:true})).toBeVisible();
-  await expect(page.getByText('Huerta en macetas — DEMO',{exact:true})).toBeVisible();
+  await expect(page.getByText('Recuperar la mesa familiar · DEMO',{exact:true})).toBeVisible();
+  await expect(page.getByText('Riego automático para las macetas · DEMO',{exact:true})).toBeVisible();
   await page.goto('/recetas');
   await expect(page.getByText('Panqueques caseros',{exact:true})).toBeVisible();
   expect(requests).toEqual([]);

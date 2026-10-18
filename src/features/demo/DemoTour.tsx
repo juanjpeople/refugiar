@@ -15,6 +15,7 @@ export function DemoTour() {
   const buttonStyle = { minHeight: 44, height: "auto", whiteSpace: "normal" as const };
   if (!DEMO_ENABLED) return null;
   return <Reveal><Callout title={t("demo.tour.title")} action={<Flex wrap gap={token.marginXS}>
+    <Can perform="projects.view"><Link style={linkStyle} href="/proyectos"><Button block style={buttonStyle}>{t("projects.title")}</Button></Link></Can>
     <Link style={linkStyle} href="/recetas"><Button block style={buttonStyle}>{t("demo.tour.recipes")}</Button></Link>
     <Can perform="shopping.view"><Link style={linkStyle} href="/compras"><Button block style={buttonStyle}>{t("demo.tour.shopping")}</Button></Link></Can>
     <Can perform="recipes.view"><Link style={linkStyle} href="/recetas/semana"><Button block style={buttonStyle}>{t("demo.tour.meals")}</Button></Link></Can>

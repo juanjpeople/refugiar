@@ -59,7 +59,7 @@ export function isAllowed(author: SyncAuthor, change: Change, existing: Row | un
     if (existing && ((change.f?.ownerType !== undefined && change.f.ownerType !== existing.ownerType) ||
       (change.f?.ownerId !== undefined && change.f.ownerId !== existing.ownerId) ||
       change.u?.some((field) => field === "ownerType" || field === "ownerId"))) return false;
-    return ownerType === "container" ? can(actor, "storage.manage") : ownerType === "recipe" && can(actor, "recipes.manage");
+    return ownerType === "project" ? can(actor, "projects.manage") : ownerType === "container" ? can(actor, "storage.manage") : ownerType === "recipe" && can(actor, "recipes.manage");
   }
 
   // Etiquetas impresas en blanco (`label:<código>`): son del inventario, no del calendario.

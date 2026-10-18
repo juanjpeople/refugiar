@@ -1029,229 +1029,59 @@
         "containerId": "71d7a7c8-fee2-47de-8c64-6bbc25faecd7",
         "createdAt": 1791164618645,
         "updatedAt": 1791164618645
+      },
+      {
+        "id": "96cd0ccb-264e-53c1-9e36-f9383d5f5206",
+        "name": "Ducha de mano con flexible",
+        "quantity": 1,
+        "unit": "unidades",
+        "minThreshold": 0,
+        "containerId": "1dec0061-3af7-474d-9805-6ff5a801128a",
+        "createdAt": 1791164618666,
+        "updatedAt": 1791164618666
+      },
+      {
+        "id": "7a2b9a4f-5fb8-5ebb-aba0-1137a2172151",
+        "name": "Cinta de teflón",
+        "quantity": 2,
+        "unit": "unidades",
+        "minThreshold": 0,
+        "containerId": "1dec0061-3af7-474d-9805-6ff5a801128a",
+        "createdAt": 1791164618666,
+        "updatedAt": 1791164618666
+      },
+      {
+        "id": "1b295610-882f-5bd8-a9bb-8b1322597567",
+        "name": "Placa ESP32",
+        "quantity": 2,
+        "unit": "unidades",
+        "minThreshold": 0,
+        "containerId": "1dec0061-3af7-474d-9805-6ff5a801128a",
+        "createdAt": 1791164618666,
+        "updatedAt": 1791164618666
+      },
+      {
+        "id": "569a27c4-b0cc-5818-99ba-7f6f4d080740",
+        "name": "Sensor de humedad DHT22",
+        "quantity": 2,
+        "unit": "unidades",
+        "minThreshold": 0,
+        "containerId": "1dec0061-3af7-474d-9805-6ff5a801128a",
+        "createdAt": 1791164618666,
+        "updatedAt": 1791164618666
+      },
+      {
+        "id": "7a16e19a-5c15-5458-93ea-5565e933ca7d",
+        "name": "Caja perforada para sensor",
+        "quantity": 2,
+        "unit": "unidades",
+        "minThreshold": 0,
+        "containerId": "1dec0061-3af7-474d-9805-6ff5a801128a",
+        "createdAt": 1791164618666,
+        "updatedAt": 1791164618666
       }
     ],
     "shoppingList": [
-      {
-        "name": "Semillas de albahaca",
-        "quantity": 1,
-        "unit": "unidades",
-        "listId": "2ae4d542-2b97-406b-b3cc-be632e1dc741",
-        "id": "022d9cf6-9097-4d36-b4ec-3bb2232e5afd",
-        "status": "pending",
-        "createdBy": "profile-adult",
-        "createdAt": 1791163188964
-      },
-      {
-        "name": "Regleta con interruptor",
-        "quantity": 2,
-        "unit": "unidades",
-        "listId": "a0ec560c-cbff-4c8a-99f4-548562236925",
-        "id": "04610e62-63a9-4cb3-a738-b16e1c8ab661",
-        "status": "pending",
-        "createdBy": "4fa276ae-dfbf-4c14-af72-e999e458dfa0",
-        "createdAt": 1791164618666
-      },
-      {
-        "name": "Organizador de escritorio",
-        "quantity": 2,
-        "unit": "unidades",
-        "listId": "a0ec560c-cbff-4c8a-99f4-548562236925",
-        "id": "15fad8f4-1ff0-4999-a327-5f3afe66a087",
-        "status": "pending",
-        "createdBy": "4fa276ae-dfbf-4c14-af72-e999e458dfa0",
-        "createdAt": 1791164618665
-      },
-      {
-        "name": "Maceta de 10 L",
-        "quantity": 4,
-        "unit": "unidades",
-        "listId": "2ae4d542-2b97-406b-b3cc-be632e1dc741",
-        "id": "32404305-adf3-4048-8e44-67af51bc6162",
-        "status": "pending",
-        "createdBy": "profile-adult",
-        "createdAt": 1791163188963
-      },
-      {
-        "name": "Linterna",
-        "quantity": 2,
-        "unit": "unidades",
-        "listId": "6216e55b-6f42-4915-9eb3-a0e6d44a2916",
-        "id": "3a177143-ede8-414c-8379-d4a97fba5bd7",
-        "status": "pending",
-        "createdBy": "4fa276ae-dfbf-4c14-af72-e999e458dfa0",
-        "createdAt": 1791164618667
-      },
-      {
-        "name": "Cantimplora",
-        "quantity": 2,
-        "unit": "unidades",
-        "listId": "6216e55b-6f42-4915-9eb3-a0e6d44a2916",
-        "id": "3fec1243-4d00-4717-b4c2-ddff1e4acf8d",
-        "status": "pending",
-        "createdBy": "4fa276ae-dfbf-4c14-af72-e999e458dfa0",
-        "createdAt": 1791164618667
-      },
-      {
-        "name": "Caja apilable transparente 15 L",
-        "quantity": 3,
-        "unit": "unidades",
-        "listId": "8f066ece-5ea8-407a-82ec-2867b5db7a3d",
-        "id": "4230c48e-19a6-4d54-84c9-567e147493c2",
-        "status": "pending",
-        "createdBy": "profile-admin",
-        "createdAt": 1791163188882
-      },
-      {
-        "name": "Separadores",
-        "quantity": 2,
-        "unit": "unidades",
-        "listId": "cf1e1920-dd6c-4d28-a0f6-96d0328970ed",
-        "id": "4880784b-02c3-43e1-a6d1-856314d9962b",
-        "status": "pending",
-        "createdBy": "4fa276ae-dfbf-4c14-af72-e999e458dfa0",
-        "createdAt": 1791164618671
-      },
-      {
-        "name": "Aislante",
-        "quantity": 2,
-        "unit": "unidades",
-        "listId": "6216e55b-6f42-4915-9eb3-a0e6d44a2916",
-        "id": "4c8a1896-536e-4606-b33e-e4ce2efb7ce5",
-        "status": "pending",
-        "createdBy": "4fa276ae-dfbf-4c14-af72-e999e458dfa0",
-        "createdAt": 1791164618668
-      },
-      {
-        "name": "Soporte para libros",
-        "quantity": 2,
-        "unit": "unidades",
-        "listId": "a0ec560c-cbff-4c8a-99f4-548562236925",
-        "id": "68231128-d767-4696-9909-970a97d7cc1b",
-        "status": "pending",
-        "createdBy": "4fa276ae-dfbf-4c14-af72-e999e458dfa0",
-        "createdAt": 1791164618666
-      },
-      {
-        "name": "Sujetadores",
-        "quantity": 2,
-        "unit": "unidades",
-        "listId": "cf1e1920-dd6c-4d28-a0f6-96d0328970ed",
-        "id": "6b1e7195-38b5-4375-806c-abf353583afa",
-        "status": "pending",
-        "createdBy": "4fa276ae-dfbf-4c14-af72-e999e458dfa0",
-        "createdAt": 1791164618672
-      },
-      {
-        "name": "Etiquetas",
-        "quantity": 2,
-        "unit": "unidades",
-        "listId": "cf1e1920-dd6c-4d28-a0f6-96d0328970ed",
-        "id": "70700d3c-bf9a-4ebe-ad0e-827505be1877",
-        "status": "pending",
-        "createdBy": "4fa276ae-dfbf-4c14-af72-e999e458dfa0",
-        "createdAt": 1791164618671
-      },
-      {
-        "name": "Parches",
-        "quantity": 2,
-        "unit": "unidades",
-        "listId": "f93228f4-4d7e-4909-ba0a-37b8891dbde9",
-        "id": "7d40ac79-cf6b-47a9-982b-3d4af4528bb4",
-        "status": "pending",
-        "createdBy": "4fa276ae-dfbf-4c14-af72-e999e458dfa0",
-        "createdAt": 1791164618673
-      },
-      {
-        "name": "Sustrato universal 20 L",
-        "quantity": 2,
-        "unit": "unidades",
-        "listId": "2ae4d542-2b97-406b-b3cc-be632e1dc741",
-        "id": "b57ae764-50cf-4233-aebe-5ac5fa0c10c8",
-        "status": "pending",
-        "createdBy": "profile-adult",
-        "createdAt": 1791163188963
-      },
-      {
-        "name": "Cámara de repuesto",
-        "quantity": 2,
-        "unit": "unidades",
-        "listId": "f93228f4-4d7e-4909-ba0a-37b8891dbde9",
-        "id": "bc97e868-c6fe-4cd5-b165-2b26952301b3",
-        "status": "pending",
-        "createdBy": "4fa276ae-dfbf-4c14-af72-e999e458dfa0",
-        "createdAt": 1791164618673
-      },
-      {
-        "name": "Lámpara LED",
-        "quantity": 2,
-        "unit": "unidades",
-        "listId": "a0ec560c-cbff-4c8a-99f4-548562236925",
-        "id": "c7174f2d-a877-4426-a231-2e0516a1a44b",
-        "status": "pending",
-        "createdBy": "4fa276ae-dfbf-4c14-af72-e999e458dfa0",
-        "createdAt": 1791164618665
-      },
-      {
-        "name": "Cajas para revistas",
-        "quantity": 2,
-        "unit": "unidades",
-        "listId": "cf1e1920-dd6c-4d28-a0f6-96d0328970ed",
-        "id": "c8be31b2-65ed-44a6-8d19-6d4f392aed14",
-        "status": "pending",
-        "createdBy": "4fa276ae-dfbf-4c14-af72-e999e458dfa0",
-        "createdAt": 1791164618672
-      },
-      {
-        "name": "Inflador",
-        "quantity": 2,
-        "unit": "unidades",
-        "listId": "f93228f4-4d7e-4909-ba0a-37b8891dbde9",
-        "id": "d8613ec6-86b0-4bf6-adbd-148c76f1894b",
-        "status": "pending",
-        "createdBy": "4fa276ae-dfbf-4c14-af72-e999e458dfa0",
-        "createdAt": 1791164618674
-      },
-      {
-        "name": "Etiquetas adhesivas para QR",
-        "quantity": 2,
-        "unit": "unidades",
-        "listId": "8f066ece-5ea8-407a-82ec-2867b5db7a3d",
-        "id": "ee4b5436-ec88-4470-9181-2f4107962f4c",
-        "status": "pending",
-        "createdBy": "profile-admin",
-        "createdAt": 1791163188883
-      },
-      {
-        "name": "Bolsa de dormir",
-        "quantity": 2,
-        "unit": "unidades",
-        "listId": "6216e55b-6f42-4915-9eb3-a0e6d44a2916",
-        "id": "f651f691-e5b6-4d45-9e38-c2e91c8bf8ba",
-        "status": "pending",
-        "createdBy": "4fa276ae-dfbf-4c14-af72-e999e458dfa0",
-        "createdAt": 1791164618668
-      },
-      {
-        "name": "Lubricante de cadena",
-        "quantity": 2,
-        "unit": "unidades",
-        "listId": "f93228f4-4d7e-4909-ba0a-37b8891dbde9",
-        "id": "f961e4ac-0da0-4620-99a2-bd077a9009dc",
-        "status": "pending",
-        "createdBy": "4fa276ae-dfbf-4c14-af72-e999e458dfa0",
-        "createdAt": 1791164618674
-      },
-      {
-        "name": "Separadores para tornillería",
-        "quantity": 6,
-        "unit": "unidades",
-        "listId": "8f066ece-5ea8-407a-82ec-2867b5db7a3d",
-        "id": "fd29486a-cecd-4633-8e59-0819bbe194ba",
-        "status": "pending",
-        "createdBy": "profile-admin",
-        "createdAt": 1791163188883
-      },
       {
         "id": "demo-bought-flour",
         "listId": "list-home",
@@ -1266,6 +1096,91 @@
         "createdAt": 1791164618645,
         "boughtAt": 1791164618645,
         "boughtBy": "profile-admin"
+      },
+      {
+        "id": "5e84792f-3a14-5c2d-80e0-979f016ae377",
+        "listId": "49143a3e-d57c-5de3-9997-994f126f9c8b",
+        "name": "Ducha de mano con flexible",
+        "quantity": 1,
+        "unit": "unidades",
+        "createdAt": 1791164618666,
+        "updatedAt": 1791164618666,
+        "boughtAt": 1791164618666,
+        "status": "bought",
+        "paidCents": 2800000,
+        "paidCurrency": "ARS",
+        "createdBy": "profile-admin",
+        "boughtBy": "profile-admin",
+        "inventoryItemId": "96cd0ccb-264e-53c1-9e36-f9383d5f5206",
+        "restocked": 1
+      },
+      {
+        "id": "b5c1e58c-d00f-5069-9a8c-276b1adc7957",
+        "listId": "49143a3e-d57c-5de3-9997-994f126f9c8b",
+        "name": "Cinta de teflón",
+        "quantity": 1,
+        "unit": "unidades",
+        "createdAt": 1791164618666,
+        "updatedAt": 1791164618666,
+        "boughtAt": 1791164618666,
+        "status": "bought",
+        "paidCents": 220000,
+        "paidCurrency": "ARS",
+        "createdBy": "profile-admin",
+        "boughtBy": "profile-admin",
+        "inventoryItemId": "7a2b9a4f-5fb8-5ebb-aba0-1137a2172151",
+        "restocked": 1
+      },
+      {
+        "id": "736593a4-e1a9-507b-b486-3d8cb1901bbf",
+        "listId": "389b8a84-33f8-5102-a8ed-0ece5bd5bd30",
+        "name": "Placa ESP32",
+        "quantity": 1,
+        "unit": "unidades",
+        "createdAt": 1791164618666,
+        "updatedAt": 1791164618666,
+        "boughtAt": 1791164618666,
+        "status": "bought",
+        "paidCents": 1250000,
+        "paidCurrency": "ARS",
+        "createdBy": "profile-admin",
+        "boughtBy": "profile-admin",
+        "inventoryItemId": "1b295610-882f-5bd8-a9bb-8b1322597567",
+        "restocked": 1
+      },
+      {
+        "id": "4dbdef52-90a9-57af-a227-61b5938a1578",
+        "listId": "389b8a84-33f8-5102-a8ed-0ece5bd5bd30",
+        "name": "Sensor de humedad DHT22",
+        "quantity": 1,
+        "unit": "unidades",
+        "createdAt": 1791164618666,
+        "updatedAt": 1791164618666,
+        "boughtAt": 1791164618666,
+        "status": "bought",
+        "paidCents": 650000,
+        "paidCurrency": "ARS",
+        "createdBy": "profile-admin",
+        "boughtBy": "profile-admin",
+        "inventoryItemId": "569a27c4-b0cc-5818-99ba-7f6f4d080740",
+        "restocked": 1
+      },
+      {
+        "id": "a842cb0f-d048-53a4-8314-4ed81d75ef8d",
+        "listId": "389b8a84-33f8-5102-a8ed-0ece5bd5bd30",
+        "name": "Caja perforada para sensor",
+        "quantity": 1,
+        "unit": "unidades",
+        "createdAt": 1791164618666,
+        "updatedAt": 1791164618666,
+        "boughtAt": 1791164618666,
+        "status": "bought",
+        "paidCents": 480000,
+        "paidCurrency": "ARS",
+        "createdBy": "profile-admin",
+        "boughtBy": "profile-admin",
+        "inventoryItemId": "7a16e19a-5c15-5458-93ea-5565e933ca7d",
+        "restocked": 1
       }
     ],
     "activity": [
@@ -11045,6 +10960,82 @@
         "height": 500,
         "createdBy": "profile-admin",
         "createdAt": 1791163188959
+      },
+      {
+        "id": "e0fea0ed-3eda-5b28-910b-4f6ab22eb146",
+        "ownerType": "project",
+        "ownerId": "934ddbdb-eb7d-588e-a797-f65f1474fd34",
+        "fileName": "shower-notas.txt",
+        "blob": {
+          "$blob": "UFJPWUVDVE8gRklDVElDSU86IENhbWJpYXIgbGEgZHVjaGEgZGVsIGJhw7FvCgotIE1lZGlyIGxhIGNvbmV4acOzbiB5IHJldmlzYXIgZWwgZmxleGlibGUKLSBDb21wcmFyIGR1Y2hhIHkgY2ludGEKLSBDYW1iaWFyIGVsIGNvbmp1bnRvIGNvbiBlbCBhZ3VhIGNlcnJhZGEKLSBDb21wcm9iYXIgcMOpcmRpZGFzIHkgZ3VhcmRhciBjb21wcm9iYW50ZQoKUmVnaXN0cm8gZGUgbWVkaWRhcyB5IGRlY2lzaW9uZXMuIEVqZW1wbG8gZWRpdGFibGUgcGFyYSBkb2N1bWVudGFyIGVsIHRyYWJham8uCg==",
+          "type": "application/octet-stream"
+        },
+        "thumb": {
+          "$blob": "AA==",
+          "type": "application/octet-stream"
+        },
+        "mime": "application/octet-stream",
+        "width": 0,
+        "height": 0,
+        "createdBy": "profile-admin",
+        "createdAt": 1791164618666
+      },
+      {
+        "id": "22b4aa62-f76e-503c-b083-e375d31f0130",
+        "ownerType": "project",
+        "ownerId": "e06bb030-d1cb-5567-ac20-bcb55e31d1d2",
+        "fileName": "sensor-notas.txt",
+        "blob": {
+          "$blob": "UFJPWUVDVE8gRklDVElDSU86IFNlbnNvciBkZSBodW1lZGFkIGNvbiBFU1AzMgoKLSBEZWZpbmlyIGTDs25kZSBtZWRpciBsYSBodW1lZGFkCi0gTW9udGFyIGVsIHByb3RvdGlwbyBkZSBiYWphIHRlbnNpw7NuCi0gUHJvYmFyIGxlY3R1cmFzIHkgZGVzY29uZXhpw7NuIGRlIHJlZAotIERvY3VtZW50YXIgY29tcG9uZW50ZXMgeSBndWFyZGFyIGVsIGPDs2RpZ28KCkVzcXVlbWEgZGUgYmxvcXVlczogVVNCIDUgViAtPiBwbGFjYSBFU1AzMiAtPiBzZW5zb3IgREhUMjIuCkNvbnN1bHRhciBmaWNoYXMgdMOpY25pY2FzIGFudGVzIGRlIGNvbmVjdGFyLgo=",
+          "type": "application/octet-stream"
+        },
+        "thumb": {
+          "$blob": "AA==",
+          "type": "application/octet-stream"
+        },
+        "mime": "application/octet-stream",
+        "width": 0,
+        "height": 0,
+        "createdBy": "profile-admin",
+        "createdAt": 1791164618666
+      },
+      {
+        "id": "6ece0023-c0bc-53a5-a85e-545058f17112",
+        "ownerType": "project",
+        "ownerId": "e88f35dd-571b-538b-8438-ae738e69060b",
+        "fileName": "table-notas.txt",
+        "blob": {
+          "$blob": "UFJPWUVDVE8gRklDVElDSU86IFJlY3VwZXJhciBsYSBtZXNhIGZhbWlsaWFyCgotIFJldmlzYXIgdW5pb25lcyB5IHNhY2FyIGZvdG9zCi0gTGlqYXIgeSBsaW1waWFyIGxhIHN1cGVyZmljaWUKLSBQcm9iYXIgZWwgYWNhYmFkbyBlbiB1bmEgem9uYSBwZXF1ZcOxYQotIEFwbGljYXIgYWNhYmFkbyB5IGRlamFyIHNlY2FyCgpSZWdpc3RybyBkZSBtZWRpZGFzIHkgZGVjaXNpb25lcy4gRWplbXBsbyBlZGl0YWJsZSBwYXJhIGRvY3VtZW50YXIgZWwgdHJhYmFqby4K",
+          "type": "application/octet-stream"
+        },
+        "thumb": {
+          "$blob": "AA==",
+          "type": "application/octet-stream"
+        },
+        "mime": "application/octet-stream",
+        "width": 0,
+        "height": 0,
+        "createdBy": "profile-admin",
+        "createdAt": 1791164618666
+      },
+      {
+        "id": "5cf01454-0199-5b92-8af1-edfcafe8a2d3",
+        "ownerType": "project",
+        "ownerId": "d02fc738-4860-5f04-a8b0-996a165e6abc",
+        "fileName": "garden-notas.txt",
+        "blob": {
+          "$blob": "UFJPWUVDVE8gRklDVElDSU86IFJpZWdvIGF1dG9tw6F0aWNvIHBhcmEgbGFzIG1hY2V0YXMKCi0gTWVkaXIgbWFjZXRhcyB5IHJlY29ycmlkbwotIENvbXBhcmFyIHJpZWdvIHBvciBncmF2ZWRhZCB5IGJvbWJhCi0gUHJlcGFyYXIgcHJlc3VwdWVzdG8KLSBQcm9iYXIgdW5hIG1hY2V0YSBhbnRlcyBkZSBhbXBsaWFyCgpSZWdpc3RybyBkZSBtZWRpZGFzIHkgZGVjaXNpb25lcy4gRWplbXBsbyBlZGl0YWJsZSBwYXJhIGRvY3VtZW50YXIgZWwgdHJhYmFqby4K",
+          "type": "application/octet-stream"
+        },
+        "thumb": {
+          "$blob": "AA==",
+          "type": "application/octet-stream"
+        },
+        "mime": "application/octet-stream",
+        "width": 0,
+        "height": 0,
+        "createdBy": "profile-admin",
+        "createdAt": 1791164618666
       }
     ],
     "comments": [
@@ -11521,84 +11512,6 @@
     ],
     "shoppingLists": [
       {
-        "name": "Materiales para la huerta",
-        "privacy": "family",
-        "projectId": "8f54438d-282c-4799-812a-08fca7398476",
-        "budgetCents": 3000000,
-        "currency": "ARS",
-        "color": "green",
-        "icon": "sprout",
-        "id": "2ae4d542-2b97-406b-b3cc-be632e1dc741",
-        "createdBy": "profile-admin",
-        "createdAt": 1791163188962,
-        "updatedAt": 1791163188962
-      },
-      {
-        "name": "Materiales: Preparar una salida de camping",
-        "privacy": "family",
-        "projectId": "2f4e4f56-effc-474f-94c4-c4ca2c7db167",
-        "budgetCents": 4000000,
-        "currency": "ARS",
-        "color": "green",
-        "icon": "box",
-        "id": "6216e55b-6f42-4915-9eb3-a0e6d44a2916",
-        "createdBy": "profile-adult",
-        "createdAt": 1791164618667,
-        "updatedAt": 1791164618667
-      },
-      {
-        "name": "Organización del taller",
-        "privacy": "family",
-        "projectId": "51fe28f4-d5af-4923-be95-4fdf51fdffd0",
-        "budgetCents": 5000000,
-        "currency": "ARS",
-        "color": "gold",
-        "icon": "box",
-        "id": "8f066ece-5ea8-407a-82ec-2867b5db7a3d",
-        "createdBy": "profile-admin",
-        "createdAt": 1791163188881,
-        "updatedAt": 1791163188881
-      },
-      {
-        "name": "Materiales: Renovar el estudio",
-        "privacy": "family",
-        "projectId": "62fbd514-0487-4de8-afe2-dbd00b23736d",
-        "budgetCents": 4000000,
-        "currency": "ARS",
-        "color": "green",
-        "icon": "box",
-        "id": "a0ec560c-cbff-4c8a-99f4-548562236925",
-        "createdBy": "profile-adult",
-        "createdAt": 1791164618664,
-        "updatedAt": 1791164618664
-      },
-      {
-        "name": "Materiales: Organizar la biblioteca",
-        "privacy": "family",
-        "projectId": "7e641953-dc69-42f9-b70e-d26b2359b9b3",
-        "budgetCents": 4000000,
-        "currency": "ARS",
-        "color": "green",
-        "icon": "box",
-        "id": "cf1e1920-dd6c-4d28-a0f6-96d0328970ed",
-        "createdBy": "profile-adult",
-        "createdAt": 1791164618670,
-        "updatedAt": 1791164618670
-      },
-      {
-        "name": "Materiales: Mantenimiento de bicicletas",
-        "privacy": "family",
-        "projectId": "4da4cc2f-706b-4dda-8f43-f57bef3bde0c",
-        "budgetCents": 4000000,
-        "currency": "ARS",
-        "color": "green",
-        "icon": "box",
-        "id": "f93228f4-4d7e-4909-ba0a-37b8891dbde9",
-        "createdBy": "profile-adult",
-        "createdAt": 1791164618673,
-        "updatedAt": 1791164618673
-      },
-      {
         "id": "list-home",
         "name": "Casa",
         "currency": "ARS",
@@ -11607,92 +11520,383 @@
         "createdBy": "",
         "createdAt": 1791163188802,
         "updatedAt": 1791163188802
-      }
-    ],
-    "projects": [
+      },
       {
-        "name": "Preparar una salida de camping — DEMO",
+        "id": "49143a3e-d57c-5de3-9997-994f126f9c8b",
+        "name": "Materiales · Cambiar la ducha del baño",
+        "projectId": "934ddbdb-eb7d-588e-a797-f65f1474fd34",
         "privacy": "family",
-        "notes": "Plan familiar ficticio con presupuesto y materiales pendientes.",
-        "budgetCents": 6500000,
         "currency": "ARS",
         "color": "blue",
         "icon": "box",
-        "id": "2f4e4f56-effc-474f-94c4-c4ca2c7db167",
-        "status": "active",
         "createdBy": "profile-admin",
         "createdAt": 1791164618666,
         "updatedAt": 1791164618666
       },
       {
-        "name": "Mantenimiento de bicicletas — DEMO",
+        "id": "389b8a84-33f8-5102-a8ed-0ece5bd5bd30",
+        "name": "Materiales · Sensor de humedad con ESP32",
+        "projectId": "e06bb030-d1cb-5567-ac20-bcb55e31d1d2",
         "privacy": "family",
-        "notes": "Plan familiar ficticio con presupuesto y materiales pendientes.",
-        "budgetCents": 9500000,
         "currency": "ARS",
-        "color": "blue",
+        "color": "cyan",
         "icon": "box",
-        "id": "4da4cc2f-706b-4dda-8f43-f57bef3bde0c",
-        "status": "active",
         "createdBy": "profile-admin",
-        "createdAt": 1791164618672,
-        "updatedAt": 1791164618672
+        "createdAt": 1791164618666,
+        "updatedAt": 1791164618666
       },
       {
-        "name": "Ordenar el taller — DEMO",
+        "id": "a8e35ce7-422d-5d0a-957e-f77354111aa5",
+        "name": "Materiales · Recuperar la mesa familiar",
+        "projectId": "e88f35dd-571b-538b-8438-ae738e69060b",
         "privacy": "family",
-        "notes": "Casa de prueba. Precios y datos ficticios; no son cotizaciones. Herramientas con stock; objetos sueltos en contenido libre.",
-        "budgetCents": 12000000,
+        "currency": "ARS",
+        "color": "volcano",
+        "icon": "box",
+        "createdBy": "profile-admin",
+        "createdAt": 1791164618666,
+        "updatedAt": 1791164618666
+      },
+      {
+        "id": "981097ac-4aa0-5c20-b71c-43dcbbebb64f",
+        "name": "Materiales · Riego automático para las macetas",
+        "projectId": "d02fc738-4860-5f04-a8b0-996a165e6abc",
+        "privacy": "family",
+        "currency": "ARS",
+        "color": "green",
+        "icon": "box",
+        "createdBy": "profile-admin",
+        "createdAt": 1791164618666,
+        "updatedAt": 1791164618666
+      }
+    ],
+    "projects": [
+      {
+        "id": "934ddbdb-eb7d-588e-a797-f65f1474fd34",
+        "name": "Cambiar la ducha del baño · DEMO",
+        "privacy": "family",
+        "notes": "Proyecto ficticio. Importes ilustrativos en ARS; no son precios de mercado.",
+        "budgetCents": 6500000,
+        "currency": "ARS",
+        "color": "blue",
+        "icon": "wrench",
+        "status": "done",
+        "createdBy": "profile-admin",
+        "createdAt": 1791164618666,
+        "updatedAt": 1791164618666,
+        "workspace": {
+          "kind": "repair",
+          "startDate": "2026-09-20",
+          "targetDate": "2026-10-12",
+          "tasks": [
+            {
+              "id": "0120c57a-7091-5990-aae6-8e638daeaca3",
+              "text": "Medir la conexión y revisar el flexible",
+              "done": true,
+              "responsible": "Marina"
+            },
+            {
+              "id": "2bee5c05-6700-5c8b-9492-efb3bb97e3d4",
+              "text": "Comprar ducha y cinta",
+              "done": true,
+              "responsible": "Marina"
+            },
+            {
+              "id": "276b26ee-577e-5867-bbb2-f6b28853fa7d",
+              "text": "Cambiar el conjunto con el agua cerrada",
+              "done": true,
+              "responsible": "Marina"
+            },
+            {
+              "id": "c24aff1f-0a7e-562d-83ba-084c5575da55",
+              "text": "Comprobar pérdidas y guardar comprobante",
+              "done": true,
+              "responsible": "Marina"
+            }
+          ],
+          "journal": [
+            {
+              "id": "e3ba35ba-bd90-5ad5-8f17-4c150d675555",
+              "text": "Medimos antes de comprar. El flexible anterior tenía pérdidas. La prueba final quedó sin goteo.",
+              "kind": "decision",
+              "at": 1791164618666,
+              "author": "Marina"
+            }
+          ],
+          "expenses": [
+            {
+              "id": "18e2a449-ba9e-59ea-9367-a871af8653c8",
+              "label": "Mano de obra (ficticia)",
+              "cents": 2500000,
+              "date": "2026-10-03"
+            }
+          ],
+          "contacts": [
+            {
+              "id": "68e68178-877b-5970-9a0c-1483a9304e33",
+              "name": "Paula · contacto ficticio",
+              "role": "Plomería",
+              "details": "Ejemplo de contacto. Sin teléfono ni correo real."
+            }
+          ],
+          "materials": [
+            {
+              "id": "c916f4c4-010d-57e6-ae90-ce0079f50742",
+              "itemId": "96cd0ccb-264e-53c1-9e36-f9383d5f5206",
+              "name": "Ducha de mano con flexible",
+              "unit": "unidades",
+              "quantity": 1,
+              "used": true,
+              "at": 1791164618666
+            },
+            {
+              "id": "c72cd259-9764-54bd-9022-328ff75e5e2a",
+              "itemId": "7a2b9a4f-5fb8-5ebb-aba0-1137a2172151",
+              "name": "Cinta de teflón",
+              "unit": "unidades",
+              "quantity": 1,
+              "used": true,
+              "at": 1791164618666
+            }
+          ],
+          "outcome": "Proyecto terminado y probado. Costos de ejemplo, no cotizaciones actuales.",
+          "lessons": "Anotar medidas y registrar las pruebas antes de cerrar el trabajo.",
+          "maintenanceDate": "2027-04-12"
+        }
+      },
+      {
+        "id": "e06bb030-d1cb-5567-ac20-bcb55e31d1d2",
+        "name": "Sensor de humedad con ESP32 · DEMO",
+        "privacy": "family",
+        "notes": "Proyecto ficticio. Importes ilustrativos en ARS; no son precios de mercado.",
+        "budgetCents": 4000000,
+        "currency": "ARS",
+        "color": "cyan",
+        "icon": "wrench",
+        "status": "done",
+        "createdBy": "profile-admin",
+        "createdAt": 1791164618666,
+        "updatedAt": 1791164618666,
+        "workspace": {
+          "kind": "electronics",
+          "startDate": "2026-09-20",
+          "targetDate": "2026-10-12",
+          "tasks": [
+            {
+              "id": "7c4436e4-fd28-5750-8d55-daf26c64a469",
+              "text": "Definir dónde medir la humedad",
+              "done": true,
+              "responsible": "Tomás"
+            },
+            {
+              "id": "e98af2b0-0e3e-5a73-a65b-53584be41332",
+              "text": "Montar el prototipo de baja tensión",
+              "done": true,
+              "responsible": "Tomás"
+            },
+            {
+              "id": "346e63c1-643e-5e71-bf04-c52c9af666b2",
+              "text": "Probar lecturas y desconexión de red",
+              "done": true,
+              "responsible": "Tomás"
+            },
+            {
+              "id": "f6a8bb9b-9408-5732-875f-698a779b55e0",
+              "text": "Documentar componentes y guardar el código",
+              "done": true,
+              "responsible": "Tomás"
+            }
+          ],
+          "journal": [
+            {
+              "id": "758a75c7-7d50-55aa-b7b5-79ad6aa7c5d1",
+              "text": "El prototipo funciona por USB. Guardamos lecturas de prueba y el esquema de bloques; no es una instalación de tensión de red.",
+              "kind": "decision",
+              "at": 1791164618666,
+              "author": "Tomás"
+            }
+          ],
+          "expenses": [],
+          "contacts": [
+            {
+              "id": "a83acf05-7392-53ed-a266-39d68a4d38e5",
+              "name": "Paula · contacto ficticio",
+              "role": "Colaboración",
+              "details": "Ejemplo de contacto. Sin teléfono ni correo real."
+            }
+          ],
+          "materials": [
+            {
+              "id": "8429aa3d-3c7d-5e93-953a-66786570c8ca",
+              "itemId": "1b295610-882f-5bd8-a9bb-8b1322597567",
+              "name": "Placa ESP32",
+              "unit": "unidades",
+              "quantity": 1,
+              "used": true,
+              "at": 1791164618666
+            },
+            {
+              "id": "49530d3c-f012-5866-8329-7b80f638abef",
+              "itemId": "569a27c4-b0cc-5818-99ba-7f6f4d080740",
+              "name": "Sensor de humedad DHT22",
+              "unit": "unidades",
+              "quantity": 1,
+              "used": true,
+              "at": 1791164618666
+            },
+            {
+              "id": "6d280443-7eae-5da2-b5ce-66de523c04f2",
+              "itemId": "7a16e19a-5c15-5458-93ea-5565e933ca7d",
+              "name": "Caja perforada para sensor",
+              "unit": "unidades",
+              "quantity": 1,
+              "used": true,
+              "at": 1791164618666
+            }
+          ],
+          "outcome": "Proyecto terminado y probado. Costos de ejemplo, no cotizaciones actuales.",
+          "lessons": "Anotar medidas y registrar las pruebas antes de cerrar el trabajo.",
+          "maintenanceDate": "2027-04-12"
+        }
+      },
+      {
+        "id": "e88f35dd-571b-538b-8438-ae738e69060b",
+        "name": "Recuperar la mesa familiar · DEMO",
+        "privacy": "family",
+        "notes": "Proyecto ficticio. Importes ilustrativos en ARS; no son precios de mercado.",
+        "budgetCents": 5500000,
         "currency": "ARS",
         "color": "volcano",
         "icon": "hammer",
-        "id": "51fe28f4-d5af-4923-be95-4fdf51fdffd0",
         "status": "active",
         "createdBy": "profile-admin",
-        "createdAt": 1791163188881,
-        "updatedAt": 1791163188881
+        "createdAt": 1791164618666,
+        "updatedAt": 1791164618666,
+        "workspace": {
+          "kind": "restoration",
+          "startDate": "2026-09-20",
+          "targetDate": "2026-11-15",
+          "tasks": [
+            {
+              "id": "25c7d0e1-8740-5c5b-8e94-e76ee8d2c8e5",
+              "text": "Revisar uniones y sacar fotos",
+              "done": true,
+              "responsible": "Marina"
+            },
+            {
+              "id": "30a4197d-8aa4-56e1-a42c-c0b8f62feab3",
+              "text": "Lijar y limpiar la superficie",
+              "done": true,
+              "responsible": "Marina"
+            },
+            {
+              "id": "db3e1814-8d98-5873-994b-1e8dadbb92ba",
+              "text": "Probar el acabado en una zona pequeña",
+              "done": false,
+              "responsible": "Marina"
+            },
+            {
+              "id": "f1186151-68cc-5d5d-87b2-1c1638875063",
+              "text": "Aplicar acabado y dejar secar",
+              "done": false,
+              "responsible": "Marina"
+            }
+          ],
+          "journal": [
+            {
+              "id": "17807692-56cc-53c4-92ff-13c6700a71ac",
+              "text": "El lijado reveló una veta que queremos conservar. Vamos a probar el acabado debajo de la tapa.",
+              "kind": "idea",
+              "at": 1791164618666,
+              "author": "Tomás"
+            }
+          ],
+          "expenses": [],
+          "contacts": [
+            {
+              "id": "07948ca3-8f0d-5c3d-b7be-8588242ac725",
+              "name": "Paula · contacto ficticio",
+              "role": "Colaboración",
+              "details": "Ejemplo de contacto. Sin teléfono ni correo real."
+            }
+          ],
+          "materials": [
+            {
+              "id": "7d201622-098e-5a8a-8e2c-45c5649da401",
+              "itemId": "eb7493b8-d52e-4ef1-9fd8-0ba36e6a1653",
+              "name": "Lija para madera grano 120",
+              "unit": "unidades",
+              "quantity": 2,
+              "used": true,
+              "costCents": 180000,
+              "at": 1791164618666
+            }
+          ]
+        }
       },
       {
-        "name": "Renovar el estudio — DEMO",
+        "id": "d02fc738-4860-5f04-a8b0-996a165e6abc",
+        "name": "Riego automático para las macetas · DEMO",
         "privacy": "family",
-        "notes": "Plan familiar ficticio con presupuesto y materiales pendientes.",
-        "budgetCents": 5000000,
-        "currency": "ARS",
-        "color": "blue",
-        "icon": "box",
-        "id": "62fbd514-0487-4de8-afe2-dbd00b23736d",
-        "status": "active",
-        "createdBy": "profile-admin",
-        "createdAt": 1791164618663,
-        "updatedAt": 1791164618663
-      },
-      {
-        "name": "Organizar la biblioteca — DEMO",
-        "privacy": "family",
-        "notes": "Plan familiar ficticio con presupuesto y materiales pendientes.",
+        "notes": "Proyecto ficticio. Importes ilustrativos en ARS; no son precios de mercado.",
         "budgetCents": 8000000,
-        "currency": "ARS",
-        "color": "blue",
-        "icon": "box",
-        "id": "7e641953-dc69-42f9-b70e-d26b2359b9b3",
-        "status": "active",
-        "createdBy": "profile-admin",
-        "createdAt": 1791164618669,
-        "updatedAt": 1791164618669
-      },
-      {
-        "name": "Huerta en macetas — DEMO",
-        "privacy": "family",
-        "notes": "Proyecto familiar de ejemplo para comparar listas y presupuestos.",
-        "budgetCents": 4500000,
         "currency": "ARS",
         "color": "green",
         "icon": "sprout",
-        "id": "8f54438d-282c-4799-812a-08fca7398476",
         "status": "active",
         "createdBy": "profile-admin",
-        "createdAt": 1791163188962,
-        "updatedAt": 1791163188962
+        "createdAt": 1791164618666,
+        "updatedAt": 1791164618666,
+        "workspace": {
+          "kind": "garden",
+          "startDate": "2026-09-20",
+          "targetDate": "2026-11-15",
+          "tasks": [
+            {
+              "id": "7bf93d18-4028-54ac-81ac-efe480b0c330",
+              "text": "Medir macetas y recorrido",
+              "done": false,
+              "responsible": "Tomás"
+            },
+            {
+              "id": "4881d3dd-bcd1-5541-a926-2e42395d63ce",
+              "text": "Comparar riego por gravedad y bomba",
+              "done": false,
+              "responsible": "Tomás"
+            },
+            {
+              "id": "929fa1d5-cce8-5dd9-9cec-06901080bf2b",
+              "text": "Preparar presupuesto",
+              "done": false,
+              "responsible": "Tomás"
+            },
+            {
+              "id": "7f5ab173-09db-56ff-89e9-4983f76fa5be",
+              "text": "Probar una maceta antes de ampliar",
+              "done": false,
+              "responsible": "Tomás"
+            }
+          ],
+          "journal": [
+            {
+              "id": "3395aa37-b367-5faf-9afb-7f09cd1d0722",
+              "text": "Idea inicial: empezar por una maceta. Priorizar una solución que siga funcionando sin Internet.",
+              "kind": "idea",
+              "at": 1791164618666,
+              "author": "Tomás"
+            }
+          ],
+          "expenses": [],
+          "contacts": [
+            {
+              "id": "b3203da8-3a17-5377-b0e4-609e59aab4a3",
+              "name": "Paula · contacto ficticio",
+              "role": "Colaboración",
+              "details": "Ejemplo de contacto. Sin teléfono ni correo real."
+            }
+          ],
+          "materials": []
+        }
       }
     ],
     "photoDeletes": [],

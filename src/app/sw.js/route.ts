@@ -32,7 +32,7 @@ h1{font-size:20px;margin:16px 0 8px}p{margin:0 0 20px;opacity:.7;line-height:1.5
 const source = (version: string, pages: string[]) => String.raw`
 const VERSION = ${JSON.stringify(version)};
 const PAGES = ${JSON.stringify(pages)};
-const RECIPE_ASSETS = ${JSON.stringify(EXAMPLE_COVER_ASSETS)};
+const RECIPE_ASSETS = ${JSON.stringify([...EXAMPLE_COVER_ASSETS, ...["shower","sensor","table","garden","tomas","elena","sofia","mateo","alma","admin","marina","luca"].map(name=>`/demo-projects/${name}.webp`)])};
 const STATIC = "od-static-" + VERSION;
 const PAGES_CACHE = "od-pages-" + VERSION;
 const NETWORK_TIMEOUT = 3500;

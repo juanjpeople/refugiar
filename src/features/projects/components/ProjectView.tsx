@@ -1,4 +1,7 @@
 "use client";
+import { ProjectCover } from "@/components/ui";
+import { projectExampleCover } from "../example-covers";
+import { ProjectWorkspace } from "./ProjectWorkspace";
 
 import { App, Button, Card, Col, Dropdown, Flex, Row, Tag, Tooltip, Typography, theme } from "antd";
 import { CircleCheck, Ellipsis, ListChecks, Pencil, Plus, RotateCcw, SearchX, Trash2 } from "lucide-react";
@@ -47,7 +50,7 @@ export function ProjectView() {
   const confirmDelete = () =>
     modal.confirm({
       title: t("projects.deleteConfirm", { name: project.name }),
-      content: t("projects.deleteText"),
+      content: `${t("projects.deleteText")} ${t("projects.deleteShares")}`,
       okText: t("projects.delete"),
       okButtonProps: { danger: true },
       cancelText: t("common.cancel"),
@@ -84,7 +87,7 @@ export function ProjectView() {
           ),
         }}
         summary={
-          <Card style={{ marginBottom: token.marginLG }}>
+          <><div>{projectExampleCover(project.id,project.name) && <ProjectCover src={projectExampleCover(project.id,project.name)!}/>}</div><Card style={{ marginBottom: token.marginLG }}>
             <Row gutter={[24, 16]} align="middle">
               <Col xs={24} md={8}>
                 <Typography.Text type="secondary">{t("shopping.summary.total")}</Typography.Text>
@@ -104,9 +107,9 @@ export function ProjectView() {
                 )}
               </Col>
             </Row>
-          </Card>
+          </Card></>
         }
-        sections={[
+        sections={[{ id: "avance", header: { title: t("projects.workspace") }, content: <ProjectWorkspace project={project} totals={budget} /> },
           {
             id: "listas",
             header: {

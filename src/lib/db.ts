@@ -232,6 +232,11 @@ export function declareSchema(target: Dexie, upTo = Infinity) {
     const { upgradeDemoCooking } = await Dexie.waitFor(import("@/features/demo/seed"));
     await upgradeDemoCooking(tx);
   });
+  if (upTo >= 17) target.version(17).stores({}).upgrade(async (tx) => {
+    if (!["RefugiarDemoDB", "RefugiarTestDB"].includes(target.name)) return;
+    const { upgradeDemoProjects } = await Dexie.waitFor(import("@/features/demo/seed"));
+    await upgradeDemoProjects(tx);
+  });
 }
 
 declareSchema(db);
