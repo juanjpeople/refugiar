@@ -1,4 +1,5 @@
 "use client";
+import { pendingImportHref } from "@/features/sharing/continuation";
 
 import { App, Button, Flex, Form, Grid, Input, Segmented, Typography } from "antd";
 import { House, KeyRound, TriangleAlert } from "lucide-react";
@@ -52,6 +53,7 @@ export function AccountPage() {
     return requested === "entrar" ? "signin" : requested === "recuperar" ? "recover" : "create";
   });
   const wantsHouse = params.get("siguiente") === "casa";
+  const publishingOnly = params.get("siguiente") === "compartir" || (typeof window !== "undefined" && !!sessionStorage.getItem("refugiar-share-return"));
   // Google/GitHub con los dos pasos encendidos: el servidor no abre la sesión hasta el segundo paso.
   const [step, setStep] = useState<Step>(() => (params.get("dos-pasos") === "1" ? "second" : mode === "create" ? "access" : "auth"));
   // La licencia validada en el primer paso: habilita la cuenta y la consume el servidor al crear la casa.
@@ -71,8 +73,9 @@ export function AccountPage() {
 
   /** Cuenta sin casa en la nube: la casa sigue en este dispositivo. */
   const finishLocal = () => {
+    if (publishingOnly) { afterSignIn(); return; }
     if (useDeviceStore.getState().mode === "unset") setDeviceMode("local");
-    router.push("/familia");
+    router.push(pendingImportHref() ?? "/familia");
   };
 
   async function upload(target: CloudHousehold) {
@@ -105,12 +108,18 @@ export function AccountPage() {
 
   /** Ya tiene cuenta: si tiene una casa en la nube, se baja a este dispositivo. */
   function afterSignIn() {
+    if (publishingOnly) {
+      const target = sessionStorage.getItem("refugiar-share-return");
+      sessionStorage.removeItem("refugiar-share-return");
+      router.push(target?.startsWith("/") && !target.startsWith("//") && !target.includes("\\") ? target : "/");
+      return;
+    }
     const current = useCloudStore.getState().session;
     const link = getSyncLink();
     // Este dispositivo ya tiene esa casa (volvió a entrar después de cerrarse la sesión): sigue
     // sincronizando donde estaba, sin bajar nada de nuevo ni borrar lo que no se subió.
     const linked = current?.households.find((entry) => entry.id === link?.householdId);
-    if (linked && link?.userId === current?.user.id) return router.push("/");
+    if (linked && link?.userId === current?.user.id) return router.push(pendingImportHref() ?? "/");
     const existing = current?.households[0];
     if (!existing) return wantsHouse ? void beginHouse() : finishLocal();
     setHousehold(existing);
@@ -236,13 +245,13 @@ export function AccountPage() {
                     <Button type="primary" size="large" block onClick={() => setInviting(true)}>
                       {t("cloud.done.invite")}
                     </Button>
-                    <Button size="large" block onClick={() => router.push("/")}>
+                    <Button size="large" block onClick={() => router.push(pendingImportHref() ?? "/")}>
                       {t("cloud.done.go")}
                     </Button>
                     <InviteModal open={inviting} household={household} onClose={() => setInviting(false)} />
                   </>
                 ) : (
-                  <Button type="primary" size="large" block onClick={() => router.push("/")}>
+                  <Button type="primary" size="large" block onClick={() => router.push(pendingImportHref() ?? "/")}>
                     {t("cloud.done.go")}
                   </Button>
                 )}

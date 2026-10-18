@@ -56,6 +56,8 @@ export interface ItemPlace {
 }
 
 export interface ShoppingRow extends ShoppingListItem {
+  /** External reports are derived from this publisher's local records, never synced. */
+  guestBought?: boolean;
   /** Producto vinculado y su lugar (si sigue existiendo). */
   linked?: ItemPlace;
   price?: PriceSummary;
@@ -150,9 +152,11 @@ export function useShoppingData(listId: string): ShoppingData | null | undefined
     ]);
     const itemIds = [...new Set([...linkedIds(entries), ...candidates.map((candidate) => candidate.itemId)])];
     const [places, prices] = await Promise.all([placesOf(itemIds), priceSummaries(itemIds)]);
+    const publications = (await db.publications.toArray()).filter(p => p.source.kind === "shopping-list" && p.source.id === listId && p.expiresAt > Date.now());
 
     const toRow = (entry: ShoppingListItem): ShoppingRow => ({
       ...entry,
+      guestBought: entry.status === "pending" && publications.some(p => p.checks?.[entry.id] && p.itemMap[entry.id]?.fingerprint === JSON.stringify([entry.name, entry.quantity, entry.unit])),
       linked: entry.inventoryItemId ? places.get(entry.inventoryItemId) : undefined,
       price: entry.inventoryItemId ? prices.get(entry.inventoryItemId) : undefined,
     });

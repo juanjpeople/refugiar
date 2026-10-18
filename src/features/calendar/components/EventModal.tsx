@@ -1,4 +1,5 @@
 "use client";
+import { ShareButton } from "@/features/sharing/ShareButton";
 
 import { App, Button, Col, DatePicker, Flex, Form, Grid, Input, Modal, Row, Select, Switch, TimePicker } from "antd";
 import dayjs, { type Dayjs } from "dayjs";
@@ -33,6 +34,7 @@ interface FormValues {
 }
 
 interface EventModalProps {
+  occurrence?: { start: number; end: number };
   open: boolean;
   /** Evento a editar, o `undefined` para crear. */
   event?: CalendarEvent;
@@ -41,7 +43,7 @@ interface EventModalProps {
   onClose: () => void;
 }
 
-export function EventModal({ open, event, day, onClose }: EventModalProps) {
+export function EventModal({ open, event, day, onClose, occurrence }: EventModalProps) {
   const { t } = useI18n();
   const screens = Grid.useBreakpoint();
   const isMobile = !screens.md;
@@ -163,6 +165,7 @@ export function EventModal({ open, event, day, onClose }: EventModalProps) {
             )}
           </span>
           <Flex gap={8}>
+            {event && canManage && <ShareButton source={{ kind: "event", id: event.id, start: occurrence?.start ?? event.start, end: occurrence?.end ?? event.end }} disabled={saving} />}
             <Button disabled={saving} onClick={onClose}>{t("common.cancel")}</Button>
             {canManage && (
               <Button type="primary" loading={saving} disabled={saving} aria-label={t("inventory.item.save")} onClick={onOk}>

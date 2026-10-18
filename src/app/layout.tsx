@@ -6,6 +6,7 @@ import { ThemeProvider } from "@/components/providers/ThemeProvider";
 import { PwaBridge } from "@/components/pwa/PwaBridge";
 import { BRAND } from "@/config/brand";
 import { CloudSync } from "@/features/cloud/components/CloudSync";
+import { ShareSync } from "@/features/sharing/ShareSync";
 import { I18nProvider } from "@/i18n";
 import "./globals.css";
 
@@ -54,6 +55,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
               <AppShell>{children}</AppShell>
               <PwaBridge />
               <CloudSync />
+              <ShareSync />
             </ThemeProvider>
           </I18nProvider>
         </AntdRegistry>

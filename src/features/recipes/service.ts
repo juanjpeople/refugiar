@@ -4,6 +4,7 @@
  * cada uno en una sola transacción (todo o nada).
  */
 import { isUndoable } from "@/features/activity/domain";
+import { closeSource } from "@/features/sharing/service";
 import { pruneActivity, recordActivity, setActivityPrivacy } from "@/features/activity/service";
 import { deleteCommentsOfWithin } from "@/features/comments/service";
 import { consumeWithin, undoQuantityChange, QUANTITY_TABLES } from "@/features/inventory/service";
@@ -72,6 +73,11 @@ export async function setRecipeCover(actor: Actor | null, id: string, photoId: s
 /** Borra la receta con sus fotos y comentarios (no tienen sentido solos). */
 export async function deleteRecipe(actor: Actor | null, id: string) {
   assertCan(actor, "recipes.manage");
+  const before = await db.recipes.get(id);
+  if (!before) return;
+  if (!canSee(actor, before)) throw new NotFoundError("errors.notFound.recipe");
+  await closeSource("recipe", id);
+  for (const event of await db.events.filter(event => event.meal?.recipeId === id).toArray()) await closeSource("event", event.id);
   await db.transaction("rw", [db.recipes, db.photos, db.comments, db.activity, db.photoDeletes, db.events], async () => {
     const recipe = await db.recipes.get(id);
     if (!recipe) return;

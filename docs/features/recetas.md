@@ -55,3 +55,7 @@ Las 15 recetas de la demo tienen fotos ilustrativas generadas, optimizadas en We
 Los pasos incluyen tiempos orientativos donde corresponde. Las recetas frías y los pasos sin duración definida no inventan timers. La persona los inicia en Modo cocina; confirmar el consumo sigue siendo una acción separada. Panqueques tiene harina, leche y huevos vinculados y disponibles; omelette tiene queso insuficiente; pizza tiene levadura agotada. El menú muestra panqueques y pizza y Compras incluye harina comprada pendiente de guardar.
 
 La demo tiene 95 productos, recetas, escuela, calendario, comentarios y herramientas reutilizables. Inicio ofrece un recorrido con accesos a esas funciones. Los nuevos datos se incorporan en la demo: las recetas existentes se actualizan solo si conservan el contenido anterior y no tienen tiempos personalizados. Las casas reales no reciben esa migración. Una demo editada conserva los cambios; «Restablecer demo» carga todos los ejemplos actuales con confirmación.
+
+## ✅ Hecho — compartir recetas y menú semanal
+
+El botón Compartir permite revisar texto breve/completo o publicar una ficha sin abrir la casa. Incluye ingredientes, pasos, temporizadores, porciones y etiquetas; las fotos se seleccionan expresamente. Importar crea una receta independiente, privada por defecto y sin vínculos al inventario original. En el menú se elige la semana de destino y cada receta incluida se copia una sola vez. Repetir una importación no duplica datos salvo que se elija Guardar otra copia. [Flujo, cuotas y revisión](compartir.md).

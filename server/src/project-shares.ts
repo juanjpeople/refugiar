@@ -1,6 +1,12 @@
 import { Hono, type Context } from "hono";
 import { bodyLimit } from "hono/body-limit";
 import { z } from "zod";
+import {
+  chargeShare,
+  shareBucket,
+  shareCount,
+  shareQuota,
+} from "./content-shares";
 import type { AppEnv, Env, SessionUser } from "./env";
 const input = z.object({
   id: z.string().uuid(),
@@ -42,8 +48,6 @@ export function projectShares(
   routes.post("/project-shares", async (c) => {
     const user = await requireUser(c);
     if (!user) return c.json({ error: "unauthorized" }, 401);
-    if (await tooMany(c.env, `project-publish:${user.id}`, 30, 86400000))
-      return c.json({ error: "rate-limited" }, 429);
     const parsed = input.safeParse(await c.req.json().catch(() => null));
     if (!parsed.success) return c.json({ error: "invalid" }, 400);
     const x = parsed.data,
@@ -54,10 +58,11 @@ export function projectShares(
     )
       .bind(user.id, now)
       .run();
-    const result = await c.env.DB.prepare(
-      "insert into project_shares (id,owner_id,project_id,recipient,token_hash,body,created_at,expires_at) select ?,?,?,?,?,?,?,? where (select count(*) from project_shares where owner_id = ?) < 20 and not exists (select 1 from project_share_blocks where owner_id = ? and project_id = ?)",
-    )
-      .bind(
+    const bucket = shareBucket("publish", user.id);
+    const [result] = await c.env.DB.batch([
+      c.env.DB.prepare(
+        `insert into project_shares (id,owner_id,project_id,recipient,token_hash,body,created_at,expires_at) select ?,?,?,?,?,?,?,? where (select count(*) from project_shares where owner_id = ?) + (select count(*) from content_shares where owner_id = ? and expires_at > ?) < 20 and not exists (select 1 from project_share_blocks where owner_id = ? and project_id = ?) and ${shareQuota}`,
+      ).bind(
         x.id,
         user.id,
         x.projectId,
@@ -68,9 +73,22 @@ export function projectShares(
         now + x.days * 86400000,
         user.id,
         user.id,
+        now,
+        user.id,
         x.projectId,
-      )
-      .run();
+        bucket,
+        30,
+      ),
+      chargeShare(c.env, bucket),
+    ]);
+    if (!result.meta.changes && (await shareCount(c.env, bucket)) >= 30)
+      return c.json(
+        {
+          error: "quota-exceeded",
+          resetAt: (Math.floor(now / 86400000) + 1) * 86400000,
+        },
+        429,
+      );
     if (!result.meta.changes) return c.json({ error: "quota-exceeded" }, 409);
     return c.json({ id: x.id }, 201);
   });
@@ -122,7 +140,7 @@ export function projectShares(
   );
   routes.post("/shared-project/:id", async (c) => {
     const ip = c.req.header("CF-Connecting-IP") ?? "unknown";
-    if (await tooMany(c.env, `project-read:${ip}`, 60, 60000))
+    if (await tooMany(c.env, `share-read:${ip}`, 60, 60000))
       return c.json({ error: "rate-limited" }, 429);
     const data = await c.req.json().catch(() => null);
     if (

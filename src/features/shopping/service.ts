@@ -6,6 +6,7 @@ import { INVENTORY_LIMITS, isUnit } from "@/features/inventory/domain";
  * de inventario), así la lista y el stock nunca quedan desfasados.
  */
 import { roundQuantity } from "@/features/inventory/quantity";
+import { closeSource } from "@/features/sharing/service";
 import { pruneActivity, recordActivity, setActivityPrivacy } from "@/features/activity/service";
 import { createInventoryItemWithin, QUANTITY_TABLES, restockWithin } from "@/features/inventory/service";
 import { CURRENCIES, type Currency } from "@/features/prices/domain";
@@ -141,6 +142,8 @@ export async function markBought(actor: Actor | null, id: string) {
   await db.transaction("rw", [db.shoppingList, db.shoppingLists, ...QUANTITY_TABLES()], async () => {
     const entry = await db.shoppingList.get(id);
     if (!entry || entry.status === "bought") return;
+    const currentList = await getActiveList(entry.listId);
+    if (!canSee(actor, currentList)) throw new NotFoundError("errors.notFound.list");
     const restocked = entry.inventoryItemId ? await restockWithin(actor, entry.inventoryItemId, entry.quantity) : 0;
     await db.shoppingList.update(id, { status: "bought", boughtAt: Date.now(), boughtBy: actor.id, restocked });
     // Lo que repone el inventario ya queda en su historial ("repuso"); lo suelto se registra acá.
@@ -286,9 +289,14 @@ export async function setListArchived(actor: Actor | null, id: string, archived:
 export async function deleteList(actor: Actor | null, id: string) {
   assertCan(actor, "shopping.manage");
   if (id === HOME_LIST_ID) throw new ValidationError("errors.shopping.homeList");
+  const before = await db.shoppingLists.get(id);
+  if (!before) return;
+  if (!canSee(actor, before)) throw new NotFoundError("errors.notFound.list");
+  await closeSource("shopping-list", id);
   await db.transaction("rw", db.shoppingLists, db.shoppingList, db.activity, async () => {
     const list = await db.shoppingLists.get(id);
     if (!list) return;
+    if (!canSee(actor, list)) throw new NotFoundError("errors.notFound.list");
     await setActivityPrivacy("lists", id, list.privacy ?? "family", list.createdBy);
     await db.shoppingList.where("listId").equals(id).delete();
     await db.shoppingLists.delete(id);

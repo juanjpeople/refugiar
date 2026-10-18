@@ -60,6 +60,7 @@ export const APP_ROUTES: AppRoute[] = [
   { id: "settings", href: "/ajustes", labelKey: "nav.routes.settings", icon: Settings, section: "system" },
   { id: "design", href: "/design", labelKey: "nav.routes.design", icon: Palette, permission: "settings.design", section: "system", width: "wide" },
   { id: "sharedProject", href: "/proyecto-compartido", labelKey: "projects.sharedTitle", icon: Sparkles, section: "system", external: true, hidden: true },
+  { id: "sharedContent", href: "/compartido", labelKey: "sharing.title", icon: Sparkles, section: "system", external: true, hidden: true },
   { id: "account", href: "/cuenta", labelKey: "nav.routes.account", icon: Sparkles, section: "system", external: true, hidden: true },
   { id: "feedback", href: "/feedback", labelKey: "nav.routes.feedback", icon: MessageSquare, section: "system", external: true, hidden: true },
   { id: "privacyPolicy", href: "/politica-de-privacidad", labelKey: "nav.routes.privacyPolicy", icon: ShieldCheck, section: "system", external: true, hidden: true },

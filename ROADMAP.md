@@ -9,7 +9,7 @@ Documento técnico de seguimiento, arquitectura de funcionalidades y control de 
 Módulos esenciales en desarrollo activo y mantenimiento de estabilidad técnica.
 
 ### A. Motor Local-First y Sincronización Cifrada (E2EE)
-- **Persistencia local:** IndexedDB gestionado mediante Dexie.js (esquema v12 con migraciones atómicas y soporte de importación retrospectiva).
+- **Persistencia local:** IndexedDB gestionado mediante Dexie.js (esquema v18 con migraciones atómicas y soporte de importación retrospectiva).
 - **Sincronización:** Cloudflare Workers + D1 + Durable Objects con canales WebSocket hibernados.
 - **Criptografía cliente:** Cifrado simétrico de datos y fotografías (AES-GCM con claves derivadas en cliente antes de cualquier transmisión de red).
 - **Resiliencia de conexión:** Cola de operaciones pendientes en memoria y almacenamiento local con reconciliación idempotente por identificadores criptográficos.
@@ -51,6 +51,7 @@ Funcionalidades postergadas explícitamente para preservar el foco en la estabil
 
 | Versión / Hito | Alcance técnico implementado | Estado CI |
 |---|---|---|
+| **2026-10 (Compartir sin abrir la casa)** | ✅ Hecho: fichas cifradas de recetas, proyectos, compras, eventos y menú; importación local; compras con revisiones y recepción; cuotas compartidas y Android. [Detalle y recorrido](docs/features/compartir.md). | Checks locales verificados; UI del dueño pendiente |
 | **2026-10 (Tanda 4)** | Proyectos y bitácora técnica con cómputo de materiales y consumos; mitigación de costos en builds; navegación móvil por pestañas; temporizadores locales en Android. | ✅ Verificado |
 | **2026-10 (Tanda 3)** | Vinculación de recetas con stock de alacena y compras; sustituciones explícitas y consistencia de medidas; soporte de cámara en inventario. | ✅ Verificado |
 | **2026-10 (Tanda 2)** | Sistema de perfiles con permisos granulares (adultos / menores); etiquetas QR vectoriales multiformato con línea de corte. | ✅ Verificado |

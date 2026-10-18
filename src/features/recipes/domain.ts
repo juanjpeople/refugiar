@@ -22,6 +22,7 @@ export interface RecipeIngredient {
 }
 
 export interface Recipe {
+  externalShareOwners?: string[];
   id: string;
   name: string;
   /** Quién la ve con la casa en la nube (por defecto, Familia). Sus comentarios heredan el nivel. */

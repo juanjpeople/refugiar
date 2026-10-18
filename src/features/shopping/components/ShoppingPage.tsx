@@ -1,10 +1,11 @@
 "use client";
+import { ShareButton } from "@/features/sharing/ShareButton";
 
 import { formatQuantity, formatUnit } from "@/features/inventory/format";
 
 import { App, Button, Card, Col, Dropdown, Flex, Grid, Progress, Row, Tag, Tooltip, Typography, theme } from "antd";
 import { AnimatePresence, LayoutGroup, motion } from "framer-motion";
-import { Archive, ArchiveRestore, ArrowLeftRight, ClipboardList, Ellipsis, Eraser, FolderOpen, MapPin, Pencil, Share2, ShoppingBag, ShoppingBasket, Trash2, Wallet, type LucideIcon } from "lucide-react";
+import { Archive, ArchiveRestore, ArrowLeftRight, ClipboardList, Ellipsis, Eraser, FolderOpen, MapPin, Pencil, ShoppingBag, ShoppingBasket, Trash2, Wallet, type LucideIcon } from "lucide-react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState, type ReactNode } from "react";
@@ -120,7 +121,7 @@ export function ShoppingPage() {
         extra={
           list && (
             <>
-              {data && data.pending.length > 0 && <ShareButton title={listName(list, t)} rows={data.pending} />}
+              {data && <ShareButton source={{ kind: "shopping-list", id: list.id, name: listName(list, t) }} />}
               {canManage && (
                 <Dropdown menu={{ items: listActions }} trigger={["click"]} placement="bottomRight">
                   <Button icon={<Ellipsis />} aria-label={t("shopping.lists.more")} />
@@ -417,6 +418,7 @@ function RowItem({ row, currency, targets }: { row: ShoppingRow; currency: Curre
             onToggle={canManage ? () => (done ? unbuy(row.id) : buy(row.id)) : undefined}
           />
           <Flex vertical gap={2} style={{ minWidth: 0 }}>
+            {row.guestBought && !done && <><Tag>{t("sharing.guestBought")}</Tag><Typography.Text type="secondary">{t("sharing.guestHint")}</Typography.Text>{canManage && <Button onClick={() => void buy(row.id).then(() => window.dispatchEvent(new Event("refugiar-share-refresh")))}>{t("sharing.confirmReceived")}</Button>}</>}
             <Typography.Text strong={!done} delete={done} type={done ? "secondary" : undefined} ellipsis>
               {row.name}
             </Typography.Text>
@@ -489,39 +491,5 @@ function RowItem({ row, currency, targets }: { row: ShoppingRow; currency: Curre
         )}
       </Flex>
     </motion.div>
-  );
-}
-
-// --- Compartir ----------------------------------------------------------------------
-
-/** La lista como texto ("☐ Leche · 2 litros"), para WhatsApp o donde sea. Sin compartir nativo, se copia. */
-function ShareButton({ title, rows }: { title: string; rows: ShoppingRow[] }) {
-  const { t, format } = useI18n();
-  const { message } = App.useApp();
-  const label = t("shopping.lists.share");
-
-  const share = async () => {
-    const text = [title, "", ...rows.map((row) => `☐ ${row.name} · ${formatQuantity(t, row.quantity, row.unit, format.number)}`)].join("\n");
-    if (navigator.share) {
-      try {
-        await navigator.share({ title, text });
-        return;
-      } catch (error) {
-        // Cerró el menú de compartir: no es un error.
-        if (error instanceof DOMException && error.name === "AbortError") return;
-      }
-    }
-    try {
-      await navigator.clipboard.writeText(text);
-      message.success(t("shopping.toast.shared"));
-    } catch {
-      message.error(t("errors.unexpected"));
-    }
-  };
-
-  return (
-    <Tooltip title={label}>
-      <Button icon={<Share2 />} aria-label={label} onClick={() => void share()} />
-    </Tooltip>
   );
 }

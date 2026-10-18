@@ -65,3 +65,5 @@ export { KitchenTimers } from "./KitchenTimers";
 export { ProjectNotebook } from "./ProjectNotebook";
 
 export { ProjectCover } from "./ProjectCover";
+export { ShareCard } from "./ShareCard";
+export { ShareOptions, type ShareOptionsValue } from "./ShareOptions";

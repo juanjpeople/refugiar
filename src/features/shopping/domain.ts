@@ -17,6 +17,7 @@ export const HOME_LIST_ID = "list-home";
 
 /** Una lista de compras: la del súper, "Sanitarios" de la renovación del baño, "Herramientas de jardín"… */
 export interface ShoppingList {
+  externalShareOwners?: string[];
   id: string;
   name: string;
   /** Quién la ve con la casa en la nube (por defecto, Familia). Sus ítems heredan el nivel. */

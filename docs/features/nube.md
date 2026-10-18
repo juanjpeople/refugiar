@@ -27,7 +27,7 @@ Ajustes → Datos muestra el estado y deja sincronizar o salir de la nube.
 
 ## Modo local
 
-Sin cuenta, todo queda en el dispositivo. No se comparte con nadie ni se sincroniza. Se puede pasar a la nube más adelante sin perder nada.
+Sin cuenta, la casa queda en el dispositivo y no se sincroniza. Compartir texto e importar una ficha son acciones explícitas que no requieren cuenta. Publicar un enlace habilita una sesión sin subir la casa. Se puede pasar a la nube más adelante sin perder nada.
 
 ## Límites
 
@@ -54,3 +54,7 @@ El indicador usa también el estado de conexión del dispositivo: una casa local
 ## Reanudación y confirmaciones
 
 La sesión que se desmonta sólo detiene su propio motor; un trabajo esperando el lock no inicia un ciclo si ya fue detenido. Al volver a primer plano se revisa también la conexión en tiempo real y se agenda sincronización. Se conserva el mecanismo existente de lotes persistidos con IDs estables: una respuesta incompleta no borra pendientes, y al reabrir la base se reenvían los mismos bytes. La compra y su vínculo de inventario siguen guardándose juntos; no se crea una operación nueva al reintentar el transporte. Esto no equivale a certificar todas las ediciones concurrentes entre teléfonos.
+
+## ✅ Hecho — publicar una ficha desde una casa local
+
+Compartir puede habilitar la sesión de cuenta sin sincronizar ni reemplazar la casa de este dispositivo. El ingreso iniciado por Compartir retorna al contenido de origen aunque la cuenta tenga una casa remota. Registro, código de acceso, segundo paso y recuperación siguen las reglas vigentes. Recibir e importar una ficha en una casa local no exige cuenta. Las claves de publicación y correspondencias con productos quedan sólo en el dispositivo publicador. [Contrato y límites](compartir.md).

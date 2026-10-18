@@ -1,4 +1,5 @@
 import { projectShares } from "./project-shares";
+import { contentShares } from "./content-shares";
 import { weatherBrief, newsBrief } from "./brief";
 /**
  * Worker de Refugiar: sirve la app (archivos estáticos) y la API en el mismo origen (`/api/*`),
@@ -1323,7 +1324,12 @@ async function setHouseholdStatus(env: Env, householdId: string, status: "active
 
 // --- Feedback público y operaciones privadas por CLI ---------------------------------------------
 
-app.route("/", projectShares(requireUser, tooMany));
+const requirePublisher = async (c: Context<AppEnv>) => {
+  const user = await requireUser(c);
+  return user && !await isDevice(c.env, user.id) ? user : null;
+};
+app.route("/", projectShares(requirePublisher, tooMany));
+app.route("/", contentShares(requirePublisher, tooMany));
 
 app.post("/feedback", async (c) => {
   const input = await parse(c, feedbackInput);
@@ -1816,6 +1822,11 @@ export default {
     ctx.waitUntil(
       (async () => {
         if (controller.cron === "17 4 * * *") {
+          await env.DB.batch([
+            env.DB.prepare("delete from content_shares where id in (select id from content_shares where expires_at<=? limit 200)").bind(Date.now()),
+            env.DB.prepare("delete from project_shares where id in (select id from project_shares where expires_at<=? limit 200)").bind(Date.now()),
+            env.DB.prepare("delete from attempts where key like 'share-%' and window_start<?").bind(Date.now() - 2 * 86400000),
+          ]);
           const result = await processInactivity(env);
           console.log(`[inactivity] notices=${result.noticesQueued} paused=${result.householdsPaused}`);
         }

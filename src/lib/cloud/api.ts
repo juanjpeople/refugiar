@@ -16,15 +16,21 @@ export const CLOUD_ENABLED = !DEMO_ENABLED && process.env.NEXT_PUBLIC_CLOUD === 
 export class CloudError extends AppError {
   readonly code: string;
   readonly status: number;
+  readonly resetAt?: number;
 
-  constructor(code: string, status: number) {
+  constructor(code: string, status: number, resetAt?: number) {
     super(CLOUD_ERRORS[code] ?? (status === 401 ? "errors.cloud.unauthorized" : status >= 500 ? "errors.cloud.server" : "errors.cloud.unknown"));
     this.code = code;
     this.status = status;
+    this.resetAt = resetAt;
   }
 }
 
 const CLOUD_ERRORS: Record<string, MessageKey> = {
+  "quota-exceeded": "sharing.limit",
+  "quota-or-source-closed": "sharing.limit",
+  "too-large": "sharing.tooLarge",
+  conflict: "sharing.conflict",
   "not-found": "errors.cloud.notFound",
   used: "errors.cloud.inviteUsed",
   expired: "errors.cloud.inviteExpired",
@@ -109,6 +115,6 @@ export async function api<T>(method: "GET" | "POST" | "PATCH" | "DELETE", path: 
     throw new CloudError("offline", 0);
   }
   const data = (await response.json().catch(() => null)) as (T & { error?: string; code?: string; message?: string }) | null;
-  if (!response.ok) throw new CloudError(response.status === 429 ? "rate-limited" : (data?.code ?? data?.error ?? "unknown"), response.status);
+  if (!response.ok) throw new CloudError(response.status === 429 && data?.error !== "quota-exceeded" ? "rate-limited" : (data?.code ?? data?.error ?? "unknown"), response.status);
   return data as T;
 }

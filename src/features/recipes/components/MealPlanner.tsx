@@ -1,4 +1,5 @@
 "use client";
+import { ShareButton } from "@/features/sharing/ShareButton";
 
 import { App, Button, DatePicker, Flex, Form, InputNumber, Modal, Select, Typography } from "antd";
 import dayjs, { type Dayjs } from "dayjs";
@@ -54,6 +55,7 @@ export function MealPlanner() {
   }
   return <RequirePermission perform="recipes.view">
     <PageHeader title={t("meals.title")} description={t("meals.description")} />
+    <Reveal><ShareButton source={{ kind: "meal-plan", id: week.format("YYYY-MM-DD"), name: t("meals.title") }} /></Reveal>
     <Reveal><Flex vertical gap="middle">
       <Flex justify="space-between" align="center"><Button aria-label={t("meals.previous")} icon={<ChevronLeft />} onClick={() => setWeek(week.subtract(7, "day"))} /><Typography.Text strong>{format.date(from)} – {format.date(week.add(6, "day").valueOf())}</Typography.Text><Button aria-label={t("meals.next")} icon={<ChevronRight />} onClick={() => setWeek(week.add(7, "day"))} /></Flex>
       {canShop && <Button disabled={!report?.checks.some(check => check.state !== "ok")} onClick={() => setReview(true)}>{t("meals.missing")}</Button>}
