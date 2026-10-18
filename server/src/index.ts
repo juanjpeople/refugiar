@@ -1,3 +1,4 @@
+import { projectShares } from "./project-shares";
 import { weatherBrief, newsBrief } from "./brief";
 /**
  * Worker de Refugiar: sirve la app (archivos estáticos) y la API en el mismo origen (`/api/*`),
@@ -1321,6 +1322,8 @@ async function setHouseholdStatus(env: Env, householdId: string, status: "active
 }
 
 // --- Feedback público y operaciones privadas por CLI ---------------------------------------------
+
+app.route("/", projectShares(requireUser, tooMany));
 
 app.post("/feedback", async (c) => {
   const input = await parse(c, feedbackInput);

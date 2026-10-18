@@ -8,12 +8,14 @@
  * los bajan cuando la ven (ver `src/lib/sync/photos.ts`).
  */
 
-export type PhotoOwner = "recipe" | "container";
+export type PhotoOwner = "recipe" | "container" | "project";
 
 export interface Photo {
   id: string;
   ownerType: PhotoOwner;
   ownerId: string;
+  /** Project documents use the encrypted binary transport, never inline execution. */
+  fileName?: string;
   /** Imagen comprimida (máx. `PHOTO_LIMITS.maxSide` px de lado). Puede faltar si vino de otro dispositivo y todavía no se bajó. */
   blob?: Blob;
   /** Miniatura para listas y tarjetas (igual: puede faltar hasta bajarla). */

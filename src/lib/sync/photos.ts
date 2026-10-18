@@ -64,7 +64,7 @@ export function ensurePhotoBytes(photo: Pick<Photo, "id" | "key" | "uploaded" | 
   const link = getSyncLink();
   if (photo[field] || !photo.uploaded || !photo.key || !link) return;
   const id = `${photo.id}:${field}`;
-  if (inflight.has(id)) return;
+  if (inflight.has(id)) return inflight.get(id);
   const key = photo.key;
   const task = (async () => {
     const sealed = await apiBytes("GET", `${photoPath(link.householdId, photo.id)}/${VARIANT[field]}`);
@@ -79,6 +79,7 @@ export function ensurePhotoBytes(photo: Pick<Photo, "id" | "key" | "uploaded" | 
     .catch((error: unknown) => console.warn("[fotos] no se pudo bajar", photo.id, error))
     .finally(() => setTimeout(() => inflight.delete(id), 30_000)); // si falló, se reintenta en un rato
   inflight.set(id, task);
+  return task;
 }
 
 /** Conserva el trabajo hasta que R2 confirme el borrado; debe llamarse dentro de la transacción local. */

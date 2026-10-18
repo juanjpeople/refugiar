@@ -10,6 +10,27 @@ import { isPrivacy, type Privacy } from "@/lib/sync/scope";
 
 export type ProjectStatus = "active" | "done";
 
+export type ProjectKind = "repair" | "electronics" | "restoration" | "garden" | "other";
+export interface ProjectTask { id: string; text: string; done: boolean; responsible?: string; due?: string }
+export interface ProjectNote { id: string; text: string; at: number; author: string; kind: "note" | "idea" | "decision" }
+export interface ProjectExpense { id: string; label: string; cents: number; date: string }
+export interface ProjectMaterial { id: string; itemId: string; name: string; unit: string; quantity: number; used: boolean; costCents?: number; at?: number; reversedAt?: number }
+export interface ProjectContact { id: string; name: string; role: string; details: string }
+export interface ProjectWorkspace {
+  kind?: ProjectKind;
+  startDate?: string;
+  targetDate?: string;
+  maintenanceDate?: string;
+  maintenanceEventId?: string;
+  outcome?: string;
+  lessons?: string;
+  tasks?: ProjectTask[];
+  journal?: ProjectNote[];
+  expenses?: ProjectExpense[];
+  materials?: ProjectMaterial[];
+  contacts?: ProjectContact[];
+}
+
 export interface Project {
   id: string;
   name: string;
@@ -25,6 +46,8 @@ export interface Project {
   createdBy: string;
   createdAt: number;
   updatedAt: number;
+  workspace?: ProjectWorkspace;
+  externalShares?: boolean;
 }
 
 export interface ProjectInput {

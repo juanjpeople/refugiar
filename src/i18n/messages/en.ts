@@ -1,6 +1,7 @@
 import type { Messages } from "./es";
 
 export const en: Messages = {
+
   connections: {"blocked": "Connection blocked. Review permissions in Settings → Data.", "consentTitle": "Connect to the server?", "consentText": "Your home is in local mode. Continuing allows account server access for this session. Your inventory is not uploaded and the mode stays unchanged until you link a home.", "allowSession": "Allow this connection", "stayLocal": "Stay in my local home", "scope": "Local mode blocks external services unless you enable them here. On the web, downloading the app and updates contacts its host. Use the local package or Android to work within your network. Permissions stay on this device, separate from the demo.", "products": "Look up products online", "productsHint": "Sends the barcode to Open Food Facts. The provider also receives your IP. Your inventory is not sent.", "weather": "Look up weather online", "weatherHint": "Requests MET Norway forecasts through the Refugiar server. Only the selected city is sent, not precise coordinates.", "news": "Look up news online", "newsHint": "Requests selected sources through the Refugiar server. Muted words are filtered on this device.", "adminOnly": "A home administrator can change connection permissions.", "node": "Home node", "nodeHint": "Save your server’s private address. Checking requests only its status, without credentials. Opening the node leads to its own home and requires signing in there. This home is not migrated or synced automatically. An untrusted certificate, HTTP or missing network permission may prevent the check.", "checkNode": "Save and check", "openNode": "Open local node", "forgetNode": "Forget node", "nodeState": {"idle": "Not checked.", "checking": "Checking connection…", "ready": "The node responded.", "failed": "Could not check the node. Review the address, certificate and network permissions.", "invalid": "Use a private IP address or localhost, without paths or credentials."}, "myHouse": "My home", "switchHouse": "Switch home", "switchHint": "Your home and the demo store data separately. Switching reloads the app. Saved changes are preserved."},
   brief: {"title": "A glance outside", "refresh": "Refresh overview", "hint": "Saved information. Check its date before using it.", "error": "A source did not respond. Previous data is kept. Try again later.", "city": "Reference city", "cityHint": "Argentina. Choose a nearby city; this is not an exact forecast for your address. We do not use GPS.", "sources": "News sources", "muted": "Words to mute", "mutedHint": "Separate with commas. Hides matching titles. Does not change sources or rewrite news.", "automatic": "Refresh while viewing home", "automaticHint": "Only while visible and with active permissions. With saved data, checks hourly. Failed requests retry after at least 15 minutes. No alerts or background tasks.", "clear": "Clear saved overview", "forecast": "Forecast: {temperature} °C · next 24 h: {min}–{max} °C", "savedAt": "Saved: {date}", "noWeather": "No saved forecast yet.", "noNews": "No saved headlines match your selection.", "end": "That is the overview. Open the sources whenever you want.", "weatherCredit": "Summarized forecast from MET Norway · CC BY 4.0"},
   kitchen: {"duration": "Step time (minutes; 0 = no timer)", "suggest": "Use {seconds} minutes from the text", "notify": "Notify me when new timers finish", "start": "Start {seconds}-second timer", "step": "Step {step}", "done": "Timer finished", "channel": "Kitchen timers", "error": "Could not save the timer or schedule the alert. Check notification permission.", "hint": "Times are approximate. Android battery saving may delay alerts. Timers continue after closing this mode.", "undo": "Undo the entire cooking session"},
@@ -326,7 +327,7 @@ export const en: Messages = {
       tooMany: "There can't be more than {max}.",
       tooManyPhotos: "Up to {max} photos per recipe.",
       notAnImage: "That file isn't a readable image.",
-      imageTooLarge: "The image is too large (25 MB max).",
+      imageTooLarge: "The image is too large (23 MB max).",
       ratingInvalid: "Ratings go from 1 to 5.",
       commentEmpty: "Write something or pick a rating.",
     },
@@ -1504,6 +1505,127 @@ export const en: Messages = {
     deleteConfirm: "Delete this comment?",
   },
   projects: {
+    fileUnavailable: "Could not download. Check your connection and try again.",
+    shareFilesLimit: "Select a few attachments: files up to 80 KB and reduced photos. The complete encrypted snapshot allows 160 KB. Remove attachments if it exceeds the limit.",
+    photo: "Photo",
+    all: "All",
+    actualCost: "Recorded spend",
+    pendingCost: "Remaining estimated cost",
+
+    presets: {
+  "repair": {
+    "step0": "Record measurements and current condition",
+    "step1": "Compare materials and budget",
+    "step2": "Do the work and document checks",
+    "step3": "Keep receipts and review warranty"
+  },
+  "electronics": {
+    "step0": "Define goal and power supply",
+    "step1": "List components and save schematic",
+    "step2": "Assemble and test without external connectivity",
+    "step3": "Save code and results"
+  },
+  "restoration": {
+    "step0": "Record initial condition",
+    "step1": "Prepare and test materials",
+    "step2": "Work in stages and take photos",
+    "step3": "Document finish and maintenance"
+  },
+  "garden": {
+    "step0": "Measure space and needs",
+    "step1": "Compare alternatives and costs",
+    "step2": "Test in a small area",
+    "step3": "Review results and adjust"
+  },
+  "other": {
+    "step0": "Define the intended outcome",
+    "step1": "Prepare tasks and materials",
+    "step2": "Record progress and expenses",
+    "step3": "Evaluate and close the project"
+  }
+},
+    currencyLocked: "This project already has costs. Keep its currency to preserve its history.",
+    unitChanged: "The product unit changed. Add it again using its current unit.",
+    calendar: "Schedule review",
+    calendarTitle: "Review: {name}",
+
+  "limit": "This project has reached its limit. Export a copy before removing content.",
+  "insufficient": "Not enough stock. Check the quantity before using it.",
+  "section": {
+    "tasks": "Tasks",
+    "journal": "Journal",
+    "materials": "Materials",
+    "expenses": "Additional expenses",
+    "contacts": "People"
+  },
+  "kind": {
+    "note": "Note",
+    "idea": "Idea",
+    "decision": "Decision"
+  },
+  "expenseHint": "Record labor and expenses not included in shopping lists or materials to avoid counting them twice.",
+  "materialHint": "Planning does not reserve or reduce stock. Use deducts the full quantity. Enter the total cost of existing materials; leave it blank if already included in a shopping list.",
+  "reversed": "Use reversed",
+  "used": "Used",
+  "planned": "Planned",
+  "reverse": "Return to inventory",
+  "consume": "Use and deduct",
+  "contactName": "Name",
+  "entryText": "Description",
+  "entryKind": "Entry type",
+  "contactRole": "Role or specialty",
+  "responsible": "Person responsible / author",
+  "contactDetails": "Contact details and notes",
+  "date": "Date",
+  "product": "Inventory product",
+  "quantity": "Quantity",
+  "amount": "Total cost ({currency})",
+  "addEntry": "Save entry",
+  "workspace": "Project progress",
+  "details": "Dates and wrap-up",
+  "projectType": "Project type",
+  "type": {
+    "repair": "Repair",
+    "electronics": "Electronics",
+    "restoration": "Restoration",
+    "garden": "Garden",
+    "other": "Other"
+  },
+  "startDate": "Start date",
+  "targetDate": "Target date",
+  "maintenanceDate": "Next review / warranty",
+  "outcome": "Final outcome",
+  "lessons": "Lessons learned",
+  "duplicate": "Duplicate as template",
+  "copyName": "Copy of {name}",
+  "duplicateHint": "Copies tasks and planned materials. Does not copy expenses, usage, files or access.",
+  "documents": "Photos, plans and files",
+  "fileHint": "Up to 12 attachments per project. Files up to 3 MB. Downloaded as files, never executed.",
+  "uploadFile": "Attach file",
+  "fileLimit": "The file exceeds 3 MB or the project already has 12 attachments.",
+  "download": "Download",
+  "demoImage": "Illustrative generated image for a fictional project",
+  "share": "Share",
+  "shareHint": "Publish an encrypted read-only snapshot. Each recipient has a link and expiry. It does not update automatically. Links can be forwarded; revocation cannot erase downloaded copies.",
+  "shareCloud": "To share online, enable cloud and sign in. Local mode does not publish content.",
+  "recipient": "Recipient (to identify access)",
+  "expiry": "Days until expiry",
+  "includeCosts": "Include costs",
+  "includeContacts": "Include contacts",
+  "includeJournal": "Include journal and wrap-up",
+  "publish": "Create private link",
+  "revoke": "Revoke access",
+  "shareLink": "Copy this link and give it to the person. It is shown only now.",
+  "sharedTitle": "Shared project",
+  "openShared": "Open project",
+  "sharedUnavailable": "The link is unavailable. It may have expired or been revoked.",
+  "sharedNotice": "Read-only snapshot. Check its publication date. Only includes attachments selected by the owner.",
+  "shareLimit": "Up to 20 active links per account, 90 days and 160 KB per snapshot.",
+  "shareError": "Could not complete the operation. Check your session, connection and access limit.",
+  "noShares": "No active links.",
+  "deleteShares": "Before deleting, revoke shared links from Share.",
+  "template": "Load suggested tasks",
+
     eyebrow: "Home",
     title: "Projects",
     description: "Home improvements and plans, with their shopping lists and budget.",

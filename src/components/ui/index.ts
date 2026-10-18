@@ -61,3 +61,7 @@ export { QuietSummary } from "./QuietSummary";
 export { ConnectionConsent } from "./ConnectionConsent";
 export { StepTime } from "./StepTime";
 export { KitchenTimers } from "./KitchenTimers";
+
+export { ProjectNotebook } from "./ProjectNotebook";
+
+export { ProjectCover } from "./ProjectCover";

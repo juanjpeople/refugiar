@@ -1,4 +1,6 @@
 "use client";
+import { ProjectCover } from "@/components/ui";
+import { projectExampleCover } from "../example-covers";
 
 import { Button, Card, Flex, Segmented, Tag, Typography, theme } from "antd";
 import { CheckCheck, HardHat, Plus } from "lucide-react";
@@ -15,15 +17,15 @@ import { useProjects, type ProjectSummary } from "../hooks";
 import { ProjectModal } from "./ProjectModal";
 import { projectHref } from "@/lib/navigation/routes";
 
-type Show = "active" | "done";
+type Show = "all" | "active" | "done";
 
 export function ProjectsPage() {
   const { t } = useI18n();
   const router = useRouter();
   const projects = useProjects();
-  const [show, setShow] = useState<Show>("active");
+  const [show, setShow] = useState<Show>("all");
   const [creating, setCreating] = useState(false);
-  const visible = (projects ?? []).filter((summary) => summary.project.status === show);
+  const visible = (projects ?? []).filter((summary) => show === "all" || summary.project.status === show);
   const doneCount = projects?.filter((summary) => summary.project.status === "done").length ?? 0;
 
   const newButton = (
@@ -50,6 +52,7 @@ export function ProjectsPage() {
               value={show}
               onChange={setShow}
               options={[
+                { value: "all", label: t("projects.all") },
                 { value: "active", label: t("projects.filter.active", { count: (projects?.length ?? 0) - doneCount }) },
                 { value: "done", label: t("projects.filter.done", { count: doneCount }) },
               ]}
@@ -74,6 +77,7 @@ function ProjectCard({ summary }: { summary: ProjectSummary }) {
     <Link href={projectHref(project.id)} style={{ display: "block", height: "100%" }}>
       <Card hoverable style={{ height: "100%" }}>
         <Flex vertical gap={14}>
+          {projectExampleCover(project.id,project.name) && <ProjectCover src={projectExampleCover(project.id,project.name)!}/>}
           <Flex align="center" gap={12}>
             <IconTile icon={APPEARANCE_ICONS[project.icon]} color={project.color} size={44} />
             <Flex vertical style={{ minWidth: 0, flex: 1 }}>

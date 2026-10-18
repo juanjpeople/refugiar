@@ -1,3 +1,4 @@
+import previousProjects from "./projects-previous.json" with { type: "json" };
 import type { Transaction } from "dexie";
 import type { InventoryItem } from "@/features/inventory/domain";
 import fixture from "./house.json" with { type: "json" };
@@ -85,4 +86,27 @@ export async function upgradeDemoCooking(tx: Transaction) {
   for (const event of data.tables.events.filter(event => event.id.startsWith("demo-meal-"))) {
     if ("meal" in event && event.meal && await tx.table("recipes").get(event.meal.recipeId) && !await tx.table("events").get(event.id)) await tx.table("events").add(event);
   }
+}
+
+/** Replace only legacy fixture projects in isolated demo databases; real homes never call this. */
+export async function upgradeDemoProjects(tx: Transaction) {
+ const previous = previousProjects;
+ const oldIds = new Set<string>();
+ for (const row of previous.projects) {
+  const current = await tx.table("projects").get(row.id);
+  if (current?.name === row.name) { oldIds.add(row.id); await tx.table("projects").delete(row.id); }
+ }
+ for (const row of previous.lists) {
+  if (!oldIds.has(row.projectId)) continue;
+  const current = await tx.table("shoppingLists").get(row.id);
+  if (current?.name === row.name) {
+   await tx.table("shoppingList").where("listId").equals(row.id).delete();
+   await tx.table("shoppingLists").delete(row.id);
+  } else if (current) await tx.table("shoppingLists").update(row.id, { projectId: undefined });
+ }
+ const data=demoData().tables;
+ const projectIds=new Set(data.projects.map(row=>row.id));
+ for (const [name,rows] of [["inventory",data.inventory.slice(95)],["projects",data.projects],["shoppingLists",data.shoppingLists.filter(row=>"projectId" in row&&projectIds.has(row.projectId ?? ""))],["shoppingList",data.shoppingList.filter(row=>data.shoppingLists.some(list=>"projectId" in list&&projectIds.has(list.projectId ?? "")&&list.id===row.listId))],["photos",data.photos.filter(row=>row.ownerType==="project")]] as const) {
+  for(const row of decodeDemoRows(rows)) if(!await tx.table(name).get(row.id))await tx.table(name).add(row);
+ }
 }

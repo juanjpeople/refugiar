@@ -6,6 +6,7 @@
  * - Plurales: un objeto `{ one, other }` se elige con `Intl.PluralRules` según `count`.
  */
 export const es = {
+
   connections: {"blocked": "Conexión bloqueada. Revisá los permisos en Ajustes → Datos.", "consentTitle": "¿Querés conectarte al servidor?", "consentText": "Tu casa está en modo local. Continuar permite acceder al servidor de cuentas durante esta sesión. No sube tu inventario ni cambia de modo hasta que elijas vincular una casa.", "allowSession": "Permitir esta conexión", "stayLocal": "Seguir en mi casa local", "scope": "Modo local: los servicios externos quedan bloqueados salvo los permisos que actives acá. En la web, descargar la app y sus actualizaciones requiere contactar su alojamiento. Para funcionar dentro de tu red usá el paquete local o Android. Los permisos se guardan en este dispositivo, separados de la demo.", "products": "Consultar productos en Internet", "productsHint": "Permite enviar el código de barras a Open Food Facts. El proveedor también recibe tu IP. No envía tu inventario.", "weather": "Consultar clima en Internet", "weatherHint": "Permite consultar MET Norway mediante el servidor de Refugiar. Solo se envía la ciudad elegida, sin ubicación precisa.", "news": "Consultar noticias en Internet", "newsHint": "Permite consultar las fuentes elegidas mediante el servidor de Refugiar. Las palabras silenciadas se filtran en este dispositivo.", "adminOnly": "Un administrador de la casa puede cambiar los permisos de conexión.", "node": "Nodo de tu casa", "nodeHint": "Guardá la dirección privada de tu servidor. Comprobar solo consulta su estado; no envía credenciales. Abrir nodo lleva a su propia casa y requiere iniciar sesión allí. No migra ni sincroniza automáticamente esta casa. Un certificado no confiable, HTTP o falta de permiso de red puede impedir la comprobación.", "checkNode": "Guardar y comprobar", "openNode": "Abrir nodo local", "forgetNode": "Olvidar nodo", "nodeState": {"idle": "Sin comprobar.", "checking": "Comprobando conexión…", "ready": "El nodo respondió.", "failed": "No pudimos comprobar el nodo. Revisá dirección, certificado y permisos de red.", "invalid": "Usá una dirección IP privada o localhost, sin rutas ni credenciales."}, "myHouse": "Mi casa", "switchHouse": "Cambiar de casa", "switchHint": "Tu casa y la demo guardan sus datos por separado. El cambio recarga la app. Los cambios ya guardados se conservan."},
   brief: {"title": "Un vistazo afuera", "refresh": "Actualizar resumen", "hint": "Información guardada. Revisá la fecha antes de usarla.", "error": "Alguna fuente no respondió. Conservamos los datos anteriores. Podés volver a intentar más tarde.", "city": "Ciudad de referencia", "cityHint": "Argentina. Elegí una ciudad cercana; no representa el pronóstico exacto de tu domicilio. No usamos GPS.", "sources": "Fuentes de noticias", "muted": "Palabras que querés silenciar", "mutedHint": "Separalas con comas. Oculta títulos que las contienen. No cambia las fuentes ni reescribe noticias.", "automatic": "Actualizar mientras miro el inicio", "automaticHint": "Solo con la app visible y permisos activos. Con datos guardados, consulta cada hora. Si falla, reintenta a partir de los 15 minutos. Sin avisos ni tareas en segundo plano.", "clear": "Borrar el resumen guardado", "forecast": "Pronóstico: {temperature} °C · próximas 24 h: {min}–{max} °C", "savedAt": "Guardado: {date}", "noWeather": "Todavía no hay un pronóstico guardado.", "noNews": "No hay titulares guardados que coincidan con tu selección.", "end": "Hasta acá el resumen. Podés abrir las fuentes cuando quieras.", "weatherCredit": "Pronóstico resumido de MET Norway · CC BY 4.0"},
   kitchen: {"duration": "Tiempo del paso (minutos; 0 = sin tiempo)", "suggest": "Usar {seconds} minutos del texto", "notify": "Avisarme al terminar los próximos temporizadores", "start": "Iniciar temporizador de {seconds} segundos", "step": "Paso {step}", "done": "Terminó el temporizador", "channel": "Temporizadores de cocina", "error": "No se pudo guardar el temporizador o programar el aviso. Revisá el permiso de notificaciones.", "hint": "Los tiempos son orientativos. Android puede demorar el aviso al ahorrar batería. Los temporizadores siguen al cerrar este modo.", "undo": "Deshacer la cocinada completa"},
@@ -331,7 +332,7 @@ export const es = {
       tooMany: "No puede haber más de {max}.",
       tooManyPhotos: "Hasta {max} fotos por receta.",
       notAnImage: "Ese archivo no es una imagen que se pueda leer.",
-      imageTooLarge: "La imagen es demasiado grande (máximo 25 MB).",
+      imageTooLarge: "La imagen es demasiado grande (máximo 23 MB).",
       ratingInvalid: "El puntaje va de 1 a 5.",
       commentEmpty: "Escribí algo o elegí un puntaje.",
     },
@@ -1509,6 +1510,127 @@ export const es = {
     deleteConfirm: "¿Eliminar este comentario?",
   },
   projects: {
+    fileUnavailable: "No se pudo descargar. Revisá la conexión y volvé a intentar.",
+    shareFilesLimit: "Seleccioná pocos adjuntos: archivos de hasta 80 KB y fotos reducidas. La copia completa admite 160 KB cifrados. Si supera el límite, quitá adjuntos.",
+    photo: "Foto",
+    all: "Todos",
+    actualCost: "Gasto registrado",
+    pendingCost: "Costo previsto pendiente",
+
+    presets: {
+  "repair": {
+    "step0": "Relevar medidas y estado actual",
+    "step1": "Comparar materiales y presupuesto",
+    "step2": "Realizar el trabajo y documentar pruebas",
+    "step3": "Guardar comprobantes y revisar garantía"
+  },
+  "electronics": {
+    "step0": "Definir objetivo y alimentación",
+    "step1": "Listar componentes y guardar esquema",
+    "step2": "Montar y probar sin conexión externa",
+    "step3": "Guardar código y resultados"
+  },
+  "restoration": {
+    "step0": "Registrar el estado inicial",
+    "step1": "Preparar y probar materiales",
+    "step2": "Trabajar por etapas y sacar fotos",
+    "step3": "Documentar acabado y mantenimiento"
+  },
+  "garden": {
+    "step0": "Medir espacio y necesidades",
+    "step1": "Comparar alternativas y costos",
+    "step2": "Probar en una zona pequeña",
+    "step3": "Revisar resultados y ajustar"
+  },
+  "other": {
+    "step0": "Definir el resultado esperado",
+    "step1": "Preparar tareas y materiales",
+    "step2": "Registrar avances y gastos",
+    "step3": "Evaluar y cerrar el proyecto"
+  }
+},
+    currencyLocked: "El proyecto ya tiene costos. Conservá la moneda para no alterar su historia.",
+    unitChanged: "Cambió la unidad del producto. Agregalo otra vez con la unidad actual.",
+    calendar: "Agendar revisión",
+    calendarTitle: "Revisar: {name}",
+
+  "limit": "Llegaste al límite de este proyecto. Exportá una copia antes de quitar contenido.",
+  "insufficient": "No alcanza el stock. Revisá la cantidad antes de consumir.",
+  "section": {
+    "tasks": "Tareas",
+    "journal": "Bitácora",
+    "materials": "Materiales",
+    "expenses": "Gastos adicionales",
+    "contacts": "Personas"
+  },
+  "kind": {
+    "note": "Nota",
+    "idea": "Idea",
+    "decision": "Decisión"
+  },
+  "expenseHint": "Anotá mano de obra y otros gastos que no estén en las listas de compras ni en materiales. Así no los contás dos veces.",
+  "materialHint": "Planificar no reserva ni descuenta stock. Usar descuenta la cantidad completa. Anotá el costo total de materiales que ya tenías; dejalo vacío si figura en una lista de compras.",
+  "reversed": "Uso revertido",
+  "used": "Utilizado",
+  "planned": "Previsto",
+  "reverse": "Devolver al inventario",
+  "consume": "Usar y descontar",
+  "contactName": "Nombre",
+  "entryText": "Descripción",
+  "entryKind": "Tipo de entrada",
+  "contactRole": "Rol o especialidad",
+  "responsible": "Persona responsable / autoría",
+  "contactDetails": "Contacto y notas",
+  "date": "Fecha",
+  "product": "Producto del inventario",
+  "quantity": "Cantidad",
+  "amount": "Costo total ({currency})",
+  "addEntry": "Guardar entrada",
+  "workspace": "Avance del proyecto",
+  "details": "Fechas y cierre",
+  "projectType": "Tipo de proyecto",
+  "type": {
+    "repair": "Reparación",
+    "electronics": "Electrónica",
+    "restoration": "Restauración",
+    "garden": "Jardín y huerta",
+    "other": "Otro"
+  },
+  "startDate": "Fecha de inicio",
+  "targetDate": "Fecha prevista",
+  "maintenanceDate": "Próxima revisión / garantía",
+  "outcome": "Resultado final",
+  "lessons": "Qué haríamos distinto",
+  "duplicate": "Duplicar como plantilla",
+  "copyName": "Copia de {name}",
+  "duplicateHint": "Copia tareas y materiales previstos. No copia gastos, consumos, archivos ni accesos.",
+  "documents": "Fotos, planos y archivos",
+  "fileHint": "Hasta 12 adjuntos por proyecto. Archivos de hasta 3 MB. Se descargan como archivo; no se ejecutan.",
+  "uploadFile": "Adjuntar archivo",
+  "fileLimit": "El archivo supera 3 MB o el proyecto ya tiene 12 adjuntos.",
+  "download": "Descargar",
+  "demoImage": "Imagen ilustrativa generada para un proyecto ficticio",
+  "share": "Compartir",
+  "shareHint": "Publicás una copia cifrada de solo lectura. Cada destinatario tiene su enlace y vencimiento. No se actualiza sola. El enlace puede reenviarse; revocarlo no borra copias descargadas.",
+  "shareCloud": "Para compartir por Internet, activá la nube e iniciá sesión. En modo local no se publica contenido.",
+  "recipient": "Destinatario (para identificar el acceso)",
+  "expiry": "Vigencia en días",
+  "includeCosts": "Incluir costos",
+  "includeContacts": "Incluir contactos",
+  "includeJournal": "Incluir bitácora y cierre",
+  "publish": "Crear enlace privado",
+  "revoke": "Revocar acceso",
+  "shareLink": "Copiá este enlace y entregalo a la persona. Solo se muestra ahora.",
+  "sharedTitle": "Proyecto compartido",
+  "openShared": "Abrir proyecto",
+  "sharedUnavailable": "El enlace no está disponible. Puede haber vencido o sido revocado.",
+  "sharedNotice": "Copia de solo lectura. Revisá la fecha de publicación. Solo incluye los adjuntos elegidos por quien comparte.",
+  "shareLimit": "Hasta 20 accesos activos por cuenta, 90 días y 160 KB por copia.",
+  "shareError": "No se pudo completar la operación. Revisá tu sesión, conexión y el límite de accesos.",
+  "noShares": "No hay accesos activos.",
+  "deleteShares": "Antes de borrar, revocá los enlaces compartidos desde Compartir.",
+  "template": "Cargar tareas sugeridas",
+
     eyebrow: "Casa",
     title: "Proyectos",
     description: "Obras y planes de la casa, con sus listas de compras y su presupuesto.",

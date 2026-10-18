@@ -3,6 +3,7 @@ package ar.refugi.app;
 import android.app.Activity;
 import android.content.Intent;
 import android.net.Uri;
+import android.util.Base64;
 import androidx.activity.result.ActivityResult;
 import com.getcapacitor.JSObject;
 import com.getcapacitor.Plugin;
@@ -42,6 +43,31 @@ public class BackupPlugin extends Plugin {
         }
     }
 
+    @PluginMethod
+    public void saveFile(PluginCall call) {
+        String filename = call.getString("filename");
+        String data = call.getString("base64");
+        if (filename == null || !filename.matches("[\\p{L}\\p{N} ._()-]{1,200}") || data == null || data.length() > 4 * 1024 * 1024) {
+            call.reject("Invalid document");
+            return;
+        }
+        if (pending) {
+            call.reject("A document is already being saved");
+            return;
+        }
+        pending = true;
+        Intent intent = new Intent(Intent.ACTION_CREATE_DOCUMENT);
+        intent.addCategory(Intent.CATEGORY_OPENABLE);
+        intent.setType("application/octet-stream");
+        intent.putExtra(Intent.EXTRA_TITLE, filename);
+        try {
+            startActivityForResult(call, intent, "destinationSelected");
+        } catch (RuntimeException error) {
+            pending = false;
+            call.reject("Could not open the document picker");
+        }
+    }
+
     @ActivityCallback
     private void destinationSelected(PluginCall call, ActivityResult result) {
         if (call == null) {
@@ -62,10 +88,12 @@ public class BackupPlugin extends Plugin {
         getBridge().execute(() -> {
             try {
                 String data = call.getString("data");
-                if (data == null) throw new IllegalStateException("Missing backup");
+                String encoded = call.getString("base64");
+                if (data == null && encoded == null) throw new IllegalStateException("Missing document");
+                byte[] bytes = encoded != null ? Base64.decode(encoded, Base64.DEFAULT) : data.getBytes(StandardCharsets.UTF_8);
                 try (OutputStream stream = getContext().getContentResolver().openOutputStream(uri, "w")) {
                     if (stream == null) throw new IllegalStateException("Missing output stream");
-                    stream.write(data.getBytes(StandardCharsets.UTF_8));
+                    stream.write(bytes);
                 }
                 call.resolve(new JSObject().put("saved", true));
             } catch (Exception error) {

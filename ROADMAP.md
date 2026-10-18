@@ -139,3 +139,10 @@ Cada página dice qué hace hoy, cómo se usa y qué límites tiene. No describe
 - 🔨 Ahora tiene cinco cosas como máximo.
 - El PR que termina algo lo mueve a ✅ y actualiza la página de esa funcionalidad.
 - Arquitectura y especificaciones viven en [PLAN.md](PLAN.md); el camino a producción, en [PLAN_PRODUCCION.md](docs/PLAN_PRODUCCION.md).
+
+
+## ✅ Hecho — Proyectos como bitácora de la casa
+
+Tareas, progreso, personas, fechas, ideas y decisiones; materiales previstos/usados con consumo explícito y devolución; gastos adicionales y cierre con aprendizajes. Fotos, planos/archivos y revisión en calendario. Plantillas por tipo y duplicación sin copiar movimientos. Compartir copias cifradas de solo lectura mediante enlaces individuales revocables y con vencimiento, sin cuenta para quien recibe. Nueva demo con cuatro proyectos y ocho retratos ilustrativos. Detalles y límites: [Proyectos](docs/features/proyectos.md).
+
+Pendiente: reserva real de stock, conciliación automática de compras y consumos, edición concurrente por entrada y compartir adjuntos grandes sin exponer el almacén privado.

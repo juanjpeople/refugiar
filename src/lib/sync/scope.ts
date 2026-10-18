@@ -42,7 +42,7 @@ export function canSee(viewer: Viewer | null | undefined, record: { privacy?: un
 }
 
 /** Dueños de comentarios y fotos (`ownerType`) → su tabla. */
-const COMMENT_OWNERS: Record<string, SyncTable> = { recipe: "recipes", container: "containers" };
+const COMMENT_OWNERS: Record<string, SyncTable> = { recipe: "recipes", container: "containers", project: "projects" };
 const ACTIVITY_OWNERS: Partial<Record<string, SyncTable>> = { lists: "shoppingLists", projects: "projects", recipes: "recipes", calendar: "events" };
 
 /** De quién hereda el nivel una fila, si hereda. */
