@@ -19,6 +19,9 @@ Android cierra menús o diálogos antes de volver en el historial. En la raíz p
 la app al fondo. Capacitor administra los márgenes del sistema; la web usa áreas
 seguras, sin agregar otro margen nativo.
 
+Los estilos de navegación con iconos oscuros se aplican desde API 27. API 24–26
+conserva fondo oscuro e iconos claros; no se eleva la versión mínima ni se omite lint.
+
 Pendiente de revisión del dueño en teléfono: teclado, Atrás en diálogos y cámara,
 texto grande, rotación y navegación por gestos o tres botones. Reinstalar el APK
 para recibir esta interfaz.
