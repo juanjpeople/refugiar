@@ -8,6 +8,8 @@ const ALLOWED = {
   "src/features/calendar/components/CalendarPage.tsx": { localeTernary: 1 },
   // themeColor del navegador: metadata, se resuelve antes de que exista el tema.
   "src/app/layout.tsx": { color: 2 },
+  // Sincronización dinámica de theme-color para barras del sistema en modo oscuro y claro.
+  "src/components/providers/ThemeProvider.tsx": { color: 2 },
   // Etiqueta impresa: blanco y negro puros, para que el QR se lea en cualquier impresora.
   "src/features/storage/components/ContainerLabel.tsx": { color: 2 },
   // Ícono PNG generado (ImageResponse): no hay tema en el servidor.

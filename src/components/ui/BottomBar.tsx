@@ -114,17 +114,54 @@ export function BottomBar({ items, activeId, action, position = "fixed", layoutI
               fontWeight: active ? 600 : 400,
             }}
           >
-            {active && (
-              <motion.span
-                layoutId={layoutId}
-                transition={SPRING.snappy}
-                style={{ position: "absolute", top: 6, width: "80%", height: token.controlHeightSM, borderRadius: token.borderRadiusLG, background: token.colorPrimaryBg }}
-              />
-            )}
-            <span style={{ position: "relative", display: "inline-flex", fontSize: token.fontSizeXL, paddingTop: 4 }}>
-              <Icon />
-            </span>
-            <span style={{ position: "relative", fontSize: token.fontSizeSM, lineHeight: 1.2, maxWidth: "100%", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+            <div
+              style={{
+                position: "relative",
+                display: "inline-flex",
+                alignItems: "center",
+                justifyContent: "center",
+                width: 52,
+                height: 30,
+                borderRadius: 15,
+              }}
+            >
+              {active && (
+                <motion.span
+                  layoutId={layoutId}
+                  transition={SPRING.snappy}
+                  style={{
+                    position: "absolute",
+                    inset: 0,
+                    borderRadius: 15,
+                    background: token.colorPrimaryBg,
+                  }}
+                />
+              )}
+              <span
+                style={{
+                  position: "relative",
+                  zIndex: 1,
+                  display: "inline-flex",
+                  fontSize: token.fontSizeXL,
+                  color: active ? token.colorPrimary : token.colorTextSecondary,
+                }}
+              >
+                <Icon />
+              </span>
+            </div>
+            <span
+              style={{
+                position: "relative",
+                fontSize: token.fontSizeSM,
+                lineHeight: 1.2,
+                maxWidth: "100%",
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+                whiteSpace: "nowrap",
+                color: active ? token.colorPrimary : token.colorTextSecondary,
+                fontWeight: active ? 600 : 400,
+              }}
+            >
               {item.label}
             </span>
           </MotionLink>
