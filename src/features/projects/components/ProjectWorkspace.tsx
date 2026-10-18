@@ -1,4 +1,5 @@
 "use client";
+import { downloadBlob } from "@/lib/download";
 import { ensurePhotoBytes } from "@/lib/sync/photos";
 import {
   App,
@@ -264,31 +265,28 @@ function ProjectFile({
   const t = useT();
   const [loading, setLoading] = useState(false);
   const { message } = App.useApp();
-  const url = useObjectUrl(file.blob, `project-file:${file.id}`);
+
   return (
     <Flex justify="space-between" wrap>
       <Typography.Text>{file.fileName}</Typography.Text>
-      {url ? (
-        <a href={url} download={file.fileName}>
-          {t("projects.download")}
-        </a>
-      ) : (
-        <Button
-          loading={loading}
-          onClick={async () => {
-            setLoading(true);
-            try {
-              await ensurePhotoBytes(file, "blob");
-              if (!(await db.photos.get(file.id))?.blob)
-                message.error(t("projects.fileUnavailable"));
-            } finally {
-              setLoading(false);
-            }
-          }}
-        >
-          {t("projects.download")}
-        </Button>
-      )}
+      <Button
+        loading={loading}
+        onClick={async () => {
+          setLoading(true);
+          try {
+            await ensurePhotoBytes(file, "blob");
+            const blob = (await db.photos.get(file.id))?.blob;
+            if (!blob) throw new Error("unavailable");
+            await downloadBlob(blob, file.fileName ?? "document");
+          } catch {
+            message.error(t("projects.fileUnavailable"));
+          } finally {
+            setLoading(false);
+          }
+        }}
+      >
+        {t("projects.download")}
+      </Button>
       {editable && (
         <Button danger disabled={busy} onClick={() => void remove()}>
           {t("common.delete")}

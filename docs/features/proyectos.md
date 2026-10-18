@@ -15,7 +15,7 @@ Los proyectos conservan listas de compras y presupuesto. Ahora incluyen tareas c
 
 ### Documentación y mantenimiento
 
-Hasta 12 adjuntos por proyecto, contando fotos y archivos. Las fotos se comprimen como las del resto de la casa. Los archivos permiten hasta 3 MiB, se descargan con MIME binario y no se ejecutan en la página. Reutilizan el transporte cifrado y la cuota de almacenamiento de la casa. No hay almacenamiento ilimitado ni servicios pagos nuevos.
+Hasta 12 adjuntos por proyecto, contando fotos y archivos. Las fotos se comprimen como las del resto de la casa. Los archivos permiten hasta 3 MiB, se descargan con MIME binario y no se ejecutan en la página. Android usa el selector de destino del sistema, sin permisos generales de almacenamiento. Reutilizan el transporte cifrado y la cuota de almacenamiento de la casa. No hay almacenamiento ilimitado ni servicios pagos nuevos.
 
 La fecha de próxima revisión puede agregarse al calendario mediante una acción explícita. No activa notificaciones automáticamente; se usan las preferencias existentes. El resultado y las lecciones quedan en el cierre del proyecto.
 

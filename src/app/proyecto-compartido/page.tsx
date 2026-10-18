@@ -1,7 +1,7 @@
 "use client";
 import { fromB64u } from "@/lib/crypto";
-import { useObjectUrl } from "@/features/media/hooks";
-import { Button, Card, Flex, Typography, theme } from "antd";
+import { downloadBlob } from "@/lib/download";
+import { App, Button, Card, Flex, Typography, theme } from "antd";
 import { useEffect, useMemo, useState } from "react";
 import { ProjectNotebook } from "@/components/ui";
 import { Reveal } from "@/components/motion";
@@ -109,10 +109,24 @@ function SharedFile({ file }: { file: { name: string; data: string } }) {
     () => new Blob([fromB64u(file.data)], { type: "application/octet-stream" }),
     [file.data],
   );
-  const url = useObjectUrl(blob, `shared:${file.data}`);
-  return url ? (
-    <a href={url} download={file.name}>
+  const { message } = App.useApp();
+  const t = useI18n().t;
+  const [busy, setBusy] = useState(false);
+  return (
+    <Button
+      loading={busy}
+      onClick={async () => {
+        setBusy(true);
+        try {
+          await downloadBlob(blob, file.name);
+        } catch {
+          message.error(t("projects.fileUnavailable"));
+        } finally {
+          setBusy(false);
+        }
+      }}
+    >
       {file.name}
-    </a>
-  ) : null;
+    </Button>
+  );
 }

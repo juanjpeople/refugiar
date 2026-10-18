@@ -538,3 +538,5 @@ Correcciones posteriores a #89: PageHeader permite conservar información esenci
 - Revisión visual final del dueño pendiente; no se ejecutan navegadores locales desde el agente.
 
 - ✅ Proyectos: `ProjectNotebook`, `ProjectCover` y retratos ilustrativos en `MemberAvatar`, demostrados en `/design`. Bitácora, materiales, tareas y gastos comparten la misma pieza entre app y referencia.
+
+- ✅ La barra móvil conserva su estado durante un toque completo. El desenfoque de un campo no vuelve a cubrir o desplazar el botón de envío entre presionar y soltar.
