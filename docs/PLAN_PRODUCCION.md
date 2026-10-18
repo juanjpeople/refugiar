@@ -5,7 +5,7 @@
 > recuperación y familia local; ESP se evalúa como intermediario cifrado, no solo
 > como sensor. Los detalles de la implementación cloud existente siguen como referencia.
 
-> Estado: ✅ Etapa 0 · ✅ Etapa 1 · 🔄 Etapa 2 (✅ landing + bienvenida · ✅ hito 1: cuentas, casas e invitaciones cifradas · ✅ hito 2: sincronización cifrada y privacidad · ✅ hito 3a: recuperación con el kit, contraseña, dispositivos y rotación de claves · 🔄 MVP: beta por invitación con licencias, fotos cifradas y prueba con la familia; después el 3b). Repo: https://github.com/juanjpeople/opendomus · App: https://refugi.ar
+> Estado: ✅ Etapa 0 · ✅ Etapa 1 · 🔄 Etapa 2 (✅ landing + bienvenida · ✅ hito 1: cuentas, casas e invitaciones cifradas · ✅ hito 2: sincronización cifrada y privacidad · ✅ hito 3a: recuperación con el kit, contraseña, dispositivos y rotación de claves · 🔄 MVP: beta por invitación con licencias, fotos cifradas y prueba con la familia; después el 3b). Repo: https://github.com/juanjpeople/refugiar · App: https://refugi.ar
 > Mantener este archivo al día al cerrar cada paso.
 
 ## Próximas entregas y evidencia necesaria
@@ -148,11 +148,11 @@ Objetivo: dejar `feat/fase-1` compilando, probada y mergeada a `main`.
    - mover un ítem a otra lista;
    - archivar la lista;
    - todo en escritorio, celular y modo oscuro, en es y en.
-   - Después: actualizar `PLAN.md`, commit, merge a `main`.
+   - Después: actualizar `docs/ai-context/PLAN.md`, commit, merge a `main`.
 
 ## ✅ Etapa 1: profesionalizar la base
 
-1. ✅ **GitHub**: repo público `juanjpeople/opendomus`, CI en verde en cada push.
+1. ✅ **GitHub**: repo público `juanjpeople/refugiar`, CI en verde en cada push.
 2. ✅ **Licencia** GNU AGPL v3 o posterior, `CONTRIBUTING.md` y plantillas de issues y PRs.
 3. ✅ **CI** (GitHub Actions): typecheck, lint, tests unitarios, build y Playwright de punta a punta en cada PR. Los scripts de prueba que hoy están en el scratchpad pasan a `e2e/` en el repo.
 4. **Tests de integración de los servicios** con `fake-indexeddb`: compras + inventario + recetas en transacciones reales.
@@ -246,7 +246,7 @@ El diseño de comandos, dominio en servidor y SSE que sigue **no es el protocolo
 ## Etapa 7: listo para producción
 
 - **Seguridad**:
-  - cifrado local de IndexedDB (ya diseñado en `PLAN.md`);
+  - cifrado local de IndexedDB (ya diseñado en `docs/ai-context/PLAN.md`);
   - límite de pedidos (rate limiting);
   - revisión de permisos del lado del servidor;
   - política de seguridad de contenido (CSP);

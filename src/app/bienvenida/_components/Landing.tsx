@@ -70,7 +70,7 @@ function ProjectIntroduction() {
             <Typography.Title level={3} style={{ marginTop: 0 }}>{t("landing.introduction.whoTitle")}</Typography.Title>
             <Typography.Paragraph type="secondary">{t("landing.introduction.who")}</Typography.Paragraph>
             <Typography.Paragraph type="secondary">{t("landing.introduction.invitation")}</Typography.Paragraph>
-            <Button href="https://github.com/juanjpeople/opendomus" target="_blank" rel="noopener noreferrer" icon={<ExternalLink />} iconPlacement="end">{t("landing.introduction.repository")}</Button>
+            <Button href="https://github.com/juanjpeople/refugiar" target="_blank" rel="noopener noreferrer" icon={<ExternalLink />} iconPlacement="end">{t("landing.introduction.repository")}</Button>
           </Reveal></Col>
         </Row>
       </Container>

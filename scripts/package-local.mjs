@@ -20,7 +20,7 @@ copyFileSync(join(root, "deploy", "Caddyfile"), join(staging, "Caddyfile"));
 writeManifest(staging, files);
 writeFileSync(join(staging, "package.json"), JSON.stringify({
   name: "refugiar-local", version: build.version, private: true, license: "AGPL-3.0-or-later",
-  description: "Distribución estática local. Fuente: https://github.com/juanjpeople/opendomus",
+  description: "Distribución estática local. Fuente: https://github.com/juanjpeople/refugiar",
   files: ["public", "INSTALL.md", "LICENSE", "Caddyfile", "files.sha256"],
 }, null, 2));
 // npm pack no publica: produce un .tgz local, sin hooks ni red. Cada salida vive en su directorio único.

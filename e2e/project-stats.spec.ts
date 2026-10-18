@@ -12,7 +12,7 @@ test("estadísticas públicas sin consultar trackers ni servicios de GitHub desd
     await expect(region.getByText(label, { exact: true })).toBeVisible();
   }
   await expect(region.getByText("Esta sección no mide tu actividad dentro de la app.", { exact: false })).toBeVisible();
-  await expect(region.getByRole("link", { name: "Ver la fuente en GitHub" })).toHaveAttribute("href", "https://github.com/juanjpeople/opendomus");
+  await expect(region.getByRole("link", { name: "Ver la fuente en GitHub" })).toHaveAttribute("href", "https://github.com/juanjpeople/refugiar");
   await expect(region.getByText(/Consultado el/)).toBeVisible();
   expect(external).toEqual([]);
   await region.screenshot({ path: testInfo.outputPath("project-stats.png") });

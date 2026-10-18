@@ -1,4 +1,4 @@
-export const METRICS_REPOSITORY = "juanjpeople/opendomus";
+export const METRICS_REPOSITORY = "juanjpeople/refugiar";
 
 function count(value) {
   if (!Number.isSafeInteger(value) || value < 0) throw new Error("GitHub devolvió un contador inválido.");

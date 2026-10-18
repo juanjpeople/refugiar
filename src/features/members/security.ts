@@ -4,7 +4,7 @@
  * Modelo de amenaza, dicho con claridad: el PIN y la biometría impiden que otra persona use
  * un perfil en este dispositivo (chicos, visitas, alguien que agarra la tablet). NO protegen
  * los datos ante quien tenga acceso técnico al equipo (DevTools): para eso hace falta cifrar
- * los datos con una clave derivada del PIN/biometría (próximo paso, ver PLAN.md).
+ * los datos con una clave derivada del PIN/biometría (próximo paso, ver docs/ai-context/PLAN.md).
  */
 import { BRAND } from "@/config/brand";
 import { deviceLabel } from "@/lib/device";
