@@ -36,7 +36,7 @@ esa configuración remota ni se asegura un ahorro monetario sin revisar su uso.
 
 ## Desarrollo y build
 
-Desde una copia del [repositorio público](https://github.com/juanjpeople/opendomus),
+Desde una copia del [repositorio público](https://github.com/juanjpeople/refugiar),
 con Node.js 24 y npm:
 
 ```sh

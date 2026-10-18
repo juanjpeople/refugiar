@@ -7,7 +7,7 @@ proteger a todas las familias antes de que un problema se haga público.
 
 No abras un issue público con detalles explotables, datos reales, credenciales ni capturas
 privadas. Usá el formulario privado de
-[GitHub Security Advisories](https://github.com/juanjpeople/opendomus/security/advisories/new).
+[GitHub Security Advisories](https://github.com/juanjpeople/refugiar/security/advisories/new).
 
 Incluí, cuando sea posible:
 

@@ -20,7 +20,7 @@ IPs, cookies ni eventos del navegador. Usa la autenticación local de GitHub CLI
 no guarda tokens en archivos del proyecto ni los pasa como argumentos.
 
 El repositorio y el host están fijados explícitamente en el código:
-`juanjpeople/opendomus`, en `github.com`. Una distribución derivada que quiera mostrar
+`juanjpeople/refugiar`, en `github.com`. Una distribución derivada que quiera mostrar
 sus propias cifras debe cambiar esa configuración y revisar el resultado.
 
 ## Estadísticas públicas

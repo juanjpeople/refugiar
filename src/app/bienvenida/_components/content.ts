@@ -95,10 +95,10 @@ export const TRANSPARENCY_STAGES: { key: TransparencyStageKey; icon: LucideIcon 
 export type TrustProofKey = keyof Messages["landing"]["transparency"]["proofs"];
 
 export const TRUST_PROOFS: { key: TrustProofKey; icon: LucideIcon; href?: string }[] = [
-  { key: "source", icon: Code2, href: "https://github.com/juanjpeople/opendomus" },
-  { key: "checks", icon: ShieldCheck, href: "https://github.com/juanjpeople/opendomus/actions" },
+  { key: "source", icon: Code2, href: "https://github.com/juanjpeople/refugiar" },
+  { key: "checks", icon: ShieldCheck, href: "https://github.com/juanjpeople/refugiar/actions" },
   { key: "exit", icon: Download },
-  { key: "report", icon: Bug, href: "https://github.com/juanjpeople/opendomus/security" },
+  { key: "report", icon: Bug, href: "https://github.com/juanjpeople/refugiar/security" },
 ];
 
 export type GuidelineKey = keyof Messages["landing"]["guidelines"]["items"];

@@ -14,7 +14,7 @@ for (const colorScheme of ["light", "dark"] as const) {
       const stats = page.locator('section[aria-labelledby="project-stats-title"]');
       await stats.scrollIntoViewIfNeeded();
       await expect(stats.getByRole("heading", { level: 2 })).toBeVisible();
-      await expect(stats.getByRole("link")).toHaveAttribute("href", "https://github.com/juanjpeople/opendomus");
+      await expect(stats.getByRole("link")).toHaveAttribute("href", "https://github.com/juanjpeople/refugiar");
       expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(320);
       await stats.screenshot({ path: testInfo.outputPath(`${language}-${colorScheme}-cifras.png`), animations: "disabled", style: "header { visibility: hidden !important; }" });
     }

@@ -34,7 +34,7 @@ export function ProjectStats() {
           <Typography.Text type="secondary">
             {t("projectStats.updated", { date: format.date(new Date(stats.updatedAt), { year: "numeric", month: "long", day: "numeric", timeZone: "UTC" }) })}
           </Typography.Text>
-          <Typography.Link href="https://github.com/juanjpeople/opendomus" target="_blank" rel="noopener noreferrer">{t("projectStats.source")}</Typography.Link>
+          <Typography.Link href="https://github.com/juanjpeople/refugiar" target="_blank" rel="noopener noreferrer">{t("projectStats.source")}</Typography.Link>
         </Flex></Reveal>
       </div>
     </section>

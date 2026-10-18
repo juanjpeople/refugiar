@@ -36,7 +36,7 @@ test("la primera vez arranca por la landing y la bienvenida; después, directo a
 
   await expect(page.getByRole("heading", { name: "Tus datos hacen este recorrido. Ninguno más." })).toBeAttached();
   await expect(page.getByText("Los controles automáticos reducen riesgos")).toBeAttached();
-  await expect(page.getByRole("link", { name: "Cómo reportar" })).toHaveAttribute("href", "https://github.com/juanjpeople/opendomus/security");
+  await expect(page.getByRole("link", { name: "Cómo reportar" })).toHaveAttribute("href", "https://github.com/juanjpeople/refugiar/security");
 
   await page.getByRole("link", { name: "Empezar" }).first().click();
   await expect(page).toHaveURL(/empezar/);
