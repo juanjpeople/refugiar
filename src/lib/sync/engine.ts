@@ -108,7 +108,10 @@ async function inheritorKeys(table: SyncTable, id: string): Promise<string[]> {
       ]);
       return [...comments.map((key) => recordKey("comments", key)), ...photos.map((key) => recordKey("photos", key)), ...(await activity())];
     }
-    case "projects":
+    case "projects": {
+      const photos = await db.photos.where("[ownerType+ownerId]").equals(["project", id]).primaryKeys();
+      return [...photos.map(key => recordKey("photos", key)), ...(await activity())];
+    }
     case "events":
       return activity();
     default:

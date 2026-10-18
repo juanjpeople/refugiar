@@ -2,10 +2,14 @@
  * Servicio de proyectos: ÚNICO punto que los escribe. Borrar un proyecto no borra sus listas:
  * quedan sueltas (con sus gastos), porque lo comprado sigue siendo un dato de la casa.
  */
+import { deletePhotosOfWithin } from "@/features/media/service";
+import { writableProject } from "./workspace-service";
 import { recordActivity, setActivityPrivacy } from "@/features/activity/service";
 import { assertCan, type Actor } from "@/lib/auth/permissions";
 import { db } from "@/lib/db";
-import { NotFoundError } from "@/lib/errors";
+import { useDeviceStore } from "@/store/useDeviceStore";
+import { listShares, revokeShare } from "./sharing";
+import { ValidationError, NotFoundError } from "@/lib/errors";
 import { createId } from "@/lib/id";
 import { parseProjectInput, type ProjectInput, type ProjectStatus } from "./domain";
 
@@ -24,6 +28,8 @@ export async function createProject(actor: Actor | null, input: ProjectInput) {
 export async function updateProject(actor: Actor | null, id: string, input: ProjectInput) {
   assertCan(actor, "projects.manage");
   const data = parseProjectInput(input);
+  const before = await writableProject(actor,id);
+  if(data.currency!==before.currency && ((before.workspace?.expenses?.length??0)>0 || before.workspace?.materials?.some(row=>row.costCents!==undefined))) throw new ValidationError("projects.currencyLocked");
   await db.transaction("rw", db.projects, db.activity, async () => {
     const project = await db.projects.get(id);
     if (!project) throw new NotFoundError("errors.notFound.project");
@@ -35,18 +41,26 @@ export async function updateProject(actor: Actor | null, id: string, input: Proj
 
 export async function setProjectStatus(actor: Actor | null, id: string, status: ProjectStatus) {
   assertCan(actor, "projects.manage");
+  await writableProject(actor, id);
   await db.projects.update(id, { status, updatedAt: Date.now() });
 }
 
 export async function deleteProject(actor: Actor | null, id: string) {
   assertCan(actor, "projects.manage");
-  await db.transaction("rw", db.projects, db.shoppingLists, db.activity, async () => {
+  const before = await writableProject(actor,id);
+  if(before.externalShares){
+    if(useDeviceStore.getState().mode!=="cloud" || before.createdBy!==actor!.id) throw new ValidationError("projects.deleteShares");
+    const links=(await listShares()).filter(row=>row.projectId===id);
+    for(const link of links)await revokeShare(link.id);
+  }
+  await db.transaction("rw", db.projects, db.shoppingLists, db.activity, db.photos, db.photoDeletes, async () => {
     const project = await db.projects.get(id);
     if (!project) return;
     await setActivityPrivacy("projects", id, project.privacy ?? "family", project.createdBy);
     await db.shoppingLists.where("projectId").equals(id).modify((list) => {
       delete list.projectId;
     });
+    await deletePhotosOfWithin("project", id);
     await db.projects.delete(id);
     await recordActivity(actor, { module: "projects", action: "delete", entityId: id, entityName: project.name, privacy: project.privacy ?? "family", createdBy: project.createdBy });
   });

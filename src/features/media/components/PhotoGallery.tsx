@@ -24,7 +24,8 @@ interface PhotoGalleryProps {
 export function PhotoGallery({ ownerType, ownerId, editable, coverId, onSetCover, onFirstPhoto }: PhotoGalleryProps) {
   const t = useT();
   const { token } = theme.useToken();
-  const photos = usePhotos(ownerType, ownerId);
+  const allPhotos = usePhotos(ownerType, ownerId);
+  const photos = allPhotos?.filter(photo => !photo.fileName);
   const { add } = usePhotoActions();
   const inputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);

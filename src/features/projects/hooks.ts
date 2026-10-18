@@ -23,7 +23,12 @@ async function loadProjects(viewer: Viewer | null): Promise<ProjectSummary[]> {
     .filter((project) => canSee(viewer, project))
     .map((project) => {
       const own = lists.filter((summary) => summary.list.projectId === project.id);
-      return { project, lists: own, budget: summarizeProject(project, own.map((summary) => summary.budget)) };
+      const budget = summarizeProject(project, own.map((summary) => summary.budget));
+      const extra = (project.workspace?.expenses ?? []).reduce((sum,row)=>sum+row.cents,0) + (project.workspace?.materials??[]).filter(row=>row.used&&!row.reversedAt).reduce((sum,row)=>sum+(row.costCents??0),0);
+      const planned = (project.workspace?.materials??[]).filter(row=>!row.used&&!row.reversedAt).reduce((sum,row)=>sum+(row.costCents??0),0);
+      budget.spentCents += extra; budget.pendingCents += planned; budget.totalCents += extra + planned;
+      if (budget.remainingCents !== undefined) budget.remainingCents -= extra + planned;
+      return { project, lists: own, budget };
     })
     .sort((a, b) => Number(a.project.status === "done") - Number(b.project.status === "done") || b.project.updatedAt - a.project.updatedAt);
 }

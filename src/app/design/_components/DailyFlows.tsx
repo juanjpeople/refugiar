@@ -1,4 +1,5 @@
 "use client";
+import { ProjectFlow } from "./ProjectFlow";
 
 import { RecipeCover } from "@/features/recipes/components/RecipeBits";
 import { App, Flex } from "antd";
@@ -11,7 +12,7 @@ export function DailyFlows() {
   const [progress, setProgress] = useState<CookingProgress>({ step: 0, ingredients: [], steps: [] });
   const [seconds, setSeconds] = useState(120);
   const [reminders, setReminders] = useState({ events: ["evento"], minutes: 15 });
-  return <>
+  return <><ProjectFlow />
     <DemoBlock id="portadas-recetas" title="RecipeCover" description="Fotografía ilustrativa generada, incluida en la app. La foto personal tiene prioridad. Miniatura liviana para la lista y versión completa para el detalle."><RecipeCover recipeId="f64a28c1-f5df-43f1-8eb2-0e7872de7ef9" name="Panqueques caseros" style={{ maxWidth: 400 }} /></DemoBlock>
     <DemoBlock id="resumen-tranquilo" title="QuietSummary" description="Resumen finito, fecha visible, actualización optativa y sin contenido remoto incrustado."><QuietSummary title="Un vistazo afuera" status="Guardado ayer. Revisá la fecha." busy={false} onRefresh={() => message.info("Actualización de ejemplo.")}>Hasta seis titulares de las fuentes elegidas.</QuietSummary></DemoBlock>
     <DemoBlock id="conexion-explicita" title="ConnectionConsent" description="Antes de contactar cuentas desde una casa local. No cambia el modo ni sube datos."><ConnectionConsent onAllow={() => message.info("Permiso de ejemplo.")} onBack={() => message.info("Volver de ejemplo.")} /></DemoBlock>
