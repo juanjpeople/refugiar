@@ -31,7 +31,7 @@ Límites: 20 enlaces vigentes por cuenta, vencimiento obligatorio entre 1 y 90 d
 
 Revocar elimina la copia del servidor y bloquea nuevas aperturas. Una persona puede reenviar el enlace: identifica la invitación, no demuestra identidad. No se pueden borrar capturas ni archivos ya descargados. La página no persiste la copia; al volver de otra pestaña requiere abrirla otra vez. La API usa no-store y la página no se indexa.
 
-Borrar un proyecto que publicó enlaces exige nube y dueño para revocarlos primero. Sin conexión falla antes de borrar el proyecto. Las listas quedan conservadas según el comportamiento previo; los adjuntos del proyecto se eliminan y sus borrados cifrados se encolan.
+Borrar un proyecto que publicó enlaces exige nube y dueño para revocarlos primero. Sin conexión falla antes de borrar el proyecto. El servidor bloquea nuevas publicaciones de ese identificador para impedir que otra pestaña publique mientras se borra; una restauración que necesite compartir de nuevo debe duplicarse con un identificador nuevo. Las listas quedan conservadas según el comportamiento previo; los adjuntos del proyecto se eliminan y sus borrados cifrados se encolan.
 
 ### Casa demo
 

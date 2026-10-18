@@ -44,7 +44,8 @@ export async function publishProject(
   if (useDeviceStore.getState().mode !== "cloud")
     throw new ValidationError("projects.shareCloud");
   // Mark before publishing: even if the network response is lost, deletion must revoke first.
-  await db.projects.update(project.id, { externalShares: true });
+  if (!(await db.projects.update(project.id, { externalShares: true })))
+    throw new ValidationError("projects.shareError");
   const secrets = await inviteSecrets(),
     id = crypto.randomUUID();
   const workspace: ProjectWorkspace = {
@@ -245,3 +246,6 @@ const snapshotSchema = z.object({
       .optional(),
   }),
 });
+
+export const closeProjectShares = (projectId: string) =>
+  api("DELETE", `/project-shares/project/${encodeURIComponent(projectId)}`);

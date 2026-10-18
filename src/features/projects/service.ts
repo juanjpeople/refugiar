@@ -8,7 +8,7 @@ import { recordActivity, setActivityPrivacy } from "@/features/activity/service"
 import { assertCan, type Actor } from "@/lib/auth/permissions";
 import { db } from "@/lib/db";
 import { useDeviceStore } from "@/store/useDeviceStore";
-import { listShares, revokeShare } from "./sharing";
+import { closeProjectShares } from "./sharing";
 import { ValidationError, NotFoundError } from "@/lib/errors";
 import { createId } from "@/lib/id";
 import { parseProjectInput, type ProjectInput, type ProjectStatus } from "./domain";
@@ -28,11 +28,11 @@ export async function createProject(actor: Actor | null, input: ProjectInput) {
 export async function updateProject(actor: Actor | null, id: string, input: ProjectInput) {
   assertCan(actor, "projects.manage");
   const data = parseProjectInput(input);
-  const before = await writableProject(actor,id);
-  if(data.currency!==before.currency && ((before.workspace?.expenses?.length??0)>0 || before.workspace?.materials?.some(row=>row.costCents!==undefined))) throw new ValidationError("projects.currencyLocked");
+  await writableProject(actor,id);
   await db.transaction("rw", db.projects, db.activity, async () => {
     const project = await db.projects.get(id);
     if (!project) throw new NotFoundError("errors.notFound.project");
+    if(data.currency!==project.currency && ((project.workspace?.expenses?.length??0)>0 || project.workspace?.materials?.some(row=>row.costCents!==undefined))) throw new ValidationError("projects.currencyLocked");
     await setActivityPrivacy("projects", id, data.privacy, project.createdBy);
     await db.projects.update(id, { ...data, updatedAt: Date.now() });
     await recordActivity(actor, { module: "projects", action: "update", entityId: id, entityName: data.name, privacy: data.privacy, createdBy: project.createdBy });
@@ -50,8 +50,7 @@ export async function deleteProject(actor: Actor | null, id: string) {
   const before = await writableProject(actor,id);
   if(before.externalShares){
     if(useDeviceStore.getState().mode!=="cloud" || before.createdBy!==actor!.id) throw new ValidationError("projects.deleteShares");
-    const links=(await listShares()).filter(row=>row.projectId===id);
-    for(const link of links)await revokeShare(link.id);
+    await closeProjectShares(id);
   }
   await db.transaction("rw", db.projects, db.shoppingLists, db.activity, db.photos, db.photoDeletes, async () => {
     const project = await db.projects.get(id);

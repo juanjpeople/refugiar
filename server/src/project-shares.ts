@@ -55,7 +55,7 @@ export function projectShares(
       .bind(user.id, now)
       .run();
     const result = await c.env.DB.prepare(
-      "insert into project_shares (id,owner_id,project_id,recipient,token_hash,body,created_at,expires_at) select ?,?,?,?,?,?,?,? where (select count(*) from project_shares where owner_id = ?) < 20",
+      "insert into project_shares (id,owner_id,project_id,recipient,token_hash,body,created_at,expires_at) select ?,?,?,?,?,?,?,? where (select count(*) from project_shares where owner_id = ?) < 20 and not exists (select 1 from project_share_blocks where owner_id = ? and project_id = ?)",
     )
       .bind(
         x.id,
@@ -67,6 +67,8 @@ export function projectShares(
         now,
         now + x.days * 86400000,
         user.id,
+        user.id,
+        x.projectId,
       )
       .run();
     if (!result.meta.changes) return c.json({ error: "quota-exceeded" }, 409);
@@ -81,6 +83,25 @@ export function projectShares(
       .bind(user.id, Date.now())
       .all();
     return c.json(rows.results);
+  });
+  routes.delete("/project-shares/project/:projectId", async (c) => {
+    const user = await requireUser(c);
+    if (!user) return c.json({ error: "unauthorized" }, 401);
+    const projectId = c.req.param("projectId");
+    if (
+      projectId.length > 100 ||
+      (await tooMany(c.env, `project-close:${user.id}`, 60, 86400000))
+    )
+      return c.json({ error: "rate-limited" }, 429);
+    await c.env.DB.batch([
+      c.env.DB.prepare(
+        "insert or ignore into project_share_blocks(owner_id,project_id) values (?,?)",
+      ).bind(user.id, projectId),
+      c.env.DB.prepare(
+        "delete from project_shares where owner_id=? and project_id=?",
+      ).bind(user.id, projectId),
+    ]);
+    return c.json({ ok: true });
   });
   routes.delete("/project-shares/:id", async (c) => {
     const user = await requireUser(c);

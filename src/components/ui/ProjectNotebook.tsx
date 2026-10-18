@@ -1,4 +1,5 @@
 "use client";
+import dayjs from "dayjs";
 import {
   Button,
   Card,
@@ -96,7 +97,7 @@ export function ProjectNotebook({
             id: id(),
             label: text,
             cents: Math.round(Number(values.amount) * 100),
-            date: String(values.date || new Date().toISOString().slice(0, 10)),
+            date: String(values.date || dayjs().format("YYYY-MM-DD")),
           },
         ],
       });
