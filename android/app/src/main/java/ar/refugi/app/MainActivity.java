@@ -16,6 +16,7 @@ public class MainActivity extends BridgeActivity {
         registerPlugin(KitchenScreenPlugin.class);
         registerPlugin(BiometricPlugin.class);
         super.onCreate(savedInstanceState);
+        updateSystemBarsColor();
         getBridge().setWebViewClient(new StaticWebViewClient(getBridge()));
         openHouseLink(getIntent());
         getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
@@ -54,5 +55,20 @@ public class MainActivity extends BridgeActivity {
         if (path != null && (path.equals("/unirme") || path.equals("/c") || path.startsWith("/c/"))) {
             getBridge().getWebView().loadUrl(url.toString());
         }
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        updateSystemBarsColor();
+    }
+
+    private void updateSystemBarsColor() {
+        int nightMode = getResources().getConfiguration().uiMode & android.content.res.Configuration.UI_MODE_NIGHT_MASK;
+        boolean isDark = nightMode == android.content.res.Configuration.UI_MODE_NIGHT_YES;
+        android.view.Window window = getWindow();
+        window.setNavigationBarColor(isDark ? android.graphics.Color.BLACK : android.graphics.Color.parseColor("#F5F5F5"));
+        WindowInsetsControllerCompat insetsController = new WindowInsetsControllerCompat(window, window.getDecorView());
+        insetsController.setAppearanceLightNavigationBars(!isDark);
     }
 }

@@ -37,6 +37,10 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   // no solo el del sistema: si no, en oscuro aparecen barras blancas.
   useEffect(() => {
     document.documentElement.style.colorScheme = isDark ? "dark" : "light";
+    const metaThemeColor = document.querySelector('meta[name="theme-color"]');
+    if (metaThemeColor) {
+      metaThemeColor.setAttribute("content", isDark ? "#000000" : "#F5F5F5");
+    }
   }, [isDark]);
 
   // "Reducir movimiento" de la app también apaga las transiciones de página del navegador (globals.css).
