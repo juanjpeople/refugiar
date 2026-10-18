@@ -26,3 +26,7 @@ Compras → elegir lista → anotar con autocompletado. Pegar una lista (de What
 Después de marcar una compra suelta, **Guardar en inventario** permite elegir un producto existente o crear uno dentro de una caja. Se confirma cantidad y unidad; las medidas compatibles se convierten y las incompatibles requieren una cantidad explícita. El inventario es compartido aunque la lista sea privada: el formulario lo avisa.
 
 El stock y el vínculo se guardan en la misma transacción. Repetir la acción en este dispositivo no vuelve a sumar. Desmarcar la compra revierte la cantidad guardada; limpiar comprados conserva el stock. El total pagado se conserva. Un precio anotado antes de vincular no se agrega retroactivamente al historial de precios del producto.
+
+## ✅ Hecho — compartir y comprar juntos
+
+Compartir ofrece texto, copia fija, lista actualizable y Comprar juntos. Los invitados sólo marcan productos existentes. Las marcas aparecen en el dispositivo publicador como «Comprado por invitado»; un adulto confirma recepción y el servicio de compras suma stock una sola vez si hay un vínculo. Los invitados nunca cambian inventario, cantidades ni precios. Los conflictos por producto piden repetir la acción. Importar crea otra lista, privada por defecto y con todo pendiente. [Flujo, cuotas, reconexión y revisión](compartir.md).

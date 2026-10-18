@@ -14,7 +14,7 @@ import { SYNC_META_TABLES } from "@/lib/sync/tables";
 
 /** Los datos de la casa (sin el estado interno de la sincronización, que es de cada dispositivo). */
 function dataTables() {
-  return db.tables.filter((table) => !(SYNC_META_TABLES as readonly string[]).includes(table.name));
+  return db.tables.filter((table) => ![...SYNC_META_TABLES, "publications", "shareImports"].includes(table.name));
 }
 
 export const APP_VERSION = process.env.NEXT_PUBLIC_APP_VERSION ?? "dev";
@@ -134,6 +134,8 @@ export async function importAllData(actor: Actor | null, preview: ImportPreview)
     upgraded.close();
 
     await db.transaction("rw", db.tables, async () => {
+      await db.publications.clear();
+      await db.shareImports.clear();
       for (const table of dataTables()) {
         await table.clear();
         if (tables[table.name]?.length) await table.bulkAdd(tables[table.name] as never[]);

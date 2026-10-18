@@ -25,6 +25,7 @@ import { EntryFlow, EntrySection } from "./EntrySection";
 import { CatalogSection } from "./CatalogSection";
 import { BottomBarBlock, PanesSection } from "./PanesSection";
 import { DetailTemplateSection, TemplatesSection } from "./TemplatesSection";
+import { SharingFlow } from "./SharingFlow";
 
 // El orden de cada grupo es el orden en la página (el índice sigue el scroll).
 const TOC = [
@@ -37,7 +38,7 @@ const TOC = [
     group: "Componentes propios",
     items: [["componentes-estructura", "Estructura"], ["componentes-estados", "Estados"], ["componentes-seleccion", "Selección"], ["componentes-datos", "Datos"], ["componentes-fichas", "Fichas"], ["componentes-espacios", "Espacios"], ["componentes-entrada", "Entrada"], ["componentes-paneles", "Paneles"], ["componentes-barra", "Barra de abajo"], ["componentes-plantillas", "Plantillas"], ["componentes-plantillas-detalle", "Detalle"]],
   },
-  { group: "Flujos", items: [["flujo-almacenamiento", "Almacenamiento"], ["etiquetas", "Etiquetas QR"], ["flujo-catalogo", "Catálogo"], ["flujo-recetas", "Recetas"], ["flujo-guardar-compra", "Guardar compra"], ["flujo-cocina", "Modo cocina"], ["flujo-sincronizacion", "Sincronización"], ["flujo-menu-semanal", "Menú semanal"], ["flujo-recordatorios", "Recordatorios"], ["flujo-entrada", "Entrada"]] },
+  { group: "Flujos", items: [["flujo-almacenamiento", "Almacenamiento"], ["etiquetas", "Etiquetas QR"], ["flujo-catalogo", "Catálogo"], ["flujo-recetas", "Recetas"], ["flujo-guardar-compra", "Guardar compra"], ["flujo-cocina", "Modo cocina"], ["flujo-sincronizacion", "Sincronización"], ["flujo-menu-semanal", "Menú semanal"], ["flujo-recordatorios", "Recordatorios"], ["flujo-entrada", "Entrada"], ["flujo-compartir", "Compartir"]] },
   { group: "Calidad", items: [["revision", "Revisión antes de un PR"]] },
   { group: "Seguridad", items: [["permisos", "Matriz de permisos"], ["can", "<Can>"], ["servicios", "Servicios"]] },
 ] as const;
@@ -101,6 +102,7 @@ export function DesignSystem() {
             <CatalogSection />
             <RecipesFlow />
             <EntryFlow />
+            <SharingFlow />
           </Section>
           <Section title="Calidad">
             <ReviewSection />

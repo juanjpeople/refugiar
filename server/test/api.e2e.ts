@@ -110,6 +110,42 @@ test("cuenta, casa, invitación y unión, de punta a punta y cifrado", async (t)
   assert.equal((await anonymous.call("POST", "/api/feedback", { message: "x".repeat(9 * 1024) })).status, 413);
   // Ana: cuenta + casa con sus tres claves de nivel.
   const ana = await signUp("Ana", anaEmail, "una frase larga para ana");
+  // Publishing a bounded copy is independent of creating or syncing a household.
+  // Extend this API traversal with the new capabilities; no separate suite or browser.
+  const sharedId = crypto.randomUUID(), sharedItem = crypto.randomUUID();
+  const sharedSecrets = await inviteSecrets(), sharedWriter = await inviteSecrets();
+  const sharedBody = await seal(sharedSecrets.wrapKey, JSON.stringify({ version: 1, kind: "shopping-list", name: "Lista aislada" }), `content-share/v1/${sharedId}`);
+  const publication = { id: sharedId, sourceKey: "shopping-list:local-list", sources: ["shopping-list:local-list"], kind: "shopping-list", mode: "live-check", days: 7, tokenHash: await sha256(sharedSecrets.authToken), writeHash: await sha256(sharedWriter.authToken), body: sharedBody, itemIds: [sharedItem] };
+  assert.equal((await anonymous.call("POST", "/api/shares", publication)).status, 401);
+  assert.equal((await ana.client.call("POST", "/api/shares", publication)).status, 201);
+  assert.equal((await ana.client.call("POST", "/api/shares", publication)).status, 200); // lost-response retry
+  assert.equal((await anonymous.call("GET", `/api/shares/${sharedId}`)).status, 401);
+  assert.equal((await anonymous.call("POST", `/api/shared/${sharedId}`, { token: sharedWriter.authToken })).status, 404);
+  const sharedRead = await anonymous.call("POST", `/api/shared/${sharedId}`, { token: sharedSecrets.authToken });
+  assert.equal(sharedRead.status, 200);
+  assert.equal(sharedRead.body.body, sharedBody);
+  assert.equal(sharedRead.body.owner_id, undefined);
+  assert.equal(sharedRead.body.sourceKey, undefined);
+  const check = { token: sharedSecrets.authToken, writeToken: sharedSecrets.authToken, itemId: sharedItem, revision: 0, checked: true };
+  assert.equal((await anonymous.call("POST", `/api/shared/${sharedId}/check`, check)).status, 403);
+  check.writeToken = sharedWriter.authToken;
+  const simultaneous = await Promise.all([anonymous.call("POST", `/api/shared/${sharedId}/check`, check), anonymous.call("POST", `/api/shared/${sharedId}/check`, check)]);
+  assert.deepEqual(simultaneous.map(result => result.status).sort(), [200, 409]);
+  assert.equal((await ana.client.call("PATCH", `/api/shares/${sharedId}`, { body: sharedBody, version: 0, itemIds: [sharedItem], receivedIds: [] })).status, 409);
+  assert.equal((await ana.client.call("PATCH", `/api/shares/${sharedId}`, { body: sharedBody, version: 1, itemIds: [sharedItem], receivedIds: [sharedItem] })).status, 200);
+  assert.equal((await anonymous.call("POST", `/api/shared/${sharedId}/check`, { ...check, revision: 2, checked: false })).status, 409);
+  assert.equal((await ana.client.call("GET", "/api/shares")).body.links.length, 1);
+  assert.equal((await ana.client.call("POST", "/api/shares", { ...publication, id: crypto.randomUUID(), body: "a".repeat(160001) })).status, 400);
+  assert.equal((await ana.client.call("DELETE", "/api/shares/source/shopping-list%3Alocal-list")).status, 200);
+  assert.equal((await anonymous.call("POST", `/api/shared/${sharedId}`, { token: sharedSecrets.authToken })).status, 404);
+  assert.equal((await ana.client.call("POST", "/api/shares", { ...publication, id: crypto.randomUUID() })).status, 409);
+  // Old encrypted links retain their original body and authorization protocol.
+  const legacyId = crypto.randomUUID();
+  const legacyBody = await seal(sharedSecrets.wrapKey, "legacy", `project-share/v1/${legacyId}`);
+  assert.equal((await ana.client.call("POST", "/api/project-shares", { id: legacyId, projectId: "old-project", recipient: "Prueba", days: 7, tokenHash: publication.tokenHash, body: legacyBody })).status, 201);
+  assert.equal((await anonymous.call("POST", `/api/shared-project/${legacyId}`, { token: sharedSecrets.authToken })).body.body, legacyBody);
+  assert.equal((await ana.client.call("GET", "/api/shares")).body.links[0].legacy, 1);
+  assert.equal((await ana.client.call("DELETE", `/api/shares/${legacyId}`)).status, 200);
   const householdId = crypto.randomUUID();
   const raw: Record<Scope, Uint8Array> = { family: newScopeKey(), adults: newScopeKey(), private: newScopeKey() };
   const familyKey = await importScopeKey(raw.family);

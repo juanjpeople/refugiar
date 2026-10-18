@@ -52,7 +52,7 @@ public class MainActivity extends BridgeActivity {
         if (url == null || !"https".equals(url.getScheme()) || !"refugi.ar".equals(url.getHost()) ||
             url.getPort() != -1 || url.getUserInfo() != null) return;
         String path = url.getPath();
-        if (path != null && (path.equals("/unirme") || path.equals("/c") || path.startsWith("/c/"))) {
+        if (path != null && (path.equals("/unirme") || path.equals("/compartido") || path.equals("/c") || path.startsWith("/c/"))) {
             getBridge().getWebView().loadUrl(url.toString());
         }
     }

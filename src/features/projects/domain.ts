@@ -32,6 +32,7 @@ export interface ProjectWorkspace {
 }
 
 export interface Project {
+  externalShareOwners?: string[];
   id: string;
   name: string;
   /** Quién lo ve con la casa en la nube (por defecto, Familia). */

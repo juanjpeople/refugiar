@@ -51,7 +51,7 @@ export function CalendarPage() {
   const [cursor, setCursor] = useState(() => dayjs().startOf("day"));
   const [direction, setDirection] = useState(1);
   const [filter, setFilter] = useState<string | null>(null);
-  const [modal, setModal] = useState<{ event?: CalendarEvent; day?: Dayjs } | null>(null);
+  const [modal, setModal] = useState<{ event?: CalendarEvent; day?: Dayjs; occurrence?: { start: number; end: number } } | null>(null);
   // Se mide el área real (no la pantalla): con el menú abierto, el contenido es más angosto.
   const [areaRef, areaWidth] = useElementWidth<HTMLDivElement>();
   const columns = (areaWidth ?? 0) >= WEEK_COLUMNS_MIN;
@@ -78,7 +78,7 @@ export function CalendarPage() {
   // Solo la primera letra en mayúscula ("Octubre de 2026", no "Octubre De 2026").
   const title = rawTitle.charAt(0).toUpperCase() + rawTitle.slice(1);
 
-  const openOccurrence = (occurrence: Occurrence) => occurrence.event && setModal({ event: occurrence.event });
+  const openOccurrence = (occurrence: Occurrence) => occurrence.event && setModal({ event: occurrence.event, occurrence: { start: occurrence.start, end: occurrence.end } });
   const addOn = (day: Dayjs) => canManage && setModal({ day });
 
   return (
@@ -174,7 +174,7 @@ export function CalendarPage() {
 
       </div>
 
-      <EventModal open={!!modal} event={modal?.event} day={modal?.day} onClose={() => setModal(null)} />
+      <EventModal open={!!modal} event={modal?.event} day={modal?.day} occurrence={modal?.occurrence} onClose={() => setModal(null)} />
     </RequirePermission>
   );
 }

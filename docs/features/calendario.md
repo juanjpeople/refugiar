@@ -20,8 +20,8 @@ Calendario → tocar un día para crear un evento. País, región y modo escolar
 
 ## Límites
 
-- Todavía no exporta ni importa iCal (.ics).
-- No hay recordatorios con notificación.
+- Exporta una ocurrencia compartida a iCal (.ics); todavía no importa archivos de calendarios externos.
+- Los recordatorios se configuran explícitamente en Android; compartir o importar no los activa.
 
 ## Comidas y recordatorios locales
 
@@ -32,3 +32,7 @@ El menú semanal de Recetas agrega comidas al calendario con receta y porciones.
 Preferencias locales por perfil, sin sincronizarlas con otros teléfonos. Al cambiar de perfil se reemplazan los avisos del anterior. Se agenda un máximo de 64 avisos en los próximos 30 días, renovados al abrir la app y al cambiar datos visibles. Las notificaciones muestran un mensaje genérico y abren Calendario. No se programa información que el perfil no puede ver. Android puede demorar los avisos por ahorro de batería; no se solicita permiso de alarmas exactas. No hay push, servidor adicional ni suscripción.
 
 Validación pendiente en teléfono real: conceder/revocar permiso, matar/reabrir la app, reiniciar el equipo, cambiar de perfil y tocar una notificación.
+
+## ✅ Hecho — compartir una ocurrencia
+
+Desde un evento se comparte la ocurrencia elegida, con título, fecha y horario; notas optativas. La ficha excluye participantes y datos escolares. Quien recibe puede guardar un evento independiente, privado por defecto, sin repetición ni recordatorios, o descargar un `.ics`. Las fechas de todo el día se conservan como fechas; los horarios mantienen el instante y la ficha muestra la zona de origen. [Flujo y revisión](compartir.md).

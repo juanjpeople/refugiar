@@ -1,4 +1,5 @@
 "use client";
+import { pendingImportHref } from "@/features/sharing/continuation";
 import { revokeCloudSession } from "@/lib/network/policy";
 import { DemoLauncher } from "@/features/demo/DemoLauncher";
 
@@ -54,7 +55,7 @@ export function Onboarding() {
   function finishLocal() {
     if (!DEMO_ENABLED) revokeCloudSession();
     setMode("local");
-    router.push("/");
+    router.push(pendingImportHref() ?? "/");
   }
 
   async function choose(choice: Choice) {

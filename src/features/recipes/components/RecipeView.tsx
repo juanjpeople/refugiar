@@ -1,4 +1,5 @@
 "use client";
+import { ShareButton } from "@/features/sharing/ShareButton";
 
 import { formatQuantity, formatUnit } from "@/features/inventory/format";
 
@@ -121,6 +122,7 @@ export function RecipeView() {
                 <RatingBadge rating={rating} />
               </Flex>
               <Flex gap={8} wrap style={{ marginTop: 8 }}>
+                <ShareButton source={{ kind: "recipe", id: recipe.id }} />
                 <Button size="large" onClick={() => setGuided(true)}>{t("recipes.mode.open")}</Button>
                 <Can perform="inventory.consume">
                   <Button type="primary" size="large" icon={<ChefHat />} onClick={() => setCooking(true)}>

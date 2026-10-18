@@ -3,6 +3,7 @@
  * participantes existan, y deja todo en el historial.
  */
 import { canSee } from "@/lib/sync/scope";
+import { closeSource } from "@/features/sharing/service";
 import { recordActivity, setActivityPrivacy } from "@/features/activity/service";
 import { assertCan, type Actor } from "@/lib/auth/permissions";
 import { db } from "@/lib/db";
@@ -57,6 +58,9 @@ export async function updateEvent(actor: Actor | null, id: string, input: EventI
 
 export async function deleteEvent(actor: Actor | null, id: string) {
   assertCan(actor, "calendar.manage");
+  const before = await db.events.get(id);
+  if (before && !canSee(actor, before)) throw new NotFoundError("errors.notFound.event");
+  await closeSource("event", id);
   await db.transaction("rw", db.events, db.activity, async () => {
     const event = await db.events.get(id);
     if (!event) return;

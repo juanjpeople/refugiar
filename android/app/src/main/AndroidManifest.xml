@@ -32,6 +32,7 @@
                 <category android:name="android.intent.category.BROWSABLE" />
                 <data android:scheme="https" android:host="${appLinksHost}" />
                 <data android:path="/unirme" />
+                <data android:path="/compartido" />
                 <data android:path="/c" />
                 <data android:pathPrefix="/c/" />
             </intent-filter>

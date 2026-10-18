@@ -12,6 +12,7 @@ export const EVENT_KINDS = ["event", "class", "homework", "break", "holiday"] as
 export type EventKind = (typeof EVENT_KINDS)[number];
 
 export interface CalendarEvent {
+  externalShareOwners?: string[];
   id: string;
   title: string;
   meal?: { recipeId: string; servings: number };

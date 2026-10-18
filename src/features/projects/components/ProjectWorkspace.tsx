@@ -21,7 +21,7 @@ import { db } from "@/lib/db";
 import { getErrorMessage } from "@/lib/errors";
 import { useT } from "@/i18n";
 import { PhotoGallery } from "@/features/media/components/PhotoGallery";
-import { usePhotos, useObjectUrl } from "@/features/media/hooks";
+import { usePhotos } from "@/features/media/hooks";
 import { deletePhoto } from "@/features/media/service";
 import type { Photo } from "@/features/media/domain";
 import { createEvent } from "@/features/calendar/service";
@@ -33,7 +33,7 @@ import {
   consumeProjectMaterial,
 } from "../workspace-service";
 import type { Project, ProjectKind } from "../domain";
-import { ProjectSharing } from "./ProjectSharing";
+import { ShareButton } from "@/features/sharing/ShareButton";
 const KINDS: ProjectKind[] = [
   "repair",
   "electronics",
@@ -43,7 +43,6 @@ const KINDS: ProjectKind[] = [
 ];
 export function ProjectWorkspace({
   project,
-  totals,
 }: {
   project: Project;
   totals: { spentCents: number; pendingCents: number };
@@ -95,7 +94,7 @@ export function ProjectWorkspace({
           </Button>
         )}
         {editable && actor?.id === project.createdBy && (
-          <ProjectSharing project={project} totals={totals} />
+          <ShareButton source={{ kind: "project", id: project.id }} />
         )}
       </Flex>
       <Typography.Paragraph type="secondary">

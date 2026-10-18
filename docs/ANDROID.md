@@ -19,6 +19,9 @@ Android cierra menús o diálogos antes de volver en el historial. En la raíz p
 la app al fondo. Capacitor administra los márgenes del sistema; la web usa áreas
 seguras, sin agregar otro margen nativo.
 
+Los estilos de navegación con iconos oscuros se aplican desde API 27. API 24–26
+conserva fondo oscuro e iconos claros; no se eleva la versión mínima ni se omite lint.
+
 Pendiente de revisión del dueño en teléfono: teclado, Atrás en diálogos y cámara,
 texto grande, rotación y navegación por gestos o tres botones. Reinstalar el APK
 para recibir esta interfaz.
@@ -402,3 +405,7 @@ Atrás oculta primero el teclado antes de cerrar un diálogo o navegar. Modo coc
 Los temporizadores conservan su hora de finalización y refrescan al volver del fondo. Los avisos usan el plugin de notificaciones ya instalado, canal kitchen y IDs separados de Calendario. No se cambian el identificador de la app, su origen ni la base local: la actualización conserva el almacenamiento; falta comprobarla en teléfono sobre la versión 16.
 
 Revisión del dueño: actualizar sin desinstalar, comprobar datos; abrir un paso, iniciar dos timers, bloquear y reabrir; cancelar uno; comprobar permiso denegado; abrir teclado y tocar Atrás; cocinar sin conexión, reconectar y verificar el stock en otro dispositivo.
+
+## Enlaces de contenido compartido
+
+✅ `/compartido` está permitido en Android App Links y en el encaminamiento nativo, conservando el fragmento con los secretos. El acceso a `/proyecto-compartido` se mantiene. Configuración local e ingreso conservan la intención de importar dentro de la sesión; después de una instalación nueva se debe volver a abrir el enlace original. El APK no comparte la casa local de Chrome. Lectura sin cuenta, retorno después de configurar la casa, descarga ICS y recepción de compras quedan en el recorrido manual del dueño indicado en [Compartir](features/compartir.md). No se activan recordatorios por importar un evento.

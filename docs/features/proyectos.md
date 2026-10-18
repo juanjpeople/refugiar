@@ -19,19 +19,13 @@ Hasta 12 adjuntos por proyecto, contando fotos y archivos. Las fotos se comprime
 
 La fecha de próxima revisión puede agregarse al calendario mediante una acción explícita. No activa notificaciones automáticamente; se usan las preferencias existentes. El resultado y las lecciones quedan en el cierre del proyecto.
 
-### Compartir sin cuenta para quien recibe
+### ✅ Hecho — compartir sin cuenta para quien recibe
 
-El dueño del proyecto puede publicar una **copia de solo lectura**, desde modo cloud y con sesión. No se publica desde la casa demo ni desde modo local. La copia no se actualiza automáticamente: un enlace nuevo publica un estado nuevo.
+El creador usa el flujo común de [Compartir](compartir.md): texto breve/completo o una ficha cifrada de sólo lectura. Puede publicar desde casa local con una cuenta, sin sincronizar la casa. Los enlaces anteriores de `/proyecto-compartido` siguen funcionando y cuentan en las mismas cuotas.
 
-Cada invitación tiene un secreto aleatorio de 256 bits en el fragmento del enlace, clave AES-GCM y token de autorización derivados por separado. El servidor guarda el hash del token, el contenido cifrado, el identificador del proyecto, la etiqueta del destinatario, dueño y fechas. No recibe la clave de descifrado. No se comparten claves de la casa.
+La vista básica lleva tareas y materiales. Notas/procedimiento, costos, contactos, bitácora/cierre y adjuntos se incluyen expresamente y se revisan antes de publicar. Cada archivo admite 80.000 bytes dentro de los 160.000 del cuerpo cifrado completo. La importación crea una plantilla privada por defecto: tareas pendientes, materiales sin consumir, sin gastos, contactos, responsables ni fechas de ejecución.
 
-Se eligen costos, contactos, bitácora/cierre y adjuntos. Por defecto esos grupos quedan excluidos; la vista básica lleva nombre, tareas sin responsables y materiales sin costos. Las fotos compartidas son reducidas. Los archivos compartidos admiten 80 KB cada uno y el conjunto cifrado tiene un máximo de 160 KB. Si excede el límite se rechaza sin publicar parcialmente.
-
-Límites: 20 enlaces vigentes por cuenta, vencimiento obligatorio entre 1 y 90 días, 30 intentos de publicación diarios por cuenta y 60 aperturas por minuto/IP. D1 y el alojamiento siguen sujetos a sus cuotas existentes. Los vencidos se limpian cuando el dueño crea otra invitación y al borrar la cuenta se eliminan sus enlaces.
-
-Revocar elimina la copia del servidor y bloquea nuevas aperturas. Una persona puede reenviar el enlace: identifica la invitación, no demuestra identidad. No se pueden borrar capturas ni archivos ya descargados. La página no persiste la copia; al volver de otra pestaña requiere abrirla otra vez. La API usa no-store y la página no se indexa.
-
-Borrar un proyecto que publicó enlaces exige nube y dueño para revocarlos primero. Sin conexión falla antes de borrar el proyecto. El servidor bloquea nuevas publicaciones de ese identificador para impedir que otra pestaña publique mientras se borra; una restauración que necesite compartir de nuevo debe duplicarse con un identificador nuevo. Las listas quedan conservadas según el comportamiento previo; los adjuntos del proyecto se eliminan y sus borrados cifrados se encolan.
+Revocar bloquea nuevas lecturas; no retira mensajes ni copias ya guardadas. Borrar una fuente exige cerrar primero sus enlaces, con la cuenta publicadora y conexión. El servidor bloquea publicaciones tardías de ese identificador. La demo muestra el flujo sin publicar.
 
 ### Casa demo
 
@@ -43,5 +37,5 @@ La migración 17 se ejecuta únicamente en las bases aisladas demo/pruebas. Cons
 
 - Edición sincronizada por campos: listas de tareas/bitácora se resuelven como un campo, no hay edición simultánea de cada entrada.
 - Sin reserva efectiva de stock ni asignación automática de compras a consumos.
-- Sin colaboración de escritura anónima, autenticación por destinatario o actualización automática de copias compartidas.
+- Los proyectos compartidos siguen siendo copias de sólo lectura; la colaboración de marcas se limita a listas de compras. No hay autenticación por destinatario.
 - Para compartir archivos grandes hace falta diseñar cuota y acceso revocable de objetos separados; no se abre el almacenamiento privado de la casa.

@@ -3,6 +3,7 @@
  * quedan sueltas (con sus gastos), porque lo comprado sigue siendo un dato de la casa.
  */
 import { deletePhotosOfWithin } from "@/features/media/service";
+import { closeSource } from "@/features/sharing/service";
 import { writableProject } from "./workspace-service";
 import { recordActivity, setActivityPrivacy } from "@/features/activity/service";
 import { assertCan, type Actor } from "@/lib/auth/permissions";
@@ -48,6 +49,7 @@ export async function setProjectStatus(actor: Actor | null, id: string, status: 
 export async function deleteProject(actor: Actor | null, id: string) {
   assertCan(actor, "projects.manage");
   const before = await writableProject(actor,id);
+  await closeSource("project", id);
   if(before.externalShares){
     if(useDeviceStore.getState().mode!=="cloud" || before.createdBy!==actor!.id) throw new ValidationError("projects.deleteShares");
     await closeProjectShares(id);

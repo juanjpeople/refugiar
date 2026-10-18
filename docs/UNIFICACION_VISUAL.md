@@ -540,3 +540,7 @@ Correcciones posteriores a #89: PageHeader permite conservar información esenci
 - ✅ Proyectos: `ProjectNotebook`, `ProjectCover` y retratos ilustrativos en `MemberAvatar`, demostrados en `/design`. Bitácora, materiales, tareas y gastos comparten la misma pieza entre app y referencia.
 
 - ✅ La barra móvil conserva su estado durante un toque completo. El desenfoque de un campo no vuelve a cubrir o desplazar el botón de envío entre presionar y soltar.
+
+## Compartir contenido (2026-10-18)
+
+✅ Hecho: `ShareCard` y `ShareOptions` se exportan desde UI y se demuestran en `/design#flujo-compartir`. La referencia permite elegir texto/enlace, los tres modos de compras y probar marca/recepción sin publicar. La ficha real usa tokens, Reveal, textos ES/EN y controles accesibles. La revisión visual en demo, temas, teclado, texto grande, 320 px y Android queda a cargo del dueño; no se ejecutan navegadores desde el agente. [Recorrido completo](features/compartir.md).

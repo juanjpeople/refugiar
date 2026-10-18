@@ -11,6 +11,7 @@ import type { PriceRecord } from "@/features/prices/domain";
 import type { SchoolProfile } from "@/features/school/domain";
 import type { ReservedLabel } from "@/features/storage/domain";
 import type { Recipe } from "@/features/recipes/domain";
+import type { LocalPublication, ShareImport } from "@/features/sharing/domain";
 import type { Project } from "@/features/projects/domain";
 import { HOME_LIST_ID, type ShoppingCandidate, type ShoppingList, type ShoppingListItem } from "@/features/shopping/domain";
 import type { Container, ContainerContent, Space } from "@/features/storage/domain";
@@ -29,6 +30,8 @@ import { CONTAINER_BACKFILL, SETTINGS_BACKFILL } from "@/lib/sync/upgrades";
  */
 
 export const db = new Dexie(HOUSE_DB) as Dexie & {
+  publications: EntityTable<LocalPublication, "id">;
+  shareImports: EntityTable<ShareImport, "id">;
   inventory: EntityTable<InventoryItem, "id">;
   /** Ítems de todas las listas (el nombre de la tabla es histórico: cada ítem tiene su `listId`). */
   shoppingList: EntityTable<ShoppingListItem, "id">;
@@ -237,6 +240,8 @@ export function declareSchema(target: Dexie, upTo = Infinity) {
     const { upgradeDemoProjects } = await Dexie.waitFor(import("@/features/demo/seed"));
     await upgradeDemoProjects(tx);
   });
+  // Publication secrets belong to this publishing device, never to house sync or backups.
+  if (upTo >= 18) target.version(18).stores({ publications: "id, ownerId, actorId, expiresAt", shareImports: "id" });
 }
 
 declareSchema(db);
