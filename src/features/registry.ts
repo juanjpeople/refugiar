@@ -5,6 +5,7 @@ import { useProjectSearch } from "./projects/palette";
 import { useRecipeSearch } from "./recipes/palette";
 import { useShoppingSearch } from "./shopping/palette";
 import { useStorageSearch } from "./storage/palette";
+import { usePetSearch } from "./pets/palette";
 
 /**
  * Registro de funcionalidades. El shell (menú, migas, búsqueda, recientes) no conoce ninguna
@@ -18,5 +19,5 @@ import { useStorageSearch } from "./storage/palette";
  * El orden de esta lista es el orden de los grupos en la búsqueda.
  */
 export function useFeatureSearch(context: SearchContext): FeatureSearch[] {
-  return [useStorageSearch(context), useRecipeSearch(context), useShoppingSearch(context), useProjectSearch(context)];
+  return [useStorageSearch(context), useRecipeSearch(context), useShoppingSearch(context), useProjectSearch(context), usePetSearch(context)];
 }

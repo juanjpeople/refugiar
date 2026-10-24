@@ -8,6 +8,7 @@ import type { InventoryItem } from "@/features/inventory/domain";
 import type { Photo } from "@/features/media/domain";
 import { DEFAULT_MEMBERS, type Member } from "@/features/members/domain";
 import type { PriceRecord } from "@/features/prices/domain";
+import type { PetProfile } from "@/features/pets/domain";
 import type { SchoolProfile } from "@/features/school/domain";
 import type { ReservedLabel } from "@/features/storage/domain";
 import type { Recipe } from "@/features/recipes/domain";
@@ -45,8 +46,8 @@ export const db = new Dexie(HOUSE_DB) as Dexie & {
   prices: EntityTable<PriceRecord, "id">;
   members: EntityTable<Member, "id">;
   events: EntityTable<CalendarEvent, "id">;
-  /** Calendario (`calendar`), la escuela de cada chico (`school:<miembro>`) y las etiquetas en blanco (`label:<código>`). */
-  houseSettings: EntityTable<CalendarSettings | SchoolProfile | ReservedLabel, "id">;
+  /** Calendario (`calendar`), la escuela de cada chico (`school:<miembro>`), mascotas (`pet:<id>`) y las etiquetas en blanco (`label:<código>`). */
+  houseSettings: EntityTable<CalendarSettings | SchoolProfile | ReservedLabel | PetProfile, "id">;
   recipes: EntityTable<Recipe, "id">;
   photos: EntityTable<Photo, "id">;
   comments: EntityTable<Comment, "id">;

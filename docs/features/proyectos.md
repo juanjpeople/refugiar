@@ -2,7 +2,7 @@
 
 ## ✅ Hecho — bitácora, materiales y acceso externo
 
-Los proyectos conservan listas de compras y presupuesto. Ahora incluyen tareas con responsable y fecha, progreso calculado, notas/ideas/decisiones, contactos, fechas de inicio y objetivo, resultado y aprendizajes. Las plantillas sugeridas dependen del tipo: reparación, electrónica, restauración, jardín u otro. Cargar la plantilla es opcional y solo se ofrece sin tareas.
+Los proyectos conservan listas de compras y presupuesto. Ahora incluyen tareas con responsable y fecha, progreso calculado, notas/ideas/decisiones, contactos, fechas de inicio y objetivo, resultado y aprendizajes. Las plantillas sugeridas dependen del tipo: reparación, electrónica, restauración, jardín, afición o hobby (música, instrumentos, astronomía) u otro. Cargar la plantilla es opcional y solo se ofrece sin tareas.
 
 ### Materiales y economía
 
