@@ -51,6 +51,7 @@ Funcionalidades postergadas explícitamente para preservar el foco en la estabil
 
 | Versión / Hito | Alcance técnico implementado | Estado CI |
 |---|---|---|
+| **2026-10 (Recetas simples, packs y seguridad)** | ✅ Hecho: mitigación de vulnerabilidades del ecosistema (Next.js RCE/DoS, Zod DoS, Better-Auth passkeys); desacoplamiento opcional de recetas e inventario (modo recetario simple sin alertas de stock); catálogo de packs descargables/importables (Básicos, Rápidas y saludables, Meriendas y familia); sugerencias rápidas de alacena ("Quiero usar..."). [Detalle](docs/features/recetas.md). | ✅ Verificado (`npm run check`, build estático) |
 | **2026-10 (Compartir sin abrir la casa)** | ✅ Hecho: fichas cifradas de recetas, proyectos, compras, eventos y menú; importación local; compras con revisiones y recepción; cuotas compartidas y Android. [Detalle y recorrido](docs/features/compartir.md). | Checks locales verificados; UI del dueño pendiente |
 | **2026-10 (Tanda 4)** | Proyectos y bitácora técnica con cómputo de materiales y consumos; mitigación de costos en builds; navegación móvil por pestañas; temporizadores locales en Android. | ✅ Verificado |
 | **2026-10 (Tanda 3)** | Vinculación de recetas con stock de alacena y compras; sustituciones explícitas y consistencia de medidas; soporte de cámara en inventario. | ✅ Verificado |

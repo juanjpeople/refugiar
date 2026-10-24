@@ -9,7 +9,7 @@ import { db } from "@/lib/db";
 import { getErrorMessage } from "@/lib/errors";
 import { canSee } from "@/lib/sync/scope";
 import { averageRating, checkAvailability, type AvailabilityReport, type Recipe, type RecipeInput } from "./domain";
-import { addMissingToList, undoCooking, cookRecipe, createRecipe, deleteRecipe, setRecipeCover, updateRecipe, type Consumption } from "./service";
+import { addMissingToList, undoCooking, cookRecipe, createRecipe, deleteRecipe, importRecipePack, importStarterRecipe, setRecipeCover, updateRecipe, type Consumption } from "./service";
 
 export interface RecipeSummary extends Recipe {
   report: AvailabilityReport;
@@ -87,5 +87,7 @@ export function useRecipeActions() {
     undoCook: (id: string) => run(() => undoCooking(user, id), t("activity.undone")),
     cook: (id: string, servings: number, consumptions: Consumption[], operationId?: string) => run(() => cookRecipe(user, id, servings, consumptions, operationId)),
     addMissing: (id: string, servings: number, selected?: string[]) => run(() => addMissingToList(user, id, servings, selected)),
+    importPack: (packId: string) => run(() => importRecipePack(user, packId)),
+    importStarter: (recipeId: string) => run(() => importStarterRecipe(user, recipeId)),
   };
 }

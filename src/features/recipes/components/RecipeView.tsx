@@ -17,6 +17,7 @@ import { CommentsPanel } from "@/features/comments/components/CommentsPanel";
 import { useComments } from "@/features/comments/hooks";
 
 import { PhotoGallery } from "@/features/media/components/PhotoGallery";
+import { usePreferences } from "@/hooks/usePreferences";
 import { useI18n } from "@/i18n";
 import { usePermission } from "@/lib/auth/hooks";
 import { SPRING } from "@/lib/motion";
@@ -32,6 +33,7 @@ import { belowHeader } from "@/components/layout/constants";
 
 export function RecipeView() {
   const { t, format } = useI18n();
+  const { recipeStockLink } = usePreferences();
   const { token } = theme.useToken();
   const screens = Grid.useBreakpoint();
   const router = useRouter();
@@ -102,7 +104,7 @@ export function RecipeView() {
           <Col xs={24} md={13}>
             <Flex vertical gap={12}>
               <Flex gap={6} wrap>
-                <AvailabilityTag availability={report.availability} />
+                {recipeStockLink && <AvailabilityTag availability={report.availability} />}
                 {recipe.tags.map((tag) => (
                   <Tag key={tag} variant="filled" style={{ margin: 0 }}>
                     {t(`recipes.tags.${tag}`)}
@@ -124,15 +126,17 @@ export function RecipeView() {
               <Flex gap={8} wrap style={{ marginTop: 8 }}>
                 <ShareButton source={{ kind: "recipe", id: recipe.id }} />
                 <Button size="large" onClick={() => setGuided(true)}>{t("recipes.mode.open")}</Button>
-                <Can perform="inventory.consume">
-                  <Button type="primary" size="large" icon={<ChefHat />} onClick={() => setCooking(true)}>
-                    {t("recipes.cook.button")}
-                  </Button>
-                </Can>
+                {recipeStockLink && (
+                  <Can perform="inventory.consume">
+                    <Button type="primary" size="large" icon={<ChefHat />} onClick={() => setCooking(true)}>
+                      {t("recipes.cook.button")}
+                    </Button>
+                  </Can>
+                )}
                 <Can perform="shopping.manage">
-                  <Tooltip title={report.checks.filter((check) => check.state !== "ok").length === 0 ? t("recipes.nothingMissing") : undefined}>
-                    <Button size="large" icon={<ListPlus />} disabled={report.checks.filter((check) => check.state !== "ok").length === 0} onClick={() => setShopping(true)}>
-                      {t("recipes.addMissing", { count: report.checks.filter((check) => check.state !== "ok").length })}
+                  <Tooltip title={recipeStockLink && report.checks.filter((check) => check.state !== "ok").length === 0 ? t("recipes.nothingMissing") : undefined}>
+                    <Button size="large" icon={<ListPlus />} disabled={recipeStockLink ? report.checks.filter((check) => check.state !== "ok").length === 0 : recipe.ingredients.length === 0} onClick={() => setShopping(true)}>
+                      {recipeStockLink ? t("recipes.addMissing", { count: report.checks.filter((check) => check.state !== "ok").length }) : t("recipes.addIngredientsToShopping")}
                     </Button>
                   </Tooltip>
                 </Can>
@@ -168,7 +172,7 @@ export function RecipeView() {
               )}
               <Stagger stagger={0.03}>
                 {report.checks.map((check, index) => (
-                  <IngredientRow key={`${check.ingredient.name}-${index}`} check={check} last={index === report.checks.length - 1} />
+                  <IngredientRow key={`${check.ingredient.name}-${index}`} check={check} last={index === report.checks.length - 1} stockLink={recipeStockLink} />
                 ))}
               </Stagger>
             </Card>
@@ -215,7 +219,7 @@ export function RecipeView() {
         </Col>
       </Row>
 
-      {shopping && <ReviewChecklist title={t("recipes.review.title")} description={t("recipes.review.hint")} options={report.checks.filter((check) => check.state !== "ok").map((check) => ({ value: ingredientCheckKey(check), label: `${check.ingredient.name} · ${formatQuantity(t, Math.max(0, check.needed - (check.have ?? 0)), check.ingredient.unit, format.number)}`, checked: check.state !== "unlinked" }))} onConfirm={onAddMissing} onClose={() => setShopping(false)} />}
+      {shopping && <ReviewChecklist title={t("recipes.review.title")} description={t("recipes.review.hint")} options={recipeStockLink ? report.checks.filter((check) => check.state !== "ok").map((check) => ({ value: ingredientCheckKey(check), label: `${check.ingredient.name} · ${formatQuantity(t, Math.max(0, check.needed - (check.have ?? 0)), check.ingredient.unit, format.number)}`, checked: check.state !== "unlinked" })) : report.checks.map((check) => ({ value: ingredientCheckKey(check), label: `${check.ingredient.name} · ${formatQuantity(t, check.needed, check.ingredient.unit, format.number)}`, checked: true }))} onConfirm={onAddMissing} onClose={() => setShopping(false)} />}
       {guided && <CookingMode key={`${recipe.id}:${portions}`} recipe={recipe} items={items} servings={portions} onClose={() => setGuided(false)} />}
       <CookModal open={cooking} recipe={recipe} items={items} servings={portions} onClose={() => setCooking(false)} />
     </RequirePermission>
@@ -225,13 +229,32 @@ export function RecipeView() {
 const STATE_ICON: Record<IngredientState, typeof CircleCheck> = { ok: CircleCheck, short: TriangleAlert, missing: CircleAlert, unlinked: CircleDashed };
 
 /** Un ingrediente con su estado según lo que hay en casa (alcanza, falta poco, no hay, sin vincular). */
-export function IngredientRow({ check, last }: { check: IngredientCheck; last: boolean }) {
+export function IngredientRow({ check, last, stockLink = true }: { check: IngredientCheck; last: boolean; stockLink?: boolean }) {
   const { t, format } = useI18n();
   const { token } = theme.useToken();
   const { ingredient, needed, have, state } = check;
   const Icon = STATE_ICON[state];
   const color = { ok: token.colorSuccess, short: token.colorWarning, missing: token.colorError, unlinked: token.colorTextQuaternary }[state];
   const haveUnit = formatUnit(t, have ?? 0, ingredient.unit);
+  if (!stockLink) {
+    return (
+      <StaggerItem>
+        <Flex align="center" gap={12} style={{ paddingBlock: 10, borderBottom: last ? undefined : `1px solid ${token.colorBorderSecondary}` }}>
+          <span style={{ display: "inline-flex", color: token.colorTextQuaternary, fontSize: token.fontSizeSM, paddingLeft: 6, paddingRight: 6 }}>
+            •
+          </span>
+          <Flex vertical style={{ flex: 1, minWidth: 0 }}>
+            <Typography.Text strong ellipsis>
+              {ingredient.name}
+            </Typography.Text>
+          </Flex>
+          <Typography.Text strong style={{ whiteSpace: "nowrap" }}>
+            {formatQuantity(t, needed, ingredient.unit, format.number)}
+          </Typography.Text>
+        </Flex>
+      </StaggerItem>
+    );
+  }
 
   return (
     <StaggerItem>

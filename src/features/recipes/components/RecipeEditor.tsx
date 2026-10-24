@@ -15,6 +15,7 @@ import { PhotoGallery } from "@/features/media/components/PhotoGallery";
 import { PHOTO_LIMITS } from "@/features/media/domain";
 import { usePhotoActions } from "@/features/media/hooks";
 import { useInventoryOptions, type ItemPlace } from "@/features/shopping/hooks";
+import { usePreferences } from "@/hooks/usePreferences";
 import { useI18n } from "@/i18n";
 import { SPRING } from "@/lib/motion";
 import type { Privacy } from "@/lib/sync/scope";
@@ -58,7 +59,9 @@ function EditorForm({ recipe }: { recipe: Recipe | null }) {
   const router = useRouter();
   const { create, update, setCover } = useRecipeActions();
   const { add: addPhotos } = usePhotoActions();
-  const options = useInventoryOptions();
+  const { recipeStockLink } = usePreferences();
+  const rawOptions = useInventoryOptions();
+  const options = recipeStockLink ? rawOptions : [];
   const fileRef = useRef<HTMLInputElement>(null);
   const [name, setName] = useState(recipe?.name ?? "");
   const [servings, setServings] = useState<number | null>(recipe?.servings ?? 4);
@@ -88,7 +91,7 @@ function EditorForm({ recipe }: { recipe: Recipe | null }) {
    * igual que algo del inventario (con una medida compatible y sin coincidencias ambiguas) queda vinculado.
    */
   function pasteIngredients(key: string, text: string) {
-    const available = (options ?? []).filter(({ item }) => !item.reusable);
+    const available = recipeStockLink ? (options ?? []).filter(({ item }) => !item.reusable) : [];
     const parsed = text.split(/\r?\n/).map(parseIngredientLine).filter((line) => line !== null);
     const drafts: IngredientDraft[] = parsed.map((line) => {
       const matches = available.filter(({ item }) => item.name.toLowerCase() === line.name.toLowerCase());
@@ -357,8 +360,9 @@ function IngredientField({
 }) {
   const { t } = useI18n();
   const { token } = theme.useToken();
+  const { recipeStockLink } = usePreferences();
   const query = ingredient.name.trim().toLowerCase();
-  const matches = query && !ingredient.itemId ? options.filter(({ item, place }) => !item.reusable && `${item.name} ${place}`.toLowerCase().includes(query)).slice(0, 6) : [];
+  const matches = recipeStockLink && query && !ingredient.itemId ? options.filter(({ item, place }) => !item.reusable && `${item.name} ${place}`.toLowerCase().includes(query)).slice(0, 6) : [];
   const linked = !!ingredient.itemId;
   function changeUnit(unit: string) {
     const item = options.find((option) => option.item.id === ingredient.itemId)?.item;
@@ -383,7 +387,7 @@ function IngredientField({
         value={ingredient.name}
         placeholder={t("recipes.editor.ingredientPlaceholder")}
         aria-label={t("recipes.editor.ingredientName")}
-        prefix={linked ? <Tooltip title={t("recipes.editor.linked")}><Link2 style={{ color: token.colorPrimary }} /></Tooltip> : undefined}
+        prefix={recipeStockLink && linked ? <Tooltip title={t("recipes.editor.linked")}><Link2 style={{ color: token.colorPrimary }} /></Tooltip> : undefined}
         onChange={(value: string) => onChange(linked ? { name: value, itemId: undefined } : { name: value })}
         onSelect={(id: string) => {
           const match = options.find((option) => option.item.id === id);
