@@ -15,7 +15,7 @@ export interface CalendarEvent {
   externalShareOwners?: string[];
   id: string;
   title: string;
-  meal?: { recipeId: string; servings: number };
+  meal?: { recipeId: string; servings: number; cookId?: string };
   /** Quién lo ve con la casa en la nube (por defecto, Familia). */
   privacy?: Privacy;
   /** Inicio (ms). En eventos de todo el día, la medianoche local del primer día. */

@@ -9,6 +9,7 @@ import { CURRENCIES, type Currency, type PriceSummary } from "@/features/prices/
 import { isAppearanceColor, isAppearanceIcon, type AppearanceColor, type AppearanceIcon } from "@/lib/appearance";
 import { ValidationError } from "@/lib/errors";
 import { isPrivacy, type Privacy } from "@/lib/sync/scope";
+import type { ShoppingCategory } from "./categories";
 
 // --- Listas ---------------------------------------------------------------------
 
@@ -80,6 +81,8 @@ export interface ShoppingListItem {
   unit: string;
   /** `pending` = falta comprar; `bought` = ya está en la bolsa. (Un booleano no se puede indexar en IndexedDB.) */
   status: ShoppingStatus;
+  /** Rubro o pasillo en el supermercado (opcional; si falta se infiere por el nombre). */
+  category?: ShoppingCategory;
   /** Producto del inventario al que repone (si no, es un ítem suelto: "velas de cumpleaños"). */
   inventoryItemId?: string;
   /** Cuánto se sumó al inventario al comprarlo (para poder desmarcarlo sin dejar stock de más). */

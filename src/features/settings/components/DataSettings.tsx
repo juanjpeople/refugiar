@@ -1,7 +1,7 @@
 "use client";
 
 import { Alert, App, Button, Flex, Input, Modal, Progress, Switch, Tag, Typography, theme } from "antd";
-import { Cloud, Download, Eraser, HardDrive, RotateCcw, TriangleAlert, Upload } from "lucide-react";
+import { Cloud, Download, Eraser, HardDrive, RotateCcw, Share2, TriangleAlert, Upload } from "lucide-react";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import Link from "next/link";
 import { Can } from "@/components/auth/Can";
@@ -132,9 +132,16 @@ export function DataSettings() {
 
       <SettingRow label={t("settings.data.export.title")} description={t("settings.data.export.text")}>
         {adminOnly((disabled) => (
-          <Button icon={<Download />} loading={backup.busy} disabled={disabled} onClick={onExport}>
+          <Flex gap={token.marginXS} wrap>
+            <Button icon={<Download />} loading={backup.busy} disabled={disabled} onClick={onExport}>
             {t("settings.data.export.button")}
           </Button>
+          {backup.canShare && (
+            <Button icon={<Share2 />} loading={backup.busy} disabled={disabled} onClick={() => void backup.shareNow()}>
+              {t("settings.data.export.share")}
+            </Button>
+          )}
+        </Flex>
         ))}
       </SettingRow>
 

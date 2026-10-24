@@ -1,6 +1,7 @@
 "use client";
 
-import { Col, Collapse, Form, Input, InputNumber, Modal, Row, Select, Switch, theme } from "antd";
+import { Button, Col, Collapse, DatePicker, Flex, Form, Input, InputNumber, Modal, Row, Select, Switch, theme } from "antd";
+import dayjs, { type Dayjs } from "dayjs";
 import { useEffect, useState } from "react";
 import { useT } from "@/i18n";
 import { INVENTORY_LIMITS, UNITS, type NewInventoryItem } from "../domain";
@@ -14,7 +15,7 @@ const DEFAULT_VALUES: Omit<NewInventoryItem, "name"> = { quantity: 1, unit: "uni
  * que hay; el catálogo completa el formulario y se confirma con Agregar.
  */
 export function ProductModal({ containerId, place, open, onClose }: { containerId: string; place: string; open: boolean; onClose: () => void }) {
-  const [form] = Form.useForm<NewInventoryItem>();
+  const [form] = Form.useForm<Omit<NewInventoryItem, "expiresAt"> & { expiresAt?: Dayjs }>();
   const [saving, setSaving] = useState(false);
   const { create } = useInventoryActions();
   const t = useT();
@@ -27,7 +28,8 @@ export function ProductModal({ containerId, place, open, onClose }: { containerI
   async function submit() {
     const values = await form.validateFields();
     setSaving(true);
-    const ok = await create(containerId, values);
+    const expiresAt = values.expiresAt ? values.expiresAt.valueOf() : undefined;
+    const ok = await create(containerId, { ...values, expiresAt });
     setSaving(false);
     if (ok) onClose();
   }
@@ -89,6 +91,22 @@ export function ProductModal({ containerId, place, open, onClose }: { containerI
             </Form.Item>
           </Col>
         </Row>
+        <Form.Item name="expiresAt" label={t("inventory.expires.label")}>
+          <Flex vertical gap={8}>
+            <DatePicker style={{ width: "100%" }} placeholder={t("inventory.expires.placeholder")} format="DD/MM/YYYY" />
+            <Flex gap={8} wrap>
+              <Button size="small" onClick={() => form.setFieldValue("expiresAt", dayjs().add(7, "day"))}>
+                {t("inventory.expires.presets.week")}
+              </Button>
+              <Button size="small" onClick={() => form.setFieldValue("expiresAt", dayjs().add(1, "month"))}>
+                {t("inventory.expires.presets.month")}
+              </Button>
+              <Button size="small" onClick={() => form.setFieldValue("expiresAt", dayjs().add(6, "month"))}>
+                {t("inventory.expires.presets.sixMonths")}
+              </Button>
+            </Flex>
+          </Flex>
+        </Form.Item>
         </>) }]} />
         {/* Enter en un campo guarda, como en el resto de los formularios. */}
         <button type="submit" hidden />

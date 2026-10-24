@@ -4,7 +4,8 @@ import { surfaceBackground } from "@/skins/surface";
 import { useSkin } from "@/skins/useSkin";
 import { formatQuantity, formatUnit } from "@/features/inventory/format";
 
-import { App, Button, Col, Collapse, Divider, Drawer, Flex, Form, Grid, Input, InputNumber, Row, Select, Space, Switch, Typography, theme } from "antd";
+import { App, Button, Col, Collapse, DatePicker, Divider, Drawer, Flex, Form, Grid, Input, InputNumber, Row, Select, Space, Switch, Typography, theme } from "antd";
+import dayjs, { type Dayjs } from "dayjs";
 import { Boxes, ListPlus, PackageMinus, PackageOpen, Save, ScanLine } from "lucide-react";
 import { useState, type ReactNode } from "react";
 import { Can } from "@/components/auth/Can";
@@ -25,6 +26,7 @@ import { getStockStatus, INVENTORY_LIMITS, isBarcode, UNITS, type InventoryItem,
 import { useConsumption, useInventoryActions, useInventoryItem } from "../hooks";
 import { useConsumeWithUndo } from "./ConsumeButton";
 import { ItemSpot } from "./ItemSpot";
+import { ExpirationBadge } from "./ExpirationBadge";
 
 /**
  * Ficha de un producto: primero cuánto hay y las acciones de todos los días; después dónde está,
@@ -49,6 +51,7 @@ export function ItemDrawer({ itemId, onClose }: { itemId: string | null; onClose
             <IconTile icon={appearance?.Icon ?? PackageOpen} color={appearance?.color} size={token.controlHeight} solid />
             <span style={{ overflow: "hidden", textOverflow: "ellipsis" }}>{item.name}</span>
             <StockTag status={getStockStatus(item)} tool={item.reusable} />
+            <ExpirationBadge expiresAt={item.expiresAt} />
           </Flex>
         ) : null
       }
@@ -209,11 +212,13 @@ function ItemForm({ item }: { item: InventoryItem }) {
   const t = useT();
   const { update } = useInventoryActions();
   const canEdit = usePermission("inventory.create");
+  const [form] = Form.useForm<Omit<InventoryItemPatch, "expiresAt"> & { expiresAt?: Dayjs | null }>();
   const [saving, setSaving] = useState(false);
 
-  async function onFinish(values: InventoryItemPatch) {
+  async function onFinish(values: Omit<InventoryItemPatch, "expiresAt"> & { expiresAt?: Dayjs | null }) {
     setSaving(true);
-    await update(item.id, values);
+    const expiresAt = values.expiresAt ? values.expiresAt.valueOf() : (values.expiresAt === null ? null : undefined);
+    await update(item.id, { ...values, expiresAt });
     setSaving(false);
   }
 
@@ -221,7 +226,8 @@ function ItemForm({ item }: { item: InventoryItem }) {
     <Form
       layout="vertical"
       name={`item-${item.id}`}
-      initialValues={{ name: item.name, minThreshold: item.minThreshold, unit: item.unit, autoSuggest: item.autoSuggest !== false, reusable: item.reusable === true, barcode: item.barcode ?? "" }}
+      form={form}
+      initialValues={{ name: item.name, minThreshold: item.minThreshold, unit: item.unit, autoSuggest: item.autoSuggest !== false, reusable: item.reusable === true, barcode: item.barcode ?? "", expiresAt: item.expiresAt ? dayjs(item.expiresAt) : undefined }}
       onFinish={onFinish}
       disabled={!canEdit}
       requiredMark={false}
@@ -258,6 +264,27 @@ function ItemForm({ item }: { item: InventoryItem }) {
         rules={[{ validator: (_, value?: string) => (!value?.trim() || isBarcode(value.trim()) ? Promise.resolve() : Promise.reject(new Error(t("errors.validation.barcodeInvalid")))) }]}
       >
         <Input inputMode="numeric" maxLength={14} style={{ fontFamily: "var(--font-geist-mono)" }} />
+      </Form.Item>
+      <Form.Item name="expiresAt" label={t("inventory.expires.label")}>
+        <Flex vertical gap={8}>
+          <DatePicker style={{ width: "100%" }} placeholder={t("inventory.expires.placeholder")} format="DD/MM/YYYY" allowClear />
+          <Flex gap={8} wrap>
+            <Button size="small" onClick={() => form.setFieldValue("expiresAt", dayjs().add(7, "day"))}>
+              {t("inventory.expires.presets.week")}
+            </Button>
+            <Button size="small" onClick={() => form.setFieldValue("expiresAt", dayjs().add(1, "month"))}>
+              {t("inventory.expires.presets.month")}
+            </Button>
+            <Button size="small" onClick={() => form.setFieldValue("expiresAt", dayjs().add(6, "month"))}>
+              {t("inventory.expires.presets.sixMonths")}
+            </Button>
+            {item.expiresAt && (
+              <Button size="small" danger onClick={() => form.setFieldValue("expiresAt", null)}>
+                {t("inventory.expires.clear")}
+              </Button>
+            )}
+          </Flex>
+        </Flex>
       </Form.Item>
       {canEdit && (
         <Button type="primary" htmlType="submit" icon={<Save />} loading={saving}>

@@ -160,11 +160,13 @@ export async function updateInventoryItem(actor: Actor | null, id: string, patch
     const item = await getItem(id);
     const containerId = data.containerId ?? item.containerId;
     const place = await containerName(containerId);
-    const { spot, ...fields } = data;
+    const { spot, expiresAt, ...fields } = data;
     const updated: InventoryItem = { ...item, ...fields, updatedAt: Date.now() };
+    if (expiresAt) updated.expiresAt = expiresAt;
     if (spot) updated.spot = spot;
     // El punto es de una foto de su mueble: borrado a pedido o al moverlo a otro lado.
     if (spot === null || (containerId !== item.containerId && !spot)) delete updated.spot;
+    if (patch.expiresAt === null) delete updated.expiresAt;
     await db.inventory.put(updated);
     await recordActivity(actor, {
       module: "inventory",

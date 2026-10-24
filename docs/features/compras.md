@@ -30,3 +30,11 @@ El stock y el vínculo se guardan en la misma transacción. Repetir la acción e
 ## ✅ Hecho — compartir y comprar juntos
 
 Compartir ofrece texto, copia fija, lista actualizable y Comprar juntos. Los invitados sólo marcan productos existentes. Las marcas aparecen en el dispositivo publicador como «Comprado por invitado»; un adulto confirma recepción y el servicio de compras suma stock una sola vez si hay un vínculo. Los invitados nunca cambian inventario, cantidades ni precios. Los conflictos por producto piden repetir la acción. Importar crea otra lista, privada por defecto y con todo pendiente. [Flujo, cuotas, reconexión y revisión](compartir.md).
+
+## Modo Súper
+
+El interruptor **Modo Súper** en Compras organiza la lista activa por pasillos habituales de supermercado:
+- 9 categorías automáticas con icono y color distintivo: Frutas y verduras, Lácteos y refrigerados, Carnicería y pescadería, Panadería y pastas, Almacén, Bebidas, Limpieza, Perfumería y cuidado personal, y Otros.
+- Clasificación heurística instantánea por el nombre del ítem o del producto vinculado en el inventario.
+- Barra adhesiva superior que resume en vivo el progreso ("Comprados: X de Y") y el monto total estimado que llevás en el changuito.
+- Al tildar un producto, pasa a la sección "En el changuito" con animación fluida, conservando su categoría e importe acumulado.

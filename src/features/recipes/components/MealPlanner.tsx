@@ -1,11 +1,11 @@
 "use client";
 import { ShareButton } from "@/features/sharing/ShareButton";
 
-import { App, Button, DatePicker, Flex, Form, InputNumber, Modal, Select, Typography } from "antd";
+import { App, Button, Card, DatePicker, Flex, Form, InputNumber, Modal, Select, Tag, Typography } from "antd";
 import dayjs, { type Dayjs } from "dayjs";
 import { useLiveQuery } from "dexie-react-hooks";
 import { useRef, useState } from "react";
-import { ChevronLeft, ChevronRight, ShoppingCart } from "lucide-react";
+import { ChevronLeft, ChevronRight, ShoppingCart, Sparkles } from "lucide-react";
 import { PageHeader, ReviewChecklist, WeeklyMenu } from "@/components/ui";
 import { Reveal } from "@/components/motion";
 import { RequirePermission } from "@/components/auth/RequirePermission";
@@ -16,9 +16,10 @@ import { recipeHref } from "@/lib/navigation/routes";
 import { useI18n } from "@/i18n";
 import { formatQuantity } from "@/features/inventory/format";
 import { useEventActions } from "@/features/calendar/hooks";
+import { useMembers } from "@/features/members/hooks";
 import { useRecipes } from "../hooks";
 import { ingredientCheckKey, RECIPE_LIMITS } from "../domain";
-import { addPlannedMissing, planMeal, plannedNeeds, plannedMeals } from "../meal-plan";
+import { addPlannedMissing, planMeal, plannedNeeds, plannedMeals, suggestWeeklyMenu, type MealSuggestion } from "../meal-plan";
 
 export function MealPlanner() {
   const { t, format } = useI18n();
@@ -27,6 +28,10 @@ export function MealPlanner() {
   const canPlan = usePermission("calendar.manage");
   const canShop = usePermission("shopping.manage");
   const recipes = useRecipes();
+  const members = useMembers() ?? [];
+  const [cookId, setCookId] = useState<string>();
+  const [suggesting, setSuggesting] = useState(false);
+  const [suggestions, setSuggestions] = useState<MealSuggestion[] | null>(null);
   const { remove } = useEventActions();
   const currentWeekStart = dayjs().startOf("day").subtract((dayjs().day() + 6) % 7, "day");
   const [week, setWeek] = useState(currentWeekStart);
@@ -44,7 +49,14 @@ export function MealPlanner() {
     const date = week.add(index, "day");
     return { id: date.format("YYYY-MM-DD"), label: format.date(date.valueOf(), { weekday: "long", day: "numeric", month: "short" }), meals: (entries ?? []).filter(event => dayjs(event.start).isSame(date, "day")).map(event => {
       const recipe = recipes?.find(recipe => recipe.id === event.meal!.recipeId);
-      return { id: event.id, label: recipe?.name ?? t("meals.unavailable"), href: recipe ? recipeHref(recipe.id) : undefined, servings: event.meal!.servings };
+        const cook = event.meal?.cookId ? members.find((m) => m.id === event.meal!.cookId) : (event.participantIds?.[0] ? members.find((m) => m.id === event.participantIds[0]) : undefined);
+        return {
+          id: event.id,
+          label: recipe?.name ?? t("meals.unavailable"),
+          href: recipe ? recipeHref(recipe.id) : undefined,
+          servings: event.meal!.servings,
+          cook: cook ? { id: cook.id, name: cook.name, emoji: cook.emoji } : undefined,
+        };
     }) };
   });
 
@@ -53,13 +65,51 @@ export function MealPlanner() {
     pending.current = true;
     setBusy(true);
     try {
-      await planMeal(user, recipeId, day.startOf("day").valueOf(), servings);
+      await planMeal(user, recipeId, day.startOf("day").valueOf(), servings, cookId);
       message.success(t("meals.planned"));
       setDay(null);
+      setCookId(undefined);
     } catch (error) {
       message.error(getErrorMessage(error, t));
     } finally {
       pending.current = false;
+      setBusy(false);
+    }
+  }
+
+  async function handleSuggest() {
+    if (suggesting) return;
+    setSuggesting(true);
+    try {
+      const result = await suggestWeeklyMenu(user, from, to);
+      if (result.length === 0) {
+        if ((recipes ?? []).length === 0) {
+          message.info(t("meals.suggest.empty"));
+        } else {
+          message.info(t("meals.suggest.allPlanned"));
+        }
+      } else {
+        setSuggestions(result);
+      }
+    } catch (err) {
+      message.error(getErrorMessage(err, t));
+    } finally {
+      setSuggesting(false);
+    }
+  }
+
+  async function applySuggestions() {
+    if (!suggestions || suggestions.length === 0) return;
+    setBusy(true);
+    try {
+      for (const s of suggestions) {
+        await planMeal(user, s.recipeId, s.dayStart, s.servings);
+      }
+      message.success(t("meals.planned"));
+      setSuggestions(null);
+    } catch (err) {
+      message.error(getErrorMessage(err, t));
+    } finally {
       setBusy(false);
     }
   }
@@ -96,7 +146,18 @@ export function MealPlanner() {
               onClick={() => setWeek(week.add(7, "day"))}
             />
           </Flex>
-          {canShop && (
+          <Flex gap="small" wrap>
+            {canPlan && (
+              <Button
+                icon={<Sparkles />}
+                style={{ minHeight: 44, display: "inline-flex", alignItems: "center" }}
+                loading={suggesting}
+                onClick={handleSuggest}
+              >
+                {t("meals.suggest.action")}
+              </Button>
+            )}
+            {canShop && (
             <Button
               type="primary"
               size="large"
@@ -108,6 +169,7 @@ export function MealPlanner() {
               {t("meals.missing")}
             </Button>
           )}
+          </Flex>
           <Typography.Paragraph type="secondary" style={{ margin: 0 }}>
             {t("meals.hint")}
           </Typography.Paragraph>
@@ -146,6 +208,20 @@ export function MealPlanner() {
               onChange={(value) => value && setServings(value)}
             />
           </Form.Item>
+          {members.length > 0 && (
+            <Form.Item label={t("meals.cook.label")}>
+              <Select
+                allowClear
+                placeholder={t("meals.cook.placeholder")}
+                value={cookId}
+                onChange={setCookId}
+                options={members.map((member) => ({
+                  value: member.id,
+                  label: member.emoji ? `${member.emoji} ${member.name}` : member.name,
+                }))}
+              />
+            </Form.Item>
+          )}
           <Button type="primary" htmlType="submit" size="large" style={{ minHeight: 44 }} loading={busy} disabled={!recipeId}>
             {t("meals.save")}
           </Button>
@@ -173,6 +249,38 @@ export function MealPlanner() {
           }}
         />
       )}
+      <Modal
+        open={!!suggestions}
+        title={t("meals.suggest.title")}
+        onCancel={() => setSuggestions(null)}
+        onOk={applySuggestions}
+        okText={t("meals.suggest.confirm")}
+        cancelText={t("common.cancel")}
+        confirmLoading={busy}
+      >
+        <Typography.Paragraph type="secondary">
+          {t("meals.suggest.description")}
+        </Typography.Paragraph>
+        <Flex vertical gap={8} style={{ marginBlock: 12 }}>
+          {suggestions?.map((s) => (
+            <Card key={s.dayStart} size="small" styles={{ body: { padding: "10px 14px" } }}>
+              <Flex justify="space-between" align="center" wrap gap={8}>
+                <Typography.Text strong>
+                  {format.date(s.dayStart, { weekday: "long", day: "numeric" })}
+                </Typography.Text>
+                <Flex align="center" gap={8}>
+                  <span>{s.recipeName}</span>
+                  {s.availableIngredients === s.totalIngredients && (
+                    <Tag color="success" style={{ margin: 0 }}>
+                      {t("inventory.stock.ok")}
+                    </Tag>
+                  )}
+                </Flex>
+              </Flex>
+            </Card>
+          ))}
+        </Flex>
+      </Modal>
     </RequirePermission>
   );
 }

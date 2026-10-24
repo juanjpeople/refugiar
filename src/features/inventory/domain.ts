@@ -35,16 +35,18 @@ export interface InventoryItem {
   reusable?: boolean;
   /** Código de barras del envase (EAN o UPC): al escanearlo otra vez, se suma a este. */
   barcode?: string;
+  /** Fecha de vencimiento estimada en milisegundos (timestamp Unix). Opcional. */
+  expiresAt?: number;
   /** El punto en la foto del mueble donde está guardado. Se borra al moverlo a otro lugar. */
   spot?: PhotoSpot;
   createdAt: number;
   updatedAt: number;
 }
 
-export type NewInventoryItem = Pick<InventoryItem, "name" | "quantity" | "unit" | "minThreshold" | "autoSuggest" | "reusable" | "barcode">;
+export type NewInventoryItem = Pick<InventoryItem, "name" | "quantity" | "unit" | "minThreshold" | "autoSuggest" | "reusable" | "barcode" | "expiresAt">;
 
 /** Campos editables de un producto. Cambiar `containerId` es moverlo de lugar. `spot: null` borra el punto. */
-export type InventoryItemPatch = Partial<Pick<InventoryItem, "name" | "unit" | "minThreshold" | "containerId" | "autoSuggest" | "reusable" | "barcode">> & { spot?: PhotoSpot | null };
+export type InventoryItemPatch = Partial<Pick<InventoryItem, "name" | "unit" | "minThreshold" | "containerId" | "autoSuggest" | "reusable" | "barcode">> & { spot?: PhotoSpot | null; expiresAt?: number | null };
 
 export const INVENTORY_LIMITS = {
   nameMaxLength: 80,
@@ -174,6 +176,13 @@ function parseBarcode(value: string | undefined): string | undefined {
   return code;
 }
 
+function parseExpiresAt(value: unknown): number | undefined {
+  if (value === undefined || value === null || value === "") return undefined;
+  const num = typeof value === "number" ? value : Number(value);
+  if (!Number.isFinite(num) || num <= 0) throw new ValidationError("errors.validation.dateInvalid");
+  return Math.round(num);
+}
+
 export function parseSpot(spot: PhotoSpot): PhotoSpot {
   const inside = (value: unknown) => typeof value === "number" && Number.isFinite(value) && value >= 0 && value <= 1;
   if (!spot || typeof spot.photoId !== "string" || !spot.photoId || !inside(spot.x) || !inside(spot.y)) throw new ValidationError("errors.validation.spotInvalid");
@@ -190,7 +199,8 @@ export function parseNewInventoryItem(input: NewInventoryItem): NewInventoryItem
   return { name, quantity: roundQuantity(input.quantity), unit: input.unit, minThreshold: roundQuantity(input.minThreshold),
     ...(input.autoSuggest === undefined ? {} : { autoSuggest: !!input.autoSuggest }),
     ...(input.reusable === undefined ? {} : { reusable: !!input.reusable }),
-    ...(parseBarcode(input.barcode) ? { barcode: parseBarcode(input.barcode) } : {}) };
+    ...(parseBarcode(input.barcode) ? { barcode: parseBarcode(input.barcode) } : {}),
+    ...(input.expiresAt ? { expiresAt: parseExpiresAt(input.expiresAt) } : {}) };
 }
 
 export function parseInventoryPatch(patch: InventoryItemPatch): InventoryItemPatch {
@@ -209,7 +219,29 @@ export function parseInventoryPatch(patch: InventoryItemPatch): InventoryItemPat
   if (patch.reusable !== undefined) out.reusable = !!patch.reusable;
   if (patch.barcode !== undefined) out.barcode = parseBarcode(patch.barcode);
   if (patch.spot !== undefined) out.spot = patch.spot === null ? null : parseSpot(patch.spot);
+  if (patch.expiresAt !== undefined) out.expiresAt = patch.expiresAt === null ? undefined : parseExpiresAt(patch.expiresAt);
   return out;
+}
+
+export type ExpirationStatus = "expired" | "soon" | "good" | "none";
+
+/**
+ * Calcula el estado de vencimiento de un producto según su fecha.
+ * - expired: ya pasó la fecha.
+ * - soon: vence en los próximos 7 días (incluyendo hoy).
+ * - good: vence en más de 7 días.
+ * - none: no tiene fecha de vencimiento configurada.
+ */
+export function getExpirationStatus(expiresAt?: number, now = Date.now()): ExpirationStatus {
+  if (!expiresAt) return "none";
+  if (expiresAt < now) return "expired";
+  if (expiresAt - now <= 7 * 86_400_000) return "soon";
+  return "good";
+}
+
+/** Días restantes hasta el vencimiento (positivo = faltan días, negativo = vencido hace N días). */
+export function getExpirationDays(expiresAt: number, now = Date.now()): number {
+  return Math.ceil((expiresAt - now) / 86_400_000);
 }
 
 // --- Consumo -----------------------------------------------------------------

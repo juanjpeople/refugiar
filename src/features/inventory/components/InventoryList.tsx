@@ -15,6 +15,7 @@ import { usePermission } from "@/lib/auth/hooks";
 import { getStockStatus, isInStock } from "../domain";
 import { useInventoryActions, useInventoryItems } from "../hooks";
 import { ConsumeButton } from "./ConsumeButton";
+import { ExpirationBadge } from "./ExpirationBadge";
 import { findCatalogProduct } from "../catalog";
 import { CATEGORY_APPEARANCE } from "../catalog-appearance";
 
@@ -73,6 +74,7 @@ export function InventoryList({ containerId, onOpen, highlightId }: InventoryLis
               onOpen={() => onOpen(item.id)} openLabel={t("inventory.list.openAria", { name: item.name })}
               meta={<>
                       <StockTag status={getStockStatus(item)} tool={item.reusable} />
+                      <ExpirationBadge expiresAt={item.expiresAt} />
                       {!item.reusable && (
                         <Typography.Text type="secondary" style={{ fontSize: token.fontSizeSM }}>
                           {t("inventory.list.min", { min: item.minThreshold, unit: unitLabel(item.unit, item.minThreshold) })}
