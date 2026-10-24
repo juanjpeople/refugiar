@@ -9,7 +9,7 @@ import { checkAvailability, RECIPE_LIMITS, type Recipe } from "./domain";
 import { LIST_TABLES } from "@/features/shopping/service";
 import { addReportMissingWithin } from "./service";
 
-export async function planMeal(actor: Actor | null, recipeId: string, start: number, servings: number) {
+export async function planMeal(actor: Actor | null, recipeId: string, start: number, servings: number, cookId?: string) {
   assertCan(actor, "calendar.manage");
   assertCan(actor, "recipes.view");
   if (!Number.isFinite(start) || !Number.isInteger(servings) || servings < 1 || servings > RECIPE_LIMITS.maxServings) throw new ValidationError("errors.validation.servingsInvalid");
@@ -17,7 +17,7 @@ export async function planMeal(actor: Actor | null, recipeId: string, start: num
     const recipe = await db.recipes.get(recipeId);
     if (!recipe || !canSee(actor, recipe)) throw new NotFoundError("errors.notFound.recipe");
     const id = createId();
-    await db.events.add({ id, title: recipe.name, start, end: start, allDay: true, repeat: "none", participantIds: [], color: "orange", privacy: recipe.privacy ?? "family", meal: { recipeId, servings }, createdBy: actor.id, createdAt: Date.now(), updatedAt: Date.now() });
+    await db.events.add({ id, title: recipe.name, start, end: start, allDay: true, repeat: "none", participantIds: cookId ? [cookId] : [], color: "orange", privacy: recipe.privacy ?? "family", meal: { recipeId, servings, cookId }, createdBy: actor.id, createdAt: Date.now(), updatedAt: Date.now() });
     await recordActivity(actor, { module: "calendar", action: "create", entityId: id, entityName: recipe.name, privacy: recipe.privacy ?? "family", createdBy: actor.id });
   });
   await pruneActivity();
@@ -48,4 +48,64 @@ export async function addPlannedMissing(actor: Actor | null, from: number, to: n
   });
   await pruneActivity();
   return added;
+}
+
+export interface MealSuggestion {
+  dayStart: number;
+  recipeId: string;
+  recipeName: string;
+  servings: number;
+  availableIngredients: number;
+  totalIngredients: number;
+}
+
+/**
+ * Sugiere recetas para los días de la semana que aún no tienen una comida planificada.
+ * Prioriza recetas que tengan todos o la mayoría de sus ingredientes en el inventario.
+ */
+export async function suggestWeeklyMenu(actor: Actor | null, from: number, to: number): Promise<MealSuggestion[]> {
+  assertCan(actor, "calendar.manage");
+  assertCan(actor, "recipes.view");
+  const planned = await plannedMeals(actor, from, to);
+  const plannedDays = new Set(planned.map((e) => Math.floor(e.start / 86400000)));
+
+  const emptyDays: number[] = [];
+  for (let t = from; t < to; t += 86400000) {
+    const dayKey = Math.floor(t / 86400000);
+    if (!plannedDays.has(dayKey)) {
+      emptyDays.push(t);
+    }
+  }
+
+  if (emptyDays.length === 0) return [];
+
+  const allRecipes = (await db.recipes.toArray()).filter((r) => canSee(actor, r));
+  if (allRecipes.length === 0) return [];
+
+  const inventoryItems = new Map((await db.inventory.toArray()).map((item) => [item.id, item]));
+
+  const scoredRecipes = allRecipes.map((recipe) => {
+    const report = checkAvailability(recipe, inventoryItems, recipe.servings);
+    const available = report.checks.filter((c) => c.state === "ok").length;
+    const total = report.checks.length;
+    const score = total > 0 ? available / total : 1;
+    return { recipe, score, available, total };
+  });
+
+  scoredRecipes.sort((a, b) => b.score - a.score || b.recipe.updatedAt - a.recipe.updatedAt);
+
+  const suggestions: MealSuggestion[] = [];
+  for (let i = 0; i < emptyDays.length; i++) {
+    const candidate = scoredRecipes[i % scoredRecipes.length];
+    suggestions.push({
+      dayStart: emptyDays[i],
+      recipeId: candidate.recipe.id,
+      recipeName: candidate.recipe.name,
+      servings: candidate.recipe.servings || 4,
+      availableIngredients: candidate.available,
+      totalIngredients: candidate.total,
+    });
+  }
+
+  return suggestions;
 }

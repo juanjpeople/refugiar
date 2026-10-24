@@ -1,14 +1,25 @@
 "use client";
 
-import { Button, Card, Flex, Typography, theme } from "antd";
+import { Button, Card, Flex, Tag, Typography, theme } from "antd";
 import Link from "next/link";
-import { Plus, Trash2 } from "lucide-react";
+import { ChefHat, Plus, Trash2 } from "lucide-react";
 import { Stagger, StaggerItem } from "@/components/motion";
 import { useT } from "@/i18n";
 
 export function WeeklyMenu({ days, onAdd, onRemove }: {
-  days: { id: string; label: string; meals: { id: string; label: string; href?: string; servings: number }[] }[];
-  onAdd?: (id: string) => void; onRemove?: (id: string) => void;
+  days: {
+    id: string;
+    label: string;
+    meals: {
+      id: string;
+      label: string;
+      href?: string;
+      servings: number;
+      cook?: { id: string; name: string; emoji?: string };
+    }[];
+  }[];
+  onAdd?: (id: string) => void;
+  onRemove?: (id: string) => void;
 }) {
   const t = useT();
   const { token } = theme.useToken();
@@ -47,9 +58,26 @@ export function WeeklyMenu({ days, onAdd, onRemove }: {
                           {meal.label}
                         </Typography.Text>
                       )}
-                      <Typography.Text type="secondary" style={{ fontSize: token.fontSizeSM }}>
-                        {t("recipes.servings", { count: meal.servings })}
-                      </Typography.Text>
+                      <Flex align="center" gap={8} wrap>
+                        <Typography.Text type="secondary" style={{ fontSize: token.fontSizeSM }}>
+                          {t("recipes.servings", { count: meal.servings })}
+                        </Typography.Text>
+                        {meal.cook && (
+                          <Tag
+                            variant="filled"
+                            style={{
+                              margin: 0,
+                              display: "inline-flex",
+                              alignItems: "center",
+                              gap: 4,
+                              fontSize: token.fontSizeSM,
+                            }}
+                          >
+                            <ChefHat />
+                            <span>{meal.cook.emoji ? `${meal.cook.emoji} ${meal.cook.name}` : meal.cook.name}</span>
+                          </Tag>
+                        )}
+                      </Flex>
                     </Flex>
                     {onRemove && (
                       <Button

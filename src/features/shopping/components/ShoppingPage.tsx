@@ -5,10 +5,10 @@ import { formatQuantity, formatUnit } from "@/features/inventory/format";
 
 import { App, Button, Card, Col, Dropdown, Flex, Grid, Progress, Row, Tag, Tooltip, Typography, theme } from "antd";
 import { AnimatePresence, LayoutGroup, motion } from "framer-motion";
-import { Archive, ArchiveRestore, ArrowLeftRight, ClipboardList, Ellipsis, Eraser, FolderOpen, MapPin, Pencil, ShoppingBag, ShoppingBasket, Trash2, Wallet, type LucideIcon } from "lucide-react";
+import { Archive, ArchiveRestore, ArrowLeftRight, ClipboardList, Ellipsis, Eraser, FolderOpen, MapPin, Pencil, ShoppingBag, ShoppingBasket, Store, Trash2, Wallet, type LucideIcon } from "lucide-react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useState, type ReactNode } from "react";
+import { useMemo, useState, type ReactNode } from "react";
 import { RequirePermission } from "@/components/auth/RequirePermission";
 import { AnimatedNumber, Reveal, Stagger, StaggerItem } from "@/components/motion";
 import { EmptyState, IconTile, PageHeader, QuantityStepper, LoadingSkeleton } from "@/components/ui";
@@ -18,6 +18,7 @@ import { useI18n } from "@/i18n";
 import { APPEARANCE_ICONS } from "@/lib/appearance";
 import { usePermission } from "@/lib/auth/hooks";
 import { SPRING } from "@/lib/motion";
+import { CATEGORY_ICONS, guessShoppingCategory, SHOPPING_CATEGORIES, type ShoppingCategory } from "../categories";
 import { HOME_LIST_ID, SHOPPING_LIMITS, type ListBudget, type ShoppingList } from "../domain";
 import { listName, useListSummaries, useShoppingActions, useShoppingData, type ListSummary, type ShoppingRow } from "../hooks";
 import { BudgetBar } from "./BudgetBar";
@@ -41,6 +42,7 @@ export function ShoppingPage() {
   const canManage = usePermission("shopping.manage");
   const { clearBought, archiveList, deleteList } = useShoppingActions();
   const [dialog, setDialog] = useState<"create" | "edit" | null>(null);
+  const [supermarketMode, setSupermarketMode] = useState(false);
 
   const select = (id: string) => router.replace(id === HOME_LIST_ID ? "/compras" : `/compras?lista=${id}`, { scroll: false });
 
@@ -148,7 +150,15 @@ export function ShoppingPage() {
                 </Reveal>
               )}
               <Reveal delay={0.15}>
-                <ListCard list={list} lists={lists ?? []} pending={data.pending} bought={data.bought} />
+                <ListCard
+                  list={list}
+                  lists={lists ?? []}
+                  pending={data.pending}
+                  bought={data.bought}
+                  supermarketMode={supermarketMode}
+                  onToggleSupermarketMode={() => setSupermarketMode((prev) => !prev)}
+                  inCartCents={data.budget.spentCents + data.budget.boughtEstimateCents}
+                />
               </Reveal>
             </Col>
             <Col xs={{ span: 24, order: 2 }} lg={{ span: 9, order: 2 }}>
@@ -321,17 +331,65 @@ function BudgetLine({ label, value, strong = false }: { label: string; value: st
 
 // --- Lista ----------------------------------------------------------------------
 
-function ListCard({ list, lists, pending, bought }: { list: ShoppingList; lists: ListSummary[]; pending: ShoppingRow[]; bought: ShoppingRow[] }) {
+function ListCard({
+  list,
+  lists,
+  pending,
+  bought,
+  supermarketMode,
+  onToggleSupermarketMode,
+  inCartCents,
+}: {
+  list: ShoppingList;
+  lists: ListSummary[];
+  pending: ShoppingRow[];
+  bought: ShoppingRow[];
+  supermarketMode: boolean;
+  onToggleSupermarketMode: () => void;
+  inCartCents: number;
+}) {
   const { t } = useI18n();
   const { token } = theme.useToken();
   const total = pending.length + bought.length;
   const home = list.id === HOME_LIST_ID;
   const days = SHOPPING_LIMITS.boughtVisibleMs / 86_400_000;
+  const { format } = useI18n();
+  const screens = Grid.useBreakpoint();
   const targets = lists.filter((summary) => summary.list.id !== list.id && !summary.list.archivedAt).map((summary) => summary.list);
+
+  const groupedPending = useMemo(() => {
+    if (!supermarketMode) return null;
+    const groups = new Map<ShoppingCategory, ShoppingRow[]>();
+    for (const row of pending) {
+      const cat = row.category ?? guessShoppingCategory(row.name);
+      const list = groups.get(cat) ?? [];
+      list.push(row);
+      groups.set(cat, list);
+    }
+    return SHOPPING_CATEGORIES.filter((cat) => groups.has(cat)).map((cat) => ({
+      category: cat,
+      rows: groups.get(cat)!,
+    }));
+  }, [supermarketMode, pending]);
 
   return (
     <Card
-      title={t("shopping.list.title")}
+      title={
+        <Flex align="center" gap={10} wrap="wrap">
+          <span>{t("shopping.list.title")}</span>
+          {total > 0 && (
+            <Button
+              size="small"
+              type={supermarketMode ? "primary" : "default"}
+              icon={<Store />}
+              onClick={onToggleSupermarketMode}
+              style={{ display: "inline-flex", alignItems: "center" }}
+            >
+              {t("shopping.supermarketMode")}
+            </Button>
+          )}
+        </Flex>
+      }
       extra={
         total > 0 && (
           <Tooltip title={home ? t("shopping.list.progressHint", { days }) : undefined}>
@@ -348,15 +406,82 @@ function ListCard({ list, lists, pending, bought }: { list: ShoppingList; lists:
       // Las filas tienen fondo propio: sin esto taparían las esquinas redondeadas.
       style={{ overflow: "hidden" }}
     >
+      {supermarketMode && total > 0 && (
+        <motion.div
+          layout="position"
+          style={{
+            padding: screens.sm ? "10px 24px" : "8px 16px",
+            background: token.colorFillAlter,
+            borderBottom: `1px solid ${token.colorBorderSecondary}`,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            flexWrap: "wrap",
+            gap: 8,
+          }}
+        >
+          <Flex align="center" gap={8}>
+            <Tag color="blue" style={{ margin: 0 }}>
+              {t("shopping.supermarketModeActive")}
+            </Tag>
+            <Typography.Text type="secondary" style={{ fontSize: token.fontSizeSM }}>
+              {t("shopping.supermarketProgress", { bought: bought.length, total })}
+            </Typography.Text>
+          </Flex>
+          {inCartCents > 0 && (
+            <Typography.Text strong style={{ fontSize: token.fontSizeSM, color: token.colorSuccessText }}>
+              {t("shopping.supermarketTotalEstimate", { total: format.money(inCartCents, list.currency) })}
+            </Typography.Text>
+          )}
+        </motion.div>
+      )}
+
       {total === 0 && <EmptyState icon={ShoppingBasket} title={t("shopping.list.emptyTitle")} description={home ? t("shopping.list.emptyText") : t("shopping.list.emptyTextList")} />}
 
       {/* LayoutGroup: al marcar, la fila viaja de "Por comprar" a "En la bolsa" en vez de saltar. */}
       <LayoutGroup>
+        {supermarketMode && groupedPending ? (
+          groupedPending.map(({ category, rows }) => {
+            const CatIcon = CATEGORY_ICONS[category];
+            return (
+              <div key={category}>
+                <motion.div
+                  layout="position"
+                  style={{
+                    padding: screens.sm ? "8px 24px" : "8px 16px",
+                    background: token.colorFillQuaternary,
+                    borderTop: `1px solid ${token.colorBorderSecondary}`,
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 8,
+                  }}
+                >
+                  <span style={{ display: "inline-flex", color: token.colorTextSecondary }}>
+                    <CatIcon />
+                  </span>
+                  <Typography.Text strong style={{ fontSize: token.fontSizeSM }}>
+                    {t(`shopping.categories.${category}` as const)}
+                  </Typography.Text>
+                  <Tag bordered={false} style={{ margin: 0, fontSize: token.fontSizeSM }}>
+                    {rows.length}
+                  </Tag>
+                </motion.div>
+                <AnimatePresence initial={false}>
+                  {rows.map((row) => (
+                    <RowItem key={row.id} row={row} currency={list.currency} targets={targets} />
+                  ))}
+                </AnimatePresence>
+              </div>
+            );
+          })
+        ) : (
         <AnimatePresence initial={false}>
           {pending.map((row) => (
             <RowItem key={row.id} row={row} currency={list.currency} targets={targets} />
           ))}
         </AnimatePresence>
+
+        )}
 
         {pending.length === 0 && bought.length > 0 && (
           <Flex align="center" gap={12} style={{ padding: "20px 24px" }}>
@@ -368,7 +493,7 @@ function ListCard({ list, lists, pending, bought }: { list: ShoppingList; lists:
         {bought.length > 0 && (
           <motion.div layout="position" style={{ padding: "16px 24px 4px", borderTop: `1px solid ${token.colorBorderSecondary}`, background: token.colorFillQuaternary }}>
             <Typography.Text type="secondary" strong style={{ fontSize: token.fontSizeSM, textTransform: "uppercase", letterSpacing: "0.08em" }}>
-              {t("shopping.list.bought", { count: bought.length })}
+              {supermarketMode ? t("shopping.inCart", { count: bought.length }) : t("shopping.list.bought", { count: bought.length })}
             </Typography.Text>
           </motion.div>
         )}
@@ -397,6 +522,8 @@ function RowItem({ row, currency, targets }: { row: ShoppingRow; currency: Curre
   const cheapest = knownPrice?.cheapest;
   const showCheapest = !done && cheapest?.store && cheapest.amountCents < (knownPrice?.latest.amountCents ?? 0);
   const estimateText = row.estimateCents !== undefined ? t("shopping.approx", { amount: format.money(row.estimateCents * row.quantity, currency) }) : null;
+  const cat = row.category ?? guessShoppingCategory(row.name);
+  const CatIcon = CATEGORY_ICONS[cat];
 
   return (
     <motion.div
@@ -423,6 +550,22 @@ function RowItem({ row, currency, targets }: { row: ShoppingRow; currency: Curre
               {row.name}
             </Typography.Text>
             <Flex gap={8} align="center" wrap style={{ fontSize: token.fontSizeSM }}>
+              <Tag
+                bordered={false}
+                style={{
+                  margin: 0,
+                  paddingInline: 6,
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: 4,
+                  fontSize: "inherit",
+                  color: token.colorTextSecondary,
+                  background: token.colorFillQuaternary,
+                }}
+              >
+                <CatIcon />
+                {t(`shopping.categories.${cat}` as const)}
+              </Tag>
               <Typography.Text type="secondary" style={{ fontSize: "inherit" }}>
                 {formatQuantity(t, row.quantity, row.unit, format.number)}
               </Typography.Text>

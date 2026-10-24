@@ -50,3 +50,44 @@ export async function downloadBlob(blob: Blob, name: string): Promise<boolean> {
   setTimeout(() => URL.revokeObjectURL(url), 1000);
   return true;
 }
+
+/** Comprueba si el dispositivo soporta compartir archivos nativamente mediante Web Share API. */
+export function canShareFiles(): boolean {
+  if (typeof navigator === "undefined" || !navigator.share || !navigator.canShare) return false;
+  try {
+    const testFile = new File(["{}"], "test.json", { type: "application/json" });
+    return navigator.canShare({ files: [testFile] });
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Comparte el archivo de respaldo usando el Web Share API nativo si está disponible.
+ * Devuelve true si se compartió, o false si se canceló o no está soportado.
+ */
+export async function shareJson(
+  data: unknown,
+  filename: string,
+  title = "Respaldo Refugiar",
+): Promise<boolean> {
+  const json = JSON.stringify(data, null, 2);
+  const blob = new Blob([json], { type: "application/json" });
+  if (typeof navigator !== "undefined" && typeof File !== "undefined") {
+    try {
+      const file = new File([blob], filename, { type: "application/json" });
+      if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        await navigator.share({
+          files: [file],
+          title,
+        });
+        return true;
+      }
+    } catch (err: unknown) {
+      if (err instanceof Error && err.name === "AbortError") {
+        return false;
+      }
+    }
+  }
+  return false;
+}

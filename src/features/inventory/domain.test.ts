@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { describe, test } from "node:test";
 import { ValidationError } from "@/lib/errors";
-import { forecastUsage, getStockStatus, needsRestock, parseInventoryPatch, parseNewInventoryItem, planConsumption, summarizeInventory } from "./domain";
+import { forecastUsage, getExpirationDays, getExpirationStatus, getStockStatus, needsRestock, parseInventoryPatch, parseNewInventoryItem, planConsumption, summarizeInventory } from "./domain";
 
 describe("estado de stock", () => {
   test("agotado, bajo y en stock", () => {
@@ -81,6 +81,26 @@ describe("validación de productos", () => {
     assert.throws(() => parseNewInventoryItem({ name: "x".repeat(81), quantity: 1, minThreshold: 0, unit: "litros" }), ValidationError);
     assert.throws(() => parseNewInventoryItem({ name: "Leche", quantity: -1, minThreshold: 0, unit: "litros" }), ValidationError);
     assert.throws(() => parseNewInventoryItem({ name: "Leche", quantity: 1, minThreshold: 0, unit: "galones" }), ValidationError);
+  });
+
+  test("soporta y valida fecha de vencimiento", () => {
+    const now = 1700000000000;
+    const item = parseNewInventoryItem({ name: "Yogur", quantity: 1, minThreshold: 0, unit: "unidades", expiresAt: now + 86400000 });
+    assert.equal(item.expiresAt, now + 86400000);
+    assert.throws(() => parseNewInventoryItem({ name: "Yogur", quantity: 1, minThreshold: 0, unit: "unidades", expiresAt: -5 }), ValidationError);
+
+    assert.equal(getExpirationStatus(undefined, now), "none");
+    assert.equal(getExpirationStatus(now - 1000, now), "expired");
+    assert.equal(getExpirationStatus(now + 2 * 86400000, now), "soon");
+    assert.equal(getExpirationStatus(now + 15 * 86400000, now), "good");
+
+    assert.equal(getExpirationDays(now + 2 * 86400000, now), 2);
+    assert.equal(getExpirationDays(now - 86400000, now), -1);
+
+    const patch = parseInventoryPatch({ expiresAt: now + 5000 });
+    assert.equal(patch.expiresAt, now + 5000);
+    const clearPatch = parseInventoryPatch({ expiresAt: null });
+    assert.equal(clearPatch.expiresAt, undefined);
   });
 
   test("un parche solo trae lo que cambia", () => {

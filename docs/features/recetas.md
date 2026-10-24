@@ -40,6 +40,9 @@ En `/design` → Recetas están el selector, la revisión de compras y el formul
 
 **Menú semanal** permite elegir recetas guardadas y porciones para cada día. Cada comida es un evento del calendario. Los faltantes se calculan sumando las cantidades de todas las comidas de la semana y comparando una sola vez contra el inventario; se revisan antes de anotarlos en Compras y se descuentan los pendientes ya anotados. Planear no reserva ni consume stock. Los ingredientes sin vínculo requieren confirmación explícita.
 
+- **Sugerencia inteligente de menú**: la acción "Sugerir menú" evalúa las recetas guardadas y las existencias reales en la alacena para proponer recetas con stock disponible en los turnos libres de la semana (almuerzos y cenas). Abre una ventana de previsualización que muestra día, turno y receta sugerida para confirmar o descartar en conjunto.
+- **Asignación de cocinero**: al planear una comida se puede indicar quién cocina eligiendo entre los integrantes de la casa. En la grilla semanal la comida exhibe una insignia con el icono de chef y el nombre o emoji del cocinero asignado.
+
 La comida nace con la privacidad de la receta. Si la receta pasa a un nivel más restringido, se restringen sus comidas; borrarla quita también esas comidas. Las repeticiones editadas desde Calendario se consideran en el menú. Quitar una comida repetida elimina la serie, como en Calendario.
 
 ## Preparación y temporizadores

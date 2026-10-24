@@ -49,3 +49,10 @@ inferior y permiten volver desde la cabecera.
 El recorrido de anotaciones en CI desplaza el botón Anotar al centro antes de tocarlo: evita que el scroll del campo lo deje detrás de la barra inferior. Sigue comprobando el guardado visible y la búsqueda sin tildes.
 
 El código de una caja permanece visible también en la cabecera compacta del celular. Es información operativa para etiquetas y búsqueda, no una descripción prescindible.
+
+## Fechas de vencimiento y alertas
+
+Cada producto en el inventario admite una fecha de vencimiento opcional:
+- Atajos rápidos de carga en un solo toque (+7 días, +1 mes, +6 meses) y selector de calendario completo en el alta y en el panel de detalle.
+- Indicador visual semántico con cuenta regresiva: advertencia en rojo si ya venció ("Venció hace X días"), advertencia en ámbar si vence pronto ("Vence en X días") y etiqueta discreta con la fecha si está en buen estado.
+- Los productos por vencer se identifican tanto en la lista rápida como en el drawer de detalle, con opción de modificar o borrar la fecha en cualquier momento.
