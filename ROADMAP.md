@@ -49,8 +49,9 @@ Funcionalidades postergadas explícitamente para preservar el foco en la estabil
 
 ## 3. Registro Histórico de Entregas
 
-| Versión / Hito | Alcance técnico implementado | Estado CI |
+| **Versión / Hito** | **Alcance técnico implementado** | **Estado CI** |
 |---|---|---|
+| **2026-10 (Rediseño de Modo Cocina)** | ✅ Hecho: Rediseño ergonómico y visual de Modo Cocina (`CookingGuide` y `CookingMode`) con acordeón colapsable de ingredientes con contador y etiqueta de listos, barra táctil de navegación por pasos (`1`, `2`, `3` con tildes de completado), botón para marcar paso listo sin forzar el avance, temporizador contextual integrado a la tarjeta del paso activo con minutos naturales y botón de finalización `Terminé: revisar consumo` exclusivo del último paso. | ✅ Verificado (check, tests, build) |
 | **2026-10 (Mascotas y Aficiones)** | ✅ Hecho: Módulo de Mascotas (`/mascotas`) con libreta sanitaria (vacunas y desparasitaciones), tratamientos activos y recordatorios directos al Calendario; ficha veterinaria con marcación rápida para consultas y guardia 24 hs; registro en búsqueda global (Ctrl+K); plantilla y categoría de Afición / Hobby en Proyectos para bitácoras de práctica y equipamiento. | ✅ Verificado (check, tests, build) |
 | **2026-10 (Modo Súper, Vencimientos y Menú Inteligente)** | ✅ Hecho: Modo Súper en Compras con clasificación automática en 9 pasillos y changuito en vivo; fechas de vencimiento con alertas semánticas y accesos rápidos en Alacena; sugerencia inteligente de menú semanal según stock disponible y asignación de cocinero familiar; compartir copias de respaldo vía Web Share API en Ajustes. | ✅ Verificado (check, tests, build) |
 | **2026-10 (Workflow de despliegue a Cloudflare)** | ✅ Hecho: workflow en GitHub Actions (`.github/workflows/deploy.yml`) para verificación (`npm run check`), compilación estática (`npm run build`), migraciones de D1 (`opendomus`) y publicación a Cloudflare (`refugi.ar`) controlada y desatendida. | ✅ Verificado |

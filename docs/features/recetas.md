@@ -36,7 +36,13 @@ En `/design` → Recetas están el selector, la revisión de compras y el formul
 
 ## Modo cocina y menú semanal
 
-**Modo cocina** muestra ingredientes para marcar, un paso por vez y progreso. Guarda el avance por perfil, receta y porciones en este dispositivo. Cerrar no descuenta stock. Al terminar, se abre la revisión habitual de consumo; sólo la confirmación modifica el inventario. Puede mantener la pantalla encendida si el dispositivo admite Screen Wake Lock; si no, lo informa. El avance se reinicia si cambian ingredientes, pasos o porciones.
+**Modo cocina** presenta una experiencia ergonómica optimizada para cocinar con el dispositivo en la mesada:
+- **Ingredientes colapsables**: acordeón plegable con recuento en vivo (`X / Y listos`) y badge verde al completar la lista, liberando superficie visual para las instrucciones de preparación.
+- **Navegación visual de pasos**: selector táctil con pastillas numeradas (`1`, `2`, `3...`) e insignias de verificación (`✓`) para saltar libremente entre pasos sin perder el hilo.
+- **Marcado de paso listo sin salto forzado**: el botón "Paso listo" registra la tarea como completada y mantiene la visualización en el paso en curso para consultas posteriores; el avance se controla explícitamente con los botones de navegación anterior y siguiente.
+- **Temporizador contextual integrado**: el timer y su ajuste en minutos se ubican directamente dentro de la tarjeta del paso activo, mostrando etiquetas de tiempo natural (`15 min`, `1 min 30 s`) y control de inicio inmediato.
+- **Finalización clara**: el botón primario "Terminé: revisar consumo" se reserva para el último paso de la receta (con un acceso secundario previo), evitando confusiones con completar un paso individual.
+- **Pantalla y persistencia**: guarda el avance por perfil, receta y porciones en este dispositivo (`localStorage`). Admite mantener la pantalla encendida mediante Screen Wake Lock. Cerrar no descuenta stock; al terminar, la confirmación de la revisión habitual es la única que descuenta del inventario.
 
 **Menú semanal** permite elegir recetas guardadas y porciones para cada día. Cada comida es un evento del calendario. Los faltantes se calculan sumando las cantidades de todas las comidas de la semana y comparando una sola vez contra el inventario; se revisan antes de anotarlos en Compras y se descuentan los pendientes ya anotados. Planear no reserva ni consume stock. Los ingredientes sin vínculo requieren confirmación explícita.
 
