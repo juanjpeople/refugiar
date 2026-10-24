@@ -24,7 +24,7 @@ import { SPRING } from "@/lib/motion";
 import { useTrackVisit } from "@/components/layout/useShell";
 import { recipeHref } from "@/lib/navigation/routes";
 import { usePageCrumbs } from "@/store/useBreadcrumbStore";
-import { averageRating, checkAvailability, ingredientCheckKey, RECIPE_LIMITS, type IngredientCheck, type IngredientState } from "../domain";
+import { averageRating, checkAvailability, formatRecipeShareText, ingredientCheckKey, RECIPE_LIMITS, type IngredientCheck, type IngredientState } from "../domain";
 import { useRecipe, useRecipeActions } from "../hooks";
 import { CookingMode } from "./CookingMode";
 import { CookModal } from "./CookModal";
@@ -91,26 +91,13 @@ export function RecipeView() {
   }
 
   async function handleCopyText() {
-    const lines: string[] = [];
-    lines.push(`*${recipe.name}*`);
-    const details: string[] = [];
-    if (recipe.minutes > 0) details.push(t("recipes.minutes", { count: recipe.minutes }));
-    details.push(t("recipes.servings", { count: portions }));
-    lines.push(details.join(" · "));
-    lines.push("");
-    lines.push(`${t("recipes.ingredients")}:`);
-    for (const check of report.checks) {
-      const qty = formatQuantity(t, check.needed, check.ingredient.unit, format.number);
-      lines.push(`• ${qty} ${check.ingredient.name}`);
-    }
-    if (recipe.steps.length > 0) {
-      lines.push("");
-      lines.push(`${t("recipes.steps")}:`);
-      recipe.steps.forEach((step, idx) => {
-        lines.push(`${idx + 1}. ${step}`);
-      });
-    }
-    const text = lines.join("\n");
+    const text = formatRecipeShareText(recipe, report.checks, portions, {
+      minutes: (count) => t("recipes.minutes", { count }),
+      servings: (count) => t("recipes.servings", { count }),
+      ingredients: t("recipes.ingredients"),
+      steps: t("recipes.steps"),
+      formatQty: (qty, unit) => formatQuantity(t, qty, unit, format.number),
+    });
     try {
       if (navigator.clipboard?.writeText) {
         await navigator.clipboard.writeText(text);

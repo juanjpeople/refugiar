@@ -4,7 +4,7 @@ import type { InventoryItem } from "@/features/inventory/domain";
 import { parseNewComment } from "@/features/comments/domain";
 import { fitWithin } from "@/features/media/domain";
 import { ValidationError } from "@/lib/errors";
-import { averageRating, checkAvailability, parseRecipe, rankRecipes, scaleQuantity, type RecipeIngredient } from "./domain";
+import { averageRating, checkAvailability, filterAndRankRecipes, formatRecipeShareText, parseRecipe, rankRecipes, scaleQuantity, type IngredientCheck, type RecipeIngredient } from "./domain";
 import { RECIPE_PACKS } from "./packs";
 
 const item = (id: string, quantity: number): InventoryItem => ({ id, name: id, containerId: "c", quantity, minThreshold: 0, unit: "unidades", createdAt: 0, updatedAt: 0 });
@@ -153,5 +153,69 @@ describe("packs de recetas iniciales", () => {
     assert.equal(variant.servings, 4);
     assert.equal(variant.minutes, 40);
     assert.equal(variant.ingredients.length, 1);
+  });
+});
+
+describe("formateo de texto de receta para compartir", () => {
+  test("arma encabezado, porciones, ingredientes y pasos numerados", () => {
+    const checks: IngredientCheck[] = [
+      { ingredient: { name: "Harina", quantity: 200, unit: "gr" }, needed: 200, state: "ok" },
+      { ingredient: { name: "Huevos", quantity: 2, unit: "unidades" }, needed: 2, state: "ok" },
+    ];
+    const text = formatRecipeShareText(
+      { name: "Panqueques", minutes: 20, steps: ["Mezclar ingredientes", "Cocinar en sartén"] },
+      checks,
+      4,
+      {
+        minutes: (m) => `${m} min`,
+        servings: (s) => `${s} porciones`,
+        ingredients: "Ingredientes",
+        steps: "Preparación",
+        formatQty: (q, u) => `${q} ${u}`,
+      },
+    );
+    assert.ok(text.includes("*Panqueques*"));
+    assert.ok(text.includes("20 min · 4 porciones"));
+    assert.ok(text.includes("• 200 gr Harina"));
+    assert.ok(text.includes("• 2 unidades Huevos"));
+    assert.ok(text.includes("1. Mezclar ingredientes"));
+    assert.ok(text.includes("2. Cocinar en sartén"));
+  });
+});
+
+describe("filtrado y ordenamiento de recetas en catálogo", () => {
+  const r1 = {
+    id: "1",
+    name: "Tortilla de papas",
+    servings: 4,
+    minutes: 25,
+    tags: ["quick" as const],
+    ingredients: [{ name: "Papas", quantity: 3, unit: "unidades" }],
+    steps: ["Freír y cuajar"],
+    createdBy: "u",
+    createdAt: 0,
+    updatedAt: 0,
+    report: { availability: "ready" as const, checks: [], lacking: [] },
+  };
+  const r2 = {
+    id: "2",
+    name: "Guiso de lentejas",
+    servings: 6,
+    minutes: 60,
+    tags: ["healthy" as const],
+    ingredients: [{ name: "Lentejas", quantity: 500, unit: "gr" }],
+    steps: ["Hervir todo"],
+    createdBy: "u",
+    createdAt: 0,
+    updatedAt: 0,
+    report: { availability: "missing" as const, checks: [], lacking: [] },
+  };
+
+  test("filtra por disponibilidad, tiempo máximo y búsqueda de texto", () => {
+    assert.equal(filterAndRankRecipes([r1, r2], { show: "ready" }).length, 1);
+    assert.equal(filterAndRankRecipes([r1, r2], { maxMinutes: 30 }).length, 1);
+    assert.equal(filterAndRankRecipes([r1, r2], { query: "papas" }).length, 1);
+    assert.equal(filterAndRankRecipes([r1, r2], { query: "inexistente" }).length, 0);
+    assert.equal(filterAndRankRecipes([r1, r2], { tags: ["healthy"] })[0].name, "Guiso de lentejas");
   });
 });
