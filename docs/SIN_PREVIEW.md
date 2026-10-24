@@ -25,6 +25,14 @@ Mantener una sola rama de trabajo y un solo PR por tanda. Integrar cambios y cor
 
 Los PR ejecutan ahora el recorrido completo de CI y Android. Esperar que todos terminen correctamente antes de mergear: así Cloudflare recibe una revisión validada. Las pruebas también se conservan en main como comprobación posterior.
 
-**Pendiente:** el despliegue automático de Cloudflare es independiente de GitHub Actions. El merge anterior se publicó antes de que terminaran los E2E, que fallaron. Apagar previews no cambia ese orden. Para hacer que producción espere a todos los checks, hace falta cambiar el mecanismo de publicación con acceso a Builds y un token de despliegue adecuado; no se habilitó una segunda vía de deploy ni se copiaron credenciales locales a GitHub.
+## Despliegue desde GitHub Actions (.github/workflows/deploy.yml)
+
+Para evitar desajustes con credenciales locales de Wrangler (o sesiones compartidas entre múltiples proyectos), el repositorio incluye el workflow manual `Deploy Web` (`.github/workflows/deploy.yml`).
+
+Requiere dos secretos en GitHub Actions (Settings → Secrets and variables → Actions):
+1. `CLOUDFLARE_API_TOKEN`: Token de API con permisos de edición sobre Workers y D1.
+2. `CLOUDFLARE_ACCOUNT_ID`: ID de cuenta de Cloudflare (por defecto `ce27a1e43f0ea22ce94a7be284d31a04`).
+
+El workflow compila la app estática, corre las comprobaciones (`npm run check`), aplica migraciones de D1 si corresponde y publica a producción con `wrangler deploy` de forma desatendida y reproducible.
 
 No borrar D1, el Worker, las rutas del dominio ni secretos para ahorrar builds: son los recursos de producción.
