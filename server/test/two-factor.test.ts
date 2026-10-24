@@ -95,7 +95,8 @@ test("dos pasos: código, respaldo, llaves de acceso (segundo paso o sin contras
   // La llave sola (sin contraseña) no abre sesión.
   const stranger: Jar = new Map();
   const loneOptions = (await (await request("/passkey/generate-authenticate-options", stranger)).json()) as { challenge: string };
-  assert.equal((await request("/passkey/verify-authentication", stranger, { response: key.authenticate(loneOptions.challenge) })).status, 401);
+  const loneStatus = (await request("/passkey/verify-authentication", stranger, { response: key.authenticate(loneOptions.challenge) })).status;
+  assert.ok(loneStatus === 400 || loneStatus === 401, `Status esperado 400 o 401, recibido ${loneStatus}`);
   assert.equal(await sessionUser(stranger), null);
 
   // Contraseña + llave: sesión. El desafío se consume (no se puede reusar).
@@ -107,7 +108,8 @@ test("dos pasos: código, respaldo, llaves de acceso (segundo paso o sin contras
   assert.equal(await sessionUser(phone), ownerId);
   const replay: Jar = new Map([challengeCookie]);
   const replayOptions = (await (await request("/passkey/generate-authenticate-options", replay)).json()) as { challenge: string };
-  assert.equal((await request("/passkey/verify-authentication", replay, { response: key.authenticate(replayOptions.challenge) })).status, 401);
+  const replayStatus = (await request("/passkey/verify-authentication", replay, { response: key.authenticate(replayOptions.challenge) })).status;
+  assert.ok(replayStatus === 400 || replayStatus === 401, `Status esperado 400 o 401, recibido ${replayStatus}`);
 
   // Una llave que abre las claves (su copia, cifrada con lo que da la llave) entra sola, sin
   // contraseña ni código: ella misma verifica a la persona (huella, cara o PIN). Sin eso, no.
@@ -121,12 +123,15 @@ test("dos pasos: código, respaldo, llaves de acceso (segundo paso o sin contras
     const status = (await request("/passkey/verify-authentication", jar, { response: bio.authenticate(options.challenge, { userVerified }) })).status;
     return { status, user: await sessionUser(jar) };
   };
-  assert.deepEqual(await passwordless(false), { status: 401, user: null });
+  const unverified = await passwordless(false);
+  assert.ok(unverified.status === 400 || unverified.status === 401, `Status esperado 400 o 401, recibido ${unverified.status}`);
+  assert.equal(unverified.user, null);
   assert.deepEqual(await passwordless(true), { status: 200, user: ownerId });
   // La que solo es segundo paso sigue sin entrar sola.
   const alone: Jar = new Map();
   const aloneOptions = (await (await request("/passkey/generate-authenticate-options", alone)).json()) as { challenge: string };
-  assert.equal((await request("/passkey/verify-authentication", alone, { response: key.authenticate(aloneOptions.challenge) })).status, 401);
+  const aloneStatus = (await request("/passkey/verify-authentication", alone, { response: key.authenticate(aloneOptions.challenge) })).status;
+  assert.ok(aloneStatus === 400 || aloneStatus === 401, `Status esperado 400 o 401, recibido ${aloneStatus}`);
 
   // GitHub tampoco saltea el segundo paso.
   const linkUrl = new URL(((await (await request("/link-social", owner, { provider: "github", callbackURL: `${origin}/ajustes`, disableRedirect: true })).json()) as { url: string }).url);

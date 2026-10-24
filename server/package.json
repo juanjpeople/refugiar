@@ -5,12 +5,12 @@
   "type": "module",
   "license": "AGPL-3.0-or-later",
   "dependencies": {
-    "@better-auth/passkey": "^1.7.7",
+    "@better-auth/passkey": "^1.7.12",
     "@simplewebauthn/server": "^13.3.3",
-    "better-auth": "^1.7.7",
+    "better-auth": "^1.7.12",
     "hono": "^4.13.13",
     "jose": "6.2.12",
-    "zod": "^4"
+    "zod": "^4.6.7"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^4",
