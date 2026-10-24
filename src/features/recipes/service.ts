@@ -248,3 +248,29 @@ export async function importStarterRecipe(actor: Actor | null, recipeId: string)
   if (createdId) await pruneActivity();
   return createdId;
 }
+
+/** Clona una receta existente para crear una variante personal editable. */
+export async function duplicateRecipe(actor: Actor | null, id: string, newName?: string): Promise<string> {
+  assertCan(actor, "recipes.manage");
+  const source = await getRecipe(id);
+  if (!canSee(actor, source)) throw new NotFoundError("errors.notFound.recipe");
+  const newId = createId();
+  const now = Date.now();
+  const name = newName?.trim() || `${source.name} (variante)`;
+  const data = parseRecipe({
+    name,
+    servings: source.servings,
+    minutes: source.minutes,
+    ingredients: source.ingredients,
+    steps: source.steps,
+    stepSeconds: source.stepSeconds,
+    tags: source.tags,
+    privacy: source.privacy ?? "family",
+  });
+  await db.transaction("rw", db.recipes, db.activity, async () => {
+    await db.recipes.add({ ...data, id: newId, createdBy: actor?.id ?? "local", createdAt: now, updatedAt: now });
+    await recordActivity(actor, { module: "recipes", action: "create", entityId: newId, entityName: data.name, privacy: data.privacy, createdBy: actor?.id ?? "local" });
+  });
+  await pruneActivity();
+  return newId;
+}

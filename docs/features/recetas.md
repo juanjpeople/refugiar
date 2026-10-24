@@ -14,6 +14,9 @@ Qué cocinar con los alimentos que querés aprovechar.
 - **Modo recetario simple (sin inventario)**: se puede apagar la preferencia *Vincular recetas con inventario* desde Ajustes → Datos o el menú de opciones (⋯) en Recetas. En este modo la pantalla opera como un cuaderno de cocina independiente: sin cálculo ni alertas de stock faltante, sin campos de producto en el editor y con envío directo de todos los ingredientes a la lista de compras.
 - **Packs sugeridos descargables**: catálogo inicial con packs temáticos (*Básicos de la casa*, *Rápidas y saludables*, *Meriendas y familia*) con portadas locales optimizadas y pasos completos. Se pueden previsualizar e importar de a una o el pack completo; la importación es idempotente y no duplica recetas ya presentes.
 - **Aprovechar de tu alacena ("¿Qué cocino hoy?")**: accesos directos táctiles tipo chip con los ingredientes que actualmente tienen stock en la casa para cargarlos en *Quiero usar…* con un solo toque y filtrar preparaciones posibles al instante.
+- **Crear una variante (duplicar)**: botón para clonar cualquier receta en un toque (útil para recetas de packs o adaptaciones familiares sin TACC / veganas), conservando ingredientes y pasos para personalizarlos en el editor sin modificar la original.
+- **Copiar receta en texto**: copia al portapapeles el texto limpio con porciones ajustadas, ingredientes y pasos para compartir por WhatsApp, Telegram o notas sin depender de enlaces ni conexión.
+- **Filtro por tiempo de preparación**: filtro rápido con un toque para menos de 15, 30 o 45 minutos.
 
 ## Cómo se usa
 

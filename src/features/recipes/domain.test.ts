@@ -135,4 +135,23 @@ describe("packs de recetas iniciales", () => {
       }
     }
   });
+
+  test("clonar receta conserva ingredientes y pasos con nombre de variante", () => {
+    const original = parseRecipe({
+      name: "Tarta de verdura",
+      servings: 4,
+      minutes: 40,
+      tags: ["vegetarian"],
+      ingredients: [{ name: "Acelga", quantity: 1, unit: "paquetes" }],
+      steps: ["Lavar la acelga y hervir."],
+    });
+    const variant = parseRecipe({
+      ...original,
+      name: `${original.name} (variante)`,
+    });
+    assert.equal(variant.name, "Tarta de verdura (variante)");
+    assert.equal(variant.servings, 4);
+    assert.equal(variant.minutes, 40);
+    assert.equal(variant.ingredients.length, 1);
+  });
 });

@@ -39,6 +39,8 @@ export function RecipesPage() {
   const tags = params.getAll("tag").filter((tag): tag is RecipeTag => RECIPE_TAGS.includes(tag as RecipeTag));
   const query = params.get("q") ?? "";
   const wanted = params.getAll("use");
+  const timeParam = params.get("time");
+  const maxMinutes = timeParam ? Number.parseInt(timeParam, 10) : null;
 
   function setFilter(key: string, values: string[]) {
     const next = new URL(window.location.href);
@@ -70,6 +72,7 @@ export function RecipesPage() {
   const visible = rankRecipes(recipes ?? [], wanted).filter((recipe) => {
     if (recipeStockLink && show === "ready" && recipe.report.availability !== "ready") return false;
     if (!tags.every((tag) => recipe.tags.includes(tag))) return false;
+    if (maxMinutes && (recipe.minutes <= 0 || recipe.minutes > maxMinutes)) return false;
     const haystack = normalize(`${recipe.name} ${recipe.ingredients.map((ingredient) => ingredient.name).join(" ")}`);
     return words.every((word) => haystack.includes(word));
   });
@@ -204,6 +207,32 @@ export function RecipesPage() {
                 ))}
               </Flex>
             )}
+            <Flex gap={6} wrap align="center">
+              <span style={{ display: "inline-flex", alignItems: "center", gap: 4, color: token.colorTextSecondary, fontSize: token.fontSizeSM }}>
+                <Clock />
+              </span>
+              {[
+                { value: "15", label: t("recipes.timeFilter.under15") },
+                { value: "30", label: t("recipes.timeFilter.under30") },
+                { value: "45", label: t("recipes.timeFilter.under45") },
+              ].map((opt) => {
+                const isSelected = timeParam === opt.value;
+                return (
+                  <Tag.CheckableTag
+                    key={opt.value}
+                    checked={isSelected}
+                    onChange={(checked) => setFilter("time", checked ? [opt.value] : [])}
+                    style={{
+                      margin: 0,
+                      paddingBlock: 2,
+                      border: `1px solid ${isSelected ? "transparent" : token.colorBorderSecondary}`,
+                    }}
+                  >
+                    {opt.label}
+                  </Tag.CheckableTag>
+                );
+              })}
+            </Flex>
           </Flex>
         }
         minItemWidth={260}
