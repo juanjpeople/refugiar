@@ -1,0 +1,59 @@
+name: Deploy Web
+
+# Publica la app estática y la API (Worker + D1) en Cloudflare (refugi.ar).
+# Controlado a pedido: no corre en ramas secundarias ni consume cuota accidentalmente.
+# Requiere los secretos CLOUDFLARE_API_TOKEN y opcionalmente CLOUDFLARE_ACCOUNT_ID en GitHub Secrets.
+
+on:
+  workflow_dispatch:
+    inputs:
+      migrate_db:
+        description: 'Aplicar migraciones D1 remotas antes de publicar'
+        type: boolean
+        default: true
+      dry_run:
+        description: 'Simular la publicación con --dry-run (sin tocar producción)'
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: cloudflare-deploy
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Publicar a Cloudflare (refugi.ar)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - name: Validar tipos, lint y pruebas
+        run: npm run check
+      - name: Compilar sitio estático
+        run: npm run build
+      - name: Migraciones D1 (opendomus)
+        if: ${{ inputs.migrate_db && !inputs.dry_run }}
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID || 'ce27a1e43f0ea22ce94a7be284d31a04' }}
+        run: npx wrangler d1 migrations apply opendomus --remote
+      - name: Desplegar Worker y Assets a producción
+        if: ${{ !inputs.dry_run }}
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID || 'ce27a1e43f0ea22ce94a7be284d31a04' }}
+        run: npx wrangler deploy
+      - name: Simulación (--dry-run)
+        if: ${{ inputs.dry_run }}
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID || 'ce27a1e43f0ea22ce94a7be284d31a04' }}
+        run: npx wrangler deploy --dry-run
