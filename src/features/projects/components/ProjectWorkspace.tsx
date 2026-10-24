@@ -39,6 +39,7 @@ const KINDS: ProjectKind[] = [
   "electronics",
   "restoration",
   "garden",
+  "hobby",
   "other",
 ];
 export function ProjectWorkspace({

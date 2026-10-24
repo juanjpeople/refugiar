@@ -10,7 +10,7 @@ import { isPrivacy, type Privacy } from "@/lib/sync/scope";
 
 export type ProjectStatus = "active" | "done";
 
-export type ProjectKind = "repair" | "electronics" | "restoration" | "garden" | "other";
+export type ProjectKind = "repair" | "electronics" | "restoration" | "garden" | "hobby" | "other";
 export interface ProjectTask { id: string; text: string; done: boolean; responsible?: string; due?: string }
 export interface ProjectNote { id: string; text: string; at: number; author: string; kind: "note" | "idea" | "decision" }
 export interface ProjectExpense { id: string; label: string; cents: number; date: string }

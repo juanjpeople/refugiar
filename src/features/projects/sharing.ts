@@ -190,7 +190,7 @@ const snapshotSchema = z.object({
   budgetCents: z.number().int().nonnegative().optional(),
   workspace: z.object({
     kind: z
-      .enum(["repair", "electronics", "restoration", "garden", "other"])
+      .enum(["repair", "electronics", "restoration", "garden", "hobby", "other"])
       .optional(),
     startDate: date,
     targetDate: date,
