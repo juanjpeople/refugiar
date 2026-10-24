@@ -47,6 +47,7 @@ export function QuantityStepper({ value, unit, onStep, onChange, "aria-label": a
           aria-label={t("inventory.stepper.decrease")}
           icon={<Minus />}
           disabled={disabled || value <= min}
+          style={{ minWidth: 36, minHeight: 36, display: "inline-flex", alignItems: "center", justifyContent: "center" }}
           onClick={() => onStep ? onStep(-1) : onChange?.(Math.max(min, value - 1))}
         />
       )}
@@ -78,7 +79,7 @@ export function QuantityStepper({ value, unit, onStep, onChange, "aria-label": a
         )}
       </Flex>
       {!readOnly && (
-        <Button type="text" size="small" aria-label={t("inventory.stepper.increase")} icon={<Plus />} disabled={disabled || (max !== undefined && value >= max)} onClick={() => onStep ? onStep(1) : onChange?.(Math.min(max ?? Infinity, value + 1))} />
+        <Button type="text" size="small" aria-label={t("inventory.stepper.increase")} icon={<Plus />} disabled={disabled || (max !== undefined && value >= max)} style={{ minWidth: 36, minHeight: 36, display: "inline-flex", alignItems: "center", justifyContent: "center" }} onClick={() => onStep ? onStep(1) : onChange?.(Math.min(max ?? Infinity, value + 1))} />
       )}
     </Flex>
   );

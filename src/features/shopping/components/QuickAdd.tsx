@@ -143,7 +143,7 @@ export function QuickAdd({ listId }: { listId: string }) {
             value={quantity}
             onChange={(value) => setQuantity(value ?? 1)}
             onPressEnter={submit}
-            style={{ width: 84 }}
+            style={{ width: screens.sm ? 84 : 72 }}
           />
           <Select<Unit>
             size="large"
@@ -151,9 +151,9 @@ export function QuickAdd({ listId }: { listId: string }) {
             value={unit}
             onChange={setUnit}
             options={UNITS.map((value) => ({ value, label: t(`inventory.units.${value}`, { count: quantity }) }))}
-            style={{ flex: 1, minWidth: 120 }}
+            style={{ flex: 1, minWidth: screens.sm ? 120 : 90 }}
           />
-          <Button size="large" type="primary" icon={<Plus />} loading={saving} disabled={!name.trim()} onClick={submit}>
+          <Button size="large" type="primary" icon={<Plus />} loading={saving} disabled={!name.trim()} style={{ minHeight: 44 }} onClick={submit}>
             {t("shopping.add.submit")}
           </Button>
         </Flex>
