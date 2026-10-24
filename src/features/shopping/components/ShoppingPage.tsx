@@ -483,7 +483,7 @@ function RowItem({ row, currency, targets }: { row: ShoppingRow; currency: Curre
                     ],
                   }}
                 >
-                  <Button type="text" aria-label={t("shopping.list.actionsAria", { name: row.name })} icon={<Ellipsis />} />
+                  <Button type="text" aria-label={t("shopping.list.actionsAria", { name: row.name })} icon={<Ellipsis />} style={{ minWidth: 44, minHeight: 44, display: "inline-flex", alignItems: "center", justifyContent: "center" }} />
                 </Dropdown>
               </>
             )}
