@@ -39,21 +39,54 @@ jobs:
         run: npm run check
       - name: Compilar sitio estático
         run: npm run build
+      - name: Sanitizar y verificar credenciales de Cloudflare
+        id: cf_env
+        env:
+          TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          ACCOUNT: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          CLEAN_TOKEN=$(echo -n "$TOKEN" | tr -d '[:space:]')
+          CLEAN_ACCOUNT=$(echo -n "$ACCOUNT" | tr -d '[:space:]')
+          if [ -z "$CLEAN_ACCOUNT" ]; then
+            CLEAN_ACCOUNT="ce27a1e43f0ea22ce94a7be284d31a04"
+          fi
+          echo "token=$CLEAN_TOKEN" >> $GITHUB_OUTPUT
+          echo "account=$CLEAN_ACCOUNT" >> $GITHUB_OUTPUT
+
+          node -e "
+            const token = '$CLEAN_TOKEN';
+            const account = '$CLEAN_ACCOUNT';
+            console.log('Longitud token:', token.length, '| Cuenta configurada:', account);
+            async function verify() {
+              const res = await fetch('https://api.cloudflare.com/client/v4/user/tokens/verify', {
+                headers: { Authorization: 'Bearer ' + token }
+              });
+              const data = await res.json();
+              console.log('Verificación de token:', JSON.stringify(data));
+
+              const accRes = await fetch('https://api.cloudflare.com/client/v4/accounts', {
+                headers: { Authorization: 'Bearer ' + token }
+              });
+              const accData = await accRes.json();
+              console.log('Cuentas accesibles:', JSON.stringify(accData));
+            }
+            verify();
+          "
       - name: Migraciones D1 (opendomus)
         if: ${{ inputs.migrate_db && !inputs.dry_run }}
         env:
-          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID || 'ce27a1e43f0ea22ce94a7be284d31a04' }}
+          CLOUDFLARE_API_TOKEN: ${{ steps.cf_env.outputs.token }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ steps.cf_env.outputs.account }}
         run: npx wrangler d1 migrations apply opendomus --remote
       - name: Desplegar Worker y Assets a producción
         if: ${{ !inputs.dry_run }}
         env:
-          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID || 'ce27a1e43f0ea22ce94a7be284d31a04' }}
+          CLOUDFLARE_API_TOKEN: ${{ steps.cf_env.outputs.token }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ steps.cf_env.outputs.account }}
         run: npx wrangler deploy
       - name: Simulación (--dry-run)
         if: ${{ inputs.dry_run }}
         env:
-          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID || 'ce27a1e43f0ea22ce94a7be284d31a04' }}
+          CLOUDFLARE_API_TOKEN: ${{ steps.cf_env.outputs.token }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ steps.cf_env.outputs.account }}
         run: npx wrangler deploy --dry-run
