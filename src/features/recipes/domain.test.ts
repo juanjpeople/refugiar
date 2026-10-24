@@ -5,6 +5,7 @@ import { parseNewComment } from "@/features/comments/domain";
 import { fitWithin } from "@/features/media/domain";
 import { ValidationError } from "@/lib/errors";
 import { averageRating, checkAvailability, parseRecipe, rankRecipes, scaleQuantity, type RecipeIngredient } from "./domain";
+import { RECIPE_PACKS } from "./packs";
 
 const item = (id: string, quantity: number): InventoryItem => ({ id, name: id, containerId: "c", quantity, minThreshold: 0, unit: "unidades", createdAt: 0, updatedAt: 0 });
 const linked = (itemId: string, quantity: number): RecipeIngredient => ({ itemId, name: itemId, quantity, unit: "unidades" });
@@ -110,5 +111,47 @@ describe("fotos", () => {
   test("achica sin deformar y nunca agranda", () => {
     assert.deepEqual(fitWithin(4000, 3000, 1600), { width: 1600, height: 1200 });
     assert.deepEqual(fitWithin(800, 600, 1600), { width: 800, height: 600 });
+  });
+});
+
+describe("packs de recetas iniciales", () => {
+  test("los 3 packs contienen recetas válidas y completas", () => {
+    assert.equal(RECIPE_PACKS.length, 3);
+    for (const pack of RECIPE_PACKS) {
+      assert.ok(pack.recipes.length >= 4);
+      for (const item of pack.recipes) {
+        const parsed = parseRecipe({
+          name: item.name,
+          servings: item.servings,
+          minutes: item.minutes,
+          tags: item.tags,
+          stepSeconds: item.stepSeconds,
+          steps: item.steps,
+          ingredients: item.ingredients,
+        });
+        assert.equal(parsed.name, item.name);
+        assert.ok(parsed.steps.length > 0);
+        assert.ok(parsed.ingredients.length > 0);
+      }
+    }
+  });
+
+  test("clonar receta conserva ingredientes y pasos con nombre de variante", () => {
+    const original = parseRecipe({
+      name: "Tarta de verdura",
+      servings: 4,
+      minutes: 40,
+      tags: ["vegetarian"],
+      ingredients: [{ name: "Acelga", quantity: 1, unit: "paquetes" }],
+      steps: ["Lavar la acelga y hervir."],
+    });
+    const variant = parseRecipe({
+      ...original,
+      name: `${original.name} (variante)`,
+    });
+    assert.equal(variant.name, "Tarta de verdura (variante)");
+    assert.equal(variant.servings, 4);
+    assert.equal(variant.minutes, 40);
+    assert.equal(variant.ingredients.length, 1);
   });
 });

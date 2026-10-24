@@ -46,6 +46,8 @@ export interface Preferences {
   skin: SkinId;
   /** Al escanear envases, buscar el nombre en Open Food Facts. Apagado: solo sale si la persona lo pide. */
   productLookup: boolean;
+  /** Vincular recetas con el inventario de la casa para verificar stock y descontar consumos. */
+  recipeStockLink: boolean;
 }
 
 export const DEFAULT_PREFERENCES: Preferences = {
@@ -65,6 +67,7 @@ export const DEFAULT_PREFERENCES: Preferences = {
   hiddenWidgets: [],
   skin: "casa",
   productLookup: false,
+  recipeStockLink: true,
 };
 
 /** Opciones válidas por clave: lo que se lee de localStorage se valida contra esto (puede estar editado a mano). */
@@ -85,6 +88,7 @@ const VALID: { [K in keyof Preferences]: (value: unknown) => boolean } = {
   hiddenWidgets: (v) => Array.isArray(v) && v.every((id) => (WIDGET_IDS as readonly unknown[]).includes(id)),
   skin: (v) => (SKIN_IDS as readonly unknown[]).includes(v),
   productLookup: (v) => typeof v === "boolean",
+  recipeStockLink: (v) => typeof v === "boolean",
 };
 
 export function isValidPreference<K extends keyof Preferences>(key: K, value: unknown): value is Preferences[K] {

@@ -19,6 +19,7 @@ import { NotFoundError, ValidationError } from "@/lib/errors";
 import { canSee } from "@/lib/sync/scope";
 import { createId } from "@/lib/id";
 import { checkAvailability, ingredientCheckKey, normalizeIngredient, parseRecipe, RECIPE_LIMITS, type RecipeInput, type AvailabilityReport } from "./domain";
+import { RECIPE_PACKS } from "./packs";
 
 async function getRecipe(id: string) {
   const recipe = await db.recipes.get(id);
@@ -183,4 +184,93 @@ export async function undoCooking(actor: Actor | null, entryId: string) {
     }
     await db.activity.update(entryId, { undoneAt: Date.now(), undoneBy: actor.name });
   });
+}
+
+/** Importa un pack de recetas temáticas a la casa sin duplicar las que ya existan. */
+export async function importRecipePack(actor: Actor | null, packId: string): Promise<number> {
+  assertCan(actor, "recipes.manage");
+  const pack = RECIPE_PACKS.find((p) => p.id === packId);
+  if (!pack) throw new NotFoundError("errors.notFound.recipe");
+  const now = Date.now();
+  let imported = 0;
+  await db.transaction("rw", db.recipes, db.activity, async () => {
+    for (const item of pack.recipes) {
+      const existing = await db.recipes.get(item.id);
+      if (existing) continue;
+      const byName = await db.recipes.filter((r) => normalizeIngredient(r.name) === normalizeIngredient(item.name)).first();
+      if (byName) continue;
+      const data = parseRecipe({
+        name: item.name,
+        servings: item.servings,
+        minutes: item.minutes,
+        ingredients: item.ingredients,
+        steps: item.steps,
+        stepSeconds: item.stepSeconds,
+        tags: item.tags,
+        privacy: "family",
+      });
+      await db.recipes.add({ ...data, id: item.id, createdBy: actor?.id ?? "local", createdAt: now, updatedAt: now });
+      await recordActivity(actor, { module: "recipes", action: "create", entityId: item.id, entityName: data.name, privacy: data.privacy, createdBy: actor?.id ?? "local" });
+      imported++;
+    }
+  });
+  if (imported > 0) await pruneActivity();
+  return imported;
+}
+
+/** Importa una única receta de ejemplo a la casa. */
+export async function importStarterRecipe(actor: Actor | null, recipeId: string): Promise<string | null> {
+  assertCan(actor, "recipes.manage");
+  const allRecipes = RECIPE_PACKS.flatMap((p) => p.recipes);
+  const item = allRecipes.find((r) => r.id === recipeId);
+  if (!item) throw new NotFoundError("errors.notFound.recipe");
+  const now = Date.now();
+  let createdId: string | null = null;
+  await db.transaction("rw", db.recipes, db.activity, async () => {
+    const existing = await db.recipes.get(item.id);
+    if (existing) return;
+    const byName = await db.recipes.filter((r) => normalizeIngredient(r.name) === normalizeIngredient(item.name)).first();
+    if (byName) return;
+    const data = parseRecipe({
+      name: item.name,
+      servings: item.servings,
+      minutes: item.minutes,
+      ingredients: item.ingredients,
+      steps: item.steps,
+      stepSeconds: item.stepSeconds,
+      tags: item.tags,
+      privacy: "family",
+    });
+    await db.recipes.add({ ...data, id: item.id, createdBy: actor?.id ?? "local", createdAt: now, updatedAt: now });
+    await recordActivity(actor, { module: "recipes", action: "create", entityId: item.id, entityName: data.name, privacy: data.privacy, createdBy: actor?.id ?? "local" });
+    createdId = item.id;
+  });
+  if (createdId) await pruneActivity();
+  return createdId;
+}
+
+/** Clona una receta existente para crear una variante personal editable. */
+export async function duplicateRecipe(actor: Actor | null, id: string, newName?: string): Promise<string> {
+  assertCan(actor, "recipes.manage");
+  const source = await getRecipe(id);
+  if (!canSee(actor, source)) throw new NotFoundError("errors.notFound.recipe");
+  const newId = createId();
+  const now = Date.now();
+  const name = newName?.trim() || `${source.name} (variante)`;
+  const data = parseRecipe({
+    name,
+    servings: source.servings,
+    minutes: source.minutes,
+    ingredients: source.ingredients,
+    steps: source.steps,
+    stepSeconds: source.stepSeconds,
+    tags: source.tags,
+    privacy: source.privacy ?? "family",
+  });
+  await db.transaction("rw", db.recipes, db.activity, async () => {
+    await db.recipes.add({ ...data, id: newId, createdBy: actor?.id ?? "local", createdAt: now, updatedAt: now });
+    await recordActivity(actor, { module: "recipes", action: "create", entityId: newId, entityName: data.name, privacy: data.privacy, createdBy: actor?.id ?? "local" });
+  });
+  await pruneActivity();
+  return newId;
 }

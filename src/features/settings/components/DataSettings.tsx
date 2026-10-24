@@ -1,6 +1,6 @@
 "use client";
 
-import { Alert, App, Button, Flex, Input, Modal, Progress, Tag, Typography, theme } from "antd";
+import { Alert, App, Button, Flex, Input, Modal, Progress, Switch, Tag, Typography, theme } from "antd";
 import { Cloud, Download, Eraser, HardDrive, RotateCcw, TriangleAlert, Upload } from "lucide-react";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import Link from "next/link";
@@ -10,7 +10,7 @@ import { IconTile } from "@/components/ui";
 import { LeaveCloudButton, SyncSummary } from "@/features/cloud/components/CloudDataPanel";
 import { CLOUD_ENABLED } from "@/lib/cloud/api";
 import { useDeviceStore } from "@/store/useDeviceStore";
-import { useResetPreferences } from "@/hooks/usePreferences";
+import { usePreferences, useSetPreference, useResetPreferences } from "@/hooks/usePreferences";
 import { useI18n } from "@/i18n";
 import { useCurrentUser } from "@/lib/auth/session";
 import { getErrorMessage } from "@/lib/errors";
@@ -24,6 +24,8 @@ export function DataSettings() {
   const { message } = App.useApp();
   const user = useCurrentUser();
   const resetPreferences = useResetPreferences();
+  const { recipeStockLink } = usePreferences();
+  const setPreference = useSetPreference();
   const [estimate, setEstimate] = useState<{ usage: number; quota: number } | null>(null);
   const [busy, setBusy] = useState<"cache" | "import" | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
@@ -187,6 +189,13 @@ export function DataSettings() {
         <Button icon={<Eraser />} loading={busy === "cache"} onClick={onClearCache}>
           {t("settings.data.cache.button")}
         </Button>
+      </SettingRow>
+
+      <SettingRow label={t("recipes.display.stockLink")} description={t("recipes.display.stockLinkHint")}>
+        <Switch
+          checked={recipeStockLink}
+          onChange={(checked) => setPreference("recipeStockLink", checked)}
+        />
       </SettingRow>
 
       <SettingRow label={t("settings.data.reset.title")} description={t("settings.data.reset.text")}>

@@ -5,7 +5,7 @@ import { formatQuantity, formatUnit } from "@/features/inventory/format";
 
 import { App, Button, Card, Col, Flex, Grid, Row, Tag, Tooltip, Typography, theme } from "antd";
 import { motion } from "framer-motion";
-import { ArrowLeft, ChefHat, CircleAlert, CircleCheck, CircleDashed, Clock, ListPlus, Pencil, SearchX, Trash2, TriangleAlert, Users } from "lucide-react";
+import { ArrowLeft, ChefHat, CircleAlert, CircleCheck, CircleDashed, ClipboardCopy, Clock, Copy, ListPlus, Pencil, SearchX, Trash2, TriangleAlert, Users } from "lucide-react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
@@ -17,6 +17,7 @@ import { CommentsPanel } from "@/features/comments/components/CommentsPanel";
 import { useComments } from "@/features/comments/hooks";
 
 import { PhotoGallery } from "@/features/media/components/PhotoGallery";
+import { usePreferences } from "@/hooks/usePreferences";
 import { useI18n } from "@/i18n";
 import { usePermission } from "@/lib/auth/hooks";
 import { SPRING } from "@/lib/motion";
@@ -32,6 +33,7 @@ import { belowHeader } from "@/components/layout/constants";
 
 export function RecipeView() {
   const { t, format } = useI18n();
+  const { recipeStockLink } = usePreferences();
   const { token } = theme.useToken();
   const screens = Grid.useBreakpoint();
   const router = useRouter();
@@ -39,7 +41,7 @@ export function RecipeView() {
   const id = useSearchParams().get("id");
   const data = useRecipe(id);
   const comments = useComments("recipe", id);
-  const { remove, setCover, addMissing } = useRecipeActions();
+  const { remove, setCover, addMissing, duplicate } = useRecipeActions();
   const canManage = usePermission("recipes.manage");
   const [servings, setServings] = useState<number | null>(null);
   const [guided, setGuided] = useState(false);
@@ -83,6 +85,51 @@ export function RecipeView() {
       },
     });
 
+  async function handleDuplicate() {
+    const newId = await duplicate(recipe.id, t("recipes.copyName", { name: recipe.name }));
+    if (newId) router.push(`/recetas/editar?id=${newId}`);
+  }
+
+  async function handleCopyText() {
+    const lines: string[] = [];
+    lines.push(`*${recipe.name}*`);
+    const details: string[] = [];
+    if (recipe.minutes > 0) details.push(t("recipes.minutes", { count: recipe.minutes }));
+    details.push(t("recipes.servings", { count: portions }));
+    lines.push(details.join(" · "));
+    lines.push("");
+    lines.push(`${t("recipes.ingredients")}:`);
+    for (const check of report.checks) {
+      const qty = formatQuantity(t, check.needed, check.ingredient.unit, format.number);
+      lines.push(`• ${qty} ${check.ingredient.name}`);
+    }
+    if (recipe.steps.length > 0) {
+      lines.push("");
+      lines.push(`${t("recipes.steps")}:`);
+      recipe.steps.forEach((step, idx) => {
+        lines.push(`${idx + 1}. ${step}`);
+      });
+    }
+    const text = lines.join("\n");
+    try {
+      if (navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(text);
+      } else {
+        const textarea = document.createElement("textarea");
+        textarea.value = text;
+        textarea.style.position = "fixed";
+        textarea.style.opacity = "0";
+        document.body.appendChild(textarea);
+        textarea.select();
+        document.execCommand("copy");
+        document.body.removeChild(textarea);
+      }
+      message.success(t("recipes.toast.copiedText"));
+    } catch {
+      message.error(t("recipes.toast.copyFailed"));
+    }
+  }
+
   const onAddMissing = async (selected: string[]) => {
     const added = await addMissing(recipe.id, portions, selected);
     if (added !== null) message.success(t("recipes.missingAdded", { count: added }));
@@ -102,7 +149,7 @@ export function RecipeView() {
           <Col xs={24} md={13}>
             <Flex vertical gap={12}>
               <Flex gap={6} wrap>
-                <AvailabilityTag availability={report.availability} />
+                {recipeStockLink && <AvailabilityTag availability={report.availability} />}
                 {recipe.tags.map((tag) => (
                   <Tag key={tag} variant="filled" style={{ margin: 0 }}>
                     {t(`recipes.tags.${tag}`)}
@@ -123,20 +170,28 @@ export function RecipeView() {
               </Flex>
               <Flex gap={8} wrap style={{ marginTop: 8 }}>
                 <ShareButton source={{ kind: "recipe", id: recipe.id }} />
+                <Tooltip title={t("recipes.copyText")}>
+                  <Button size="large" aria-label={t("recipes.copyText")} icon={<ClipboardCopy />} onClick={handleCopyText} />
+                </Tooltip>
                 <Button size="large" onClick={() => setGuided(true)}>{t("recipes.mode.open")}</Button>
-                <Can perform="inventory.consume">
-                  <Button type="primary" size="large" icon={<ChefHat />} onClick={() => setCooking(true)}>
-                    {t("recipes.cook.button")}
-                  </Button>
-                </Can>
+                {recipeStockLink && (
+                  <Can perform="inventory.consume">
+                    <Button type="primary" size="large" icon={<ChefHat />} onClick={() => setCooking(true)}>
+                      {t("recipes.cook.button")}
+                    </Button>
+                  </Can>
+                )}
                 <Can perform="shopping.manage">
-                  <Tooltip title={report.checks.filter((check) => check.state !== "ok").length === 0 ? t("recipes.nothingMissing") : undefined}>
-                    <Button size="large" icon={<ListPlus />} disabled={report.checks.filter((check) => check.state !== "ok").length === 0} onClick={() => setShopping(true)}>
-                      {t("recipes.addMissing", { count: report.checks.filter((check) => check.state !== "ok").length })}
+                  <Tooltip title={recipeStockLink && report.checks.filter((check) => check.state !== "ok").length === 0 ? t("recipes.nothingMissing") : undefined}>
+                    <Button size="large" icon={<ListPlus />} disabled={recipeStockLink ? report.checks.filter((check) => check.state !== "ok").length === 0 : recipe.ingredients.length === 0} onClick={() => setShopping(true)}>
+                      {recipeStockLink ? t("recipes.addMissing", { count: report.checks.filter((check) => check.state !== "ok").length }) : t("recipes.addIngredientsToShopping")}
                     </Button>
                   </Tooltip>
                 </Can>
                 <Can perform="recipes.manage">
+                  <Tooltip title={t("recipes.duplicate")}>
+                    <Button size="large" aria-label={t("recipes.duplicate")} icon={<Copy />} onClick={handleDuplicate} />
+                  </Tooltip>
                   <Tooltip title={t("recipes.edit")}>
                     <Link href={`/recetas/editar?id=${recipe.id}`}>
                       <Button size="large" aria-label={t("recipes.edit")} icon={<Pencil />} />
@@ -168,7 +223,7 @@ export function RecipeView() {
               )}
               <Stagger stagger={0.03}>
                 {report.checks.map((check, index) => (
-                  <IngredientRow key={`${check.ingredient.name}-${index}`} check={check} last={index === report.checks.length - 1} />
+                  <IngredientRow key={`${check.ingredient.name}-${index}`} check={check} last={index === report.checks.length - 1} stockLink={recipeStockLink} />
                 ))}
               </Stagger>
             </Card>
@@ -215,7 +270,7 @@ export function RecipeView() {
         </Col>
       </Row>
 
-      {shopping && <ReviewChecklist title={t("recipes.review.title")} description={t("recipes.review.hint")} options={report.checks.filter((check) => check.state !== "ok").map((check) => ({ value: ingredientCheckKey(check), label: `${check.ingredient.name} · ${formatQuantity(t, Math.max(0, check.needed - (check.have ?? 0)), check.ingredient.unit, format.number)}`, checked: check.state !== "unlinked" }))} onConfirm={onAddMissing} onClose={() => setShopping(false)} />}
+      {shopping && <ReviewChecklist title={t("recipes.review.title")} description={t("recipes.review.hint")} options={recipeStockLink ? report.checks.filter((check) => check.state !== "ok").map((check) => ({ value: ingredientCheckKey(check), label: `${check.ingredient.name} · ${formatQuantity(t, Math.max(0, check.needed - (check.have ?? 0)), check.ingredient.unit, format.number)}`, checked: check.state !== "unlinked" })) : report.checks.map((check) => ({ value: ingredientCheckKey(check), label: `${check.ingredient.name} · ${formatQuantity(t, check.needed, check.ingredient.unit, format.number)}`, checked: true }))} onConfirm={onAddMissing} onClose={() => setShopping(false)} />}
       {guided && <CookingMode key={`${recipe.id}:${portions}`} recipe={recipe} items={items} servings={portions} onClose={() => setGuided(false)} />}
       <CookModal open={cooking} recipe={recipe} items={items} servings={portions} onClose={() => setCooking(false)} />
     </RequirePermission>
@@ -225,13 +280,32 @@ export function RecipeView() {
 const STATE_ICON: Record<IngredientState, typeof CircleCheck> = { ok: CircleCheck, short: TriangleAlert, missing: CircleAlert, unlinked: CircleDashed };
 
 /** Un ingrediente con su estado según lo que hay en casa (alcanza, falta poco, no hay, sin vincular). */
-export function IngredientRow({ check, last }: { check: IngredientCheck; last: boolean }) {
+export function IngredientRow({ check, last, stockLink = true }: { check: IngredientCheck; last: boolean; stockLink?: boolean }) {
   const { t, format } = useI18n();
   const { token } = theme.useToken();
   const { ingredient, needed, have, state } = check;
   const Icon = STATE_ICON[state];
   const color = { ok: token.colorSuccess, short: token.colorWarning, missing: token.colorError, unlinked: token.colorTextQuaternary }[state];
   const haveUnit = formatUnit(t, have ?? 0, ingredient.unit);
+  if (!stockLink) {
+    return (
+      <StaggerItem>
+        <Flex align="center" gap={12} style={{ paddingBlock: 10, borderBottom: last ? undefined : `1px solid ${token.colorBorderSecondary}` }}>
+          <span style={{ display: "inline-flex", color: token.colorTextQuaternary, fontSize: token.fontSizeSM, paddingLeft: 6, paddingRight: 6 }}>
+            •
+          </span>
+          <Flex vertical style={{ flex: 1, minWidth: 0 }}>
+            <Typography.Text strong ellipsis>
+              {ingredient.name}
+            </Typography.Text>
+          </Flex>
+          <Typography.Text strong style={{ whiteSpace: "nowrap" }}>
+            {formatQuantity(t, needed, ingredient.unit, format.number)}
+          </Typography.Text>
+        </Flex>
+      </StaggerItem>
+    );
+  }
 
   return (
     <StaggerItem>
