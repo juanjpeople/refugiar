@@ -5,6 +5,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { OperatorAccess, type OperatorPasskey } from "./Access";
 import { HouseholdQuotaModal, OperatorCapacity, type CapacityData } from "./Capacity";
 import { OperatorWaitlist, type WaitlistEntry } from "./Waitlist";
+import { OperatorTraffic, type DailyMetricEntry } from "./Traffic";
 import { OperatorLayout, useT, api, CloudError, date, getErrorMessage } from "./support";
 import { PageHeader } from "../src/components/ui/PageHeader";
 import { Reveal } from "../src/components/motion/Reveal";
@@ -87,6 +88,7 @@ interface AdminData {
   passkeys: OperatorPasskey[];
   waitlist: WaitlistEntry[];
   capacity: CapacityData;
+  metrics: DailyMetricEntry[];
   mail: {
     config: "disabled" | "incomplete" | "configured";
     counts: Record<string, number>;
@@ -96,7 +98,7 @@ interface AdminData {
 }
 const shortId = (value: string) => `${value.slice(0, 8)}…`;
 async function fetchAdminData(): Promise<AdminData> {
-  const [overview, users, households, licenses, feedback, notices, passkeys, mail, waitlist, capacity] = await Promise.all([
+  const [overview, users, households, licenses, feedback, notices, passkeys, mail, waitlist, capacity, metrics] = await Promise.all([
     api<Overview>("GET", "/api/admin/platform/overview"),
     api<{ users: AdminUser[] }>("GET", "/api/admin/platform/users"),
     api<{ households: AdminHousehold[] }>("GET", "/api/admin/platform/households"),
@@ -107,8 +109,9 @@ async function fetchAdminData(): Promise<AdminData> {
     api<AdminData["mail"]>("GET", "/api/admin/platform/mail"),
     api<{ waitlist: WaitlistEntry[] }>("GET", "/api/admin/platform/waitlist"),
     api<CapacityData>("GET", "/api/admin/platform/capacity"),
+    api<{ metrics: DailyMetricEntry[] }>("GET", "/api/admin/metrics"),
   ]);
-  return { overview, users: users.users, households: households.households, licenses: licenses.licenses, feedback: feedback.feedback, notices: notices.notices, passkeys: passkeys.passkeys, mail, waitlist: waitlist.waitlist, capacity };
+  return { overview, users: users.users, households: households.households, licenses: licenses.licenses, feedback: feedback.feedback, notices: notices.notices, passkeys: passkeys.passkeys, mail, waitlist: waitlist.waitlist, capacity, metrics: metrics.metrics };
 }
 export function PlatformAdminPage() {
   const t = useT();
@@ -305,9 +308,14 @@ export function PlatformAdminPage() {
         <Reveal delay={0.15}><Card>
           {!screens.sm && <Select virtual={false} aria-label={t("operator.section")} value={section} onChange={setSection}
             style={{ width: "100%", minHeight: 44, marginBottom: token.margin }}
-            options={["households", "waitlist", "capacity", "users", "licenses", "feedback", "notices", "mail", "access"].map(value => ({ value, label: t(`platformAdmin.tabs.${value}`) }))} />}
+            options={["households", "traffic", "waitlist", "capacity", "users", "licenses", "feedback", "notices", "mail", "access"].map(value => ({ value, label: t(`platformAdmin.tabs.${value}`) }))} />}
           <Tabs activeKey={section} onChange={setSection} tabBarStyle={screens.sm ? undefined : { display: "none" }}
             items={[
+              {
+                key: "traffic",
+                label: t("platformAdmin.tabs.traffic"),
+                children: <OperatorTraffic metrics={data?.metrics ?? []} />,
+              },
               {
                 key: "households",
                 label: t("platformAdmin.tabs.households"),

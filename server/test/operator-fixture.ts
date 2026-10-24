@@ -14,6 +14,7 @@ export async function operatorFixture(origin = "https://app.example") {
   database.exec("CREATE TABLE attempts (key TEXT PRIMARY KEY, count INTEGER NOT NULL, window_start INTEGER NOT NULL)");
   database.exec(readFileSync("server/migrations/0007_operator_sessions.sql", "utf8"));
   database.exec(readFileSync("server/migrations/0011_operator_passkeys.sql", "utf8"));
+  database.exec(readFileSync("server/migrations/0018_anonymous_pulse.sql", "utf8"));
   function prepare(sql: string, args: (string | number | null)[] = []) {
     return {
       bind: (...values: (string | number | null)[]) => prepare(sql, values),
