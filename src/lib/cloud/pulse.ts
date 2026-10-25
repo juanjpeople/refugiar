@@ -17,7 +17,7 @@ export type PulseMetric = (typeof PULSE_METRICS)[number];
  */
 export function sendPulse(metric: PulseMetric): void {
   if (typeof window === "undefined" || !window.sessionStorage) return;
-  if (navigator.userAgent?.includes("Playwright") || (window as unknown as { __PLAYWRIGHT__?: boolean }).__PLAYWRIGHT__) return;
+  if (navigator.webdriver || navigator.userAgent?.includes("Playwright") || (window as unknown as { __PLAYWRIGHT__?: boolean }).__PLAYWRIGHT__) return;
 
   const today = new Date().toISOString().slice(0, 10);
   const key = `od-pulse:${today}:${metric}`;
