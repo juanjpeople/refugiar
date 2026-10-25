@@ -6,6 +6,7 @@
  * Cuando haya backend, estas funciones pasan a llamar a la API sin tocar los componentes.
  */
 import { roundQuantity } from "./quantity";
+import { deletePhotosOfWithin } from "@/features/media/service";
 import { isUndoable, type ActivityAction } from "@/features/activity/domain";
 import { pruneActivity, recordActivity } from "@/features/activity/service";
 import { dropSuggestions, SUGGESTION_TABLES, syncSuggestion } from "@/features/shopping/suggestions";
@@ -247,7 +248,7 @@ export async function knownBarcodeName(barcode: string): Promise<string | null> 
 
 export async function deleteInventoryItem(actor: Actor | null, id: string) {
   assertCan(actor, "inventory.delete");
-  await db.transaction("rw", [db.prices, ...QUANTITY_TABLES()], async () => {
+  await db.transaction("rw", [db.prices, db.photos, db.photoDeletes, ...QUANTITY_TABLES()], async () => {
     const item = await db.inventory.get(id);
     if (!item) return;
     const place = (await db.containers.get(item.containerId))?.name;
@@ -255,6 +256,7 @@ export async function deleteInventoryItem(actor: Actor | null, id: string) {
     // Sus precios y sugerencias se van con el producto (no tienen sentido solos). Si estaba
     // anotado en la lista, queda como ítem suelto: alguien lo quería comprar.
     await db.prices.where("itemId").equals(id).delete();
+    await deletePhotosOfWithin("item", id);
     await dropSuggestions(id);
     await db.shoppingList.where("inventoryItemId").equals(id).modify((entry) => {
       delete entry.inventoryItemId;

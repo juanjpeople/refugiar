@@ -20,6 +20,12 @@ export interface PhotoSpot {
   y: number;
 }
 
+export const TOOL_CATEGORIES = ["manual", "electric", "measuring", "safety", "accessory"] as const;
+export type ToolCategory = (typeof TOOL_CATEGORIES)[number];
+
+export const TOOL_STATUSES = ["available", "in_use", "maintenance", "broken"] as const;
+export type ToolStatus = (typeof TOOL_STATUSES)[number];
+
 export interface InventoryItem {
   id: string;
   name: string;
@@ -39,14 +45,24 @@ export interface InventoryItem {
   expiresAt?: number;
   /** El punto en la foto del mueble donde está guardado. Se borra al moverlo a otro lugar. */
   spot?: PhotoSpot;
+  /** Foto principal del producto o herramienta. */
+  coverPhotoId?: string;
+  /** Clasificación técnica de herramientas del taller. */
+  toolCategory?: ToolCategory;
+  /** Estado operativo de la herramienta. */
+  toolStatus?: ToolStatus;
+  /** Marca y modelo (ej. Bosch GSB 13 RE). */
+  brandModel?: string;
+  /** Especificaciones técnicas (ej. 650W, mandril 13mm). */
+  specs?: string;
   createdAt: number;
   updatedAt: number;
 }
 
-export type NewInventoryItem = Pick<InventoryItem, "name" | "quantity" | "unit" | "minThreshold" | "autoSuggest" | "reusable" | "barcode" | "expiresAt">;
+export type NewInventoryItem = Pick<InventoryItem, "name" | "quantity" | "unit" | "minThreshold" | "autoSuggest" | "reusable" | "barcode" | "expiresAt"> & Partial<Pick<InventoryItem, "coverPhotoId" | "toolCategory" | "toolStatus" | "brandModel" | "specs">>;
 
 /** Campos editables de un producto. Cambiar `containerId` es moverlo de lugar. `spot: null` borra el punto. */
-export type InventoryItemPatch = Partial<Pick<InventoryItem, "name" | "unit" | "minThreshold" | "containerId" | "autoSuggest" | "reusable" | "barcode">> & { spot?: PhotoSpot | null; expiresAt?: number | null };
+export type InventoryItemPatch = Partial<Pick<InventoryItem, "name" | "unit" | "minThreshold" | "containerId" | "autoSuggest" | "reusable" | "barcode" | "coverPhotoId" | "toolCategory" | "toolStatus" | "brandModel" | "specs">> & { spot?: PhotoSpot | null; expiresAt?: number | null };
 
 export const INVENTORY_LIMITS = {
   nameMaxLength: 80,

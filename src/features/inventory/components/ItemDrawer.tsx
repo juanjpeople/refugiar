@@ -10,6 +10,7 @@ import { Boxes, ListPlus, PackageMinus, PackageOpen, Save, ScanLine } from "luci
 import { useState, type ReactNode } from "react";
 import { Can } from "@/components/auth/Can";
 import { IconTile, PathCrumbs, QuantityStepper, StockTag } from "@/components/ui";
+import { PhotoGallery } from "@/features/media/components/PhotoGallery";
 import { PricePanel } from "@/features/prices/components/PricePanel";
 import { suggestedQuantity } from "@/features/shopping/domain";
 import { useShoppingActions } from "@/features/shopping/hooks";
@@ -20,9 +21,8 @@ import { useI18n, useT } from "@/i18n";
 import { tint } from "@/lib/appearance";
 import { usePermission } from "@/lib/auth/hooks";
 import { containerHref, spaceHref } from "@/lib/navigation/routes";
-import { findCatalogProduct } from "../catalog";
-import { CATEGORY_APPEARANCE } from "../catalog-appearance";
-import { getStockStatus, INVENTORY_LIMITS, isBarcode, UNITS, type InventoryItem, type InventoryItemPatch } from "../domain";
+import { itemAppearance } from "../catalog-appearance";
+import { getStockStatus, INVENTORY_LIMITS, isBarcode, TOOL_CATEGORIES, TOOL_STATUSES, UNITS, type InventoryItem, type InventoryItemPatch } from "../domain";
 import { useConsumption, useInventoryActions, useInventoryItem } from "../hooks";
 import { useConsumeWithUndo } from "./ConsumeButton";
 import { ItemSpot } from "./ItemSpot";
@@ -37,6 +37,8 @@ export function ItemDrawer({ itemId, onClose }: { itemId: string | null; onClose
   const { token } = theme.useToken();
   const item = useInventoryItem(itemId);
   const screens = Grid.useBreakpoint();
+  const canAdjust = usePermission("inventory.adjust");
+  const { update } = useInventoryActions();
   const appearance = item ? itemAppearance(item) : undefined;
 
   return (
@@ -71,6 +73,16 @@ export function ItemDrawer({ itemId, onClose }: { itemId: string | null; onClose
             style={{ marginInline: -token.padding }}
           />
           <Divider />
+          <PanelTitle>{t("photos.title")}</PanelTitle>
+          <PhotoGallery
+            ownerType="item"
+            ownerId={item.id}
+            editable={canAdjust}
+            coverId={item.coverPhotoId}
+            onSetCover={(photoId) => void update(item.id, { coverPhotoId: photoId === item.coverPhotoId ? undefined : photoId })}
+            onFirstPhoto={(photoId) => !item.coverPhotoId && void update(item.id, { coverPhotoId: photoId })}
+          />
+          <Divider />
           <PanelTitle>{t("prices.title")}</PanelTitle>
           <PricePanel itemId={item.id} itemName={item.name} />
         </>
@@ -79,11 +91,7 @@ export function ItemDrawer({ itemId, onClose }: { itemId: string | null; onClose
   );
 }
 
-/** Ícono y color del rubro del producto, si está en el catálogo. */
-function itemAppearance(item: InventoryItem) {
-  const category = findCatalogProduct(item.name)?.category;
-  return category ? CATEGORY_APPEARANCE[category] : undefined;
-}
+
 
 function PanelTitle({ children }: { children: ReactNode }) {
   const { token } = theme.useToken();
@@ -213,6 +221,7 @@ function ItemForm({ item }: { item: InventoryItem }) {
   const { update } = useInventoryActions();
   const canEdit = usePermission("inventory.create");
   const [form] = Form.useForm<Omit<InventoryItemPatch, "expiresAt"> & { expiresAt?: Dayjs | null }>();
+  const reusable = Form.useWatch("reusable", form);
   const [saving, setSaving] = useState(false);
 
   async function onFinish(values: Omit<InventoryItemPatch, "expiresAt"> & { expiresAt?: Dayjs | null }) {
@@ -227,7 +236,7 @@ function ItemForm({ item }: { item: InventoryItem }) {
       layout="vertical"
       name={`item-${item.id}`}
       form={form}
-      initialValues={{ name: item.name, minThreshold: item.minThreshold, unit: item.unit, autoSuggest: item.autoSuggest !== false, reusable: item.reusable === true, barcode: item.barcode ?? "", expiresAt: item.expiresAt ? dayjs(item.expiresAt) : undefined }}
+      initialValues={{ name: item.name, minThreshold: item.minThreshold, unit: item.unit, autoSuggest: item.autoSuggest !== false, reusable: item.reusable === true, barcode: item.barcode ?? "", expiresAt: item.expiresAt ? dayjs(item.expiresAt) : undefined, toolCategory: item.toolCategory, toolStatus: item.toolStatus, brandModel: item.brandModel, specs: item.specs }}
       onFinish={onFinish}
       disabled={!canEdit}
       requiredMark={false}
@@ -257,6 +266,34 @@ function ItemForm({ item }: { item: InventoryItem }) {
       <Form.Item name="reusable" valuePropName="checked" label={t("inventory.item.reusable")} tooltip={t("inventory.item.reusableHint")}>
         <Switch />
       </Form.Item>
+      {reusable && (
+        <>
+          <Row gutter={12}>
+            <Col xs={24} sm={12}>
+              <Form.Item name="toolCategory" label={t("inventory.tool.category")}>
+                <Select
+                  allowClear
+                  options={TOOL_CATEGORIES.map((cat) => ({ value: cat, label: t(`inventory.toolCategories.${cat}`) }))}
+                />
+              </Form.Item>
+            </Col>
+            <Col xs={24} sm={12}>
+              <Form.Item name="toolStatus" label={t("inventory.tool.status")}>
+                <Select
+                  allowClear
+                  options={TOOL_STATUSES.map((st) => ({ value: st, label: t(`inventory.toolStatuses.${st}`) }))}
+                />
+              </Form.Item>
+            </Col>
+          </Row>
+          <Form.Item name="brandModel" label={t("inventory.tool.brandModel")}>
+            <Input placeholder="Ej. Bosch GSB 13 RE" maxLength={80} />
+          </Form.Item>
+          <Form.Item name="specs" label={t("inventory.tool.specs")}>
+            <Input.TextArea rows={2} placeholder="Ej. 650W, mandril 13 mm" maxLength={200} />
+          </Form.Item>
+        </>
+      )}
       <Form.Item
         name="barcode"
         label={t("inventory.item.barcode")}

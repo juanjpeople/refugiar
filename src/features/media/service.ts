@@ -12,7 +12,7 @@ import { getSyncLink } from "@/lib/sync/middleware";
 import { newPhotoKey, queuePhotoDeletes } from "@/lib/sync/photos";
 import { PHOTO_LIMITS, type PhotoOwner } from "./domain";
 
-const MANAGE: Record<PhotoOwner, Permission> = { recipe: "recipes.manage", container: "storage.manage", project: "projects.manage" };
+const MANAGE: Record<PhotoOwner, Permission> = { recipe: "recipes.manage", container: "storage.manage", project: "projects.manage", item: "inventory.adjust" };
 
 /** Comprime y guarda fotos. Devuelve los ids, en el mismo orden. */
 export async function addPhotos(actor: Actor | null, ownerType: PhotoOwner, ownerId: string, files: File[]) {
@@ -45,10 +45,10 @@ export async function addPhotos(actor: Actor | null, ownerType: PhotoOwner, owne
     createdBy: actor.id,
     createdAt: now + index,
   }));
-  await db.transaction("rw", db.photos, db.recipes, db.containers, db.projects, async () => {
-    const owner = ownerType === "project" ? await db.projects.get(ownerId) : ownerType === "container" ? await db.containers.get(ownerId) : await db.recipes.get(ownerId);
+  await db.transaction("rw", db.photos, db.recipes, db.containers, db.projects, db.inventory, async () => {
+    const owner = ownerType === "project" ? await db.projects.get(ownerId) : ownerType === "container" ? await db.containers.get(ownerId) : ownerType === "item" ? await db.inventory.get(ownerId) : await db.recipes.get(ownerId);
     if (ownerType === "project" && owner && !canSee(actor, owner as { privacy?: unknown; createdBy?: string })) throw new PermissionError("projects.manage");
-    if (!owner) throw new NotFoundError(ownerType === "container" ? "errors.notFound.container" : "errors.notFound.recipe");
+    if (!owner) throw new NotFoundError(ownerType === "container" ? "errors.notFound.container" : ownerType === "item" ? "errors.notFound.item" : "errors.notFound.recipe");
     // Revalidar dentro de la transacción: otra pestaña pudo agregar fotos mientras se comprimían.
     const count = await db.photos.where("[ownerType+ownerId]").equals([ownerType, ownerId]).count();
     if (count + photos.length > PHOTO_LIMITS.maxPerOwner) throw new ValidationError("errors.validation.tooManyPhotos", { max: PHOTO_LIMITS.maxPerOwner });
