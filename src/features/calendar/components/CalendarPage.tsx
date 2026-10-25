@@ -3,7 +3,8 @@
 import { Button, Flex, Grid, Segmented, Tooltip, Typography, theme } from "antd";
 import dayjs, { type Dayjs } from "dayjs";
 import { AnimatePresence, motion } from "framer-motion";
-import { ChevronLeft, ChevronRight, Plus } from "lucide-react";
+import { ChefHat, ChevronLeft, ChevronRight, Plus } from "lucide-react";
+import Link from "next/link";
 import { useMemo, useState } from "react";
 import { Can } from "@/components/auth/Can";
 import { RequirePermission } from "@/components/auth/RequirePermission";
@@ -89,6 +90,9 @@ export function CalendarPage() {
         description={t("calendar.description")}
         extra={
           <>
+          <Link href="/recetas/semana">
+            <Button icon={<ChefHat />}>{t("meals.title")}</Button>
+          </Link>
           <ReminderButton />
           <Can perform="calendar.manage">
             <CalendarSettingsButton />
@@ -408,7 +412,7 @@ function EventChip({ occurrence, onOpen, detailed = false, past = false }: { occ
   const { t, format } = useI18n();
   const members = useMembers() ?? [];
   const palette = tint(token, occurrence.color);
-  const Icon = occurrence.icon ? APPEARANCE_ICONS[occurrence.icon] : null;
+  const Icon = occurrence.icon ? APPEARANCE_ICONS[occurrence.icon] : (occurrence.event?.meal ? ChefHat : null);
   const title = occurrence.birthdayOf ? t("calendar.birthday", { name: occurrence.title }) : occurrence.title;
   const time = occurrence.allDay ? t("calendar.allDay") : `${format.time(occurrence.start)}${occurrence.end > occurrence.start ? `–${format.time(occurrence.end)}` : ""}`;
   const participants = members.filter((member) => occurrence.participantIds.includes(member.id));

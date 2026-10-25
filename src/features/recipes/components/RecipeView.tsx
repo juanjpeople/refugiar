@@ -8,6 +8,9 @@ import { motion } from "framer-motion";
 import { ArrowLeft, ChefHat, CircleAlert, CircleCheck, CircleDashed, ClipboardCopy, Clock, Copy, ListPlus, Pencil, SearchX, Trash2, TriangleAlert, Users } from "lucide-react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
+import { useLiveQuery } from "dexie-react-hooks";
+import { db } from "@/lib/db";
+import Dexie from "dexie";
 import { useState } from "react";
 import { Can } from "@/components/auth/Can";
 import { RequirePermission } from "@/components/auth/RequirePermission";
@@ -24,7 +27,7 @@ import { SPRING } from "@/lib/motion";
 import { useTrackVisit } from "@/components/layout/useShell";
 import { recipeHref } from "@/lib/navigation/routes";
 import { usePageCrumbs } from "@/store/useBreadcrumbStore";
-import { averageRating, checkAvailability, ingredientCheckKey, RECIPE_LIMITS, type IngredientCheck, type IngredientState } from "../domain";
+import { averageRating, checkAvailability, formatRecipeShareText, ingredientCheckKey, RECIPE_LIMITS, type IngredientCheck, type IngredientState } from "../domain";
 import { useRecipe, useRecipeActions } from "../hooks";
 import { CookingMode } from "./CookingMode";
 import { CookModal } from "./CookModal";
@@ -48,6 +51,19 @@ export function RecipeView() {
   const [cooking, setCooking] = useState(false);
   const [shopping, setShopping] = useState(false);
   const [doneSteps, setDoneSteps] = useState<Set<number>>(new Set());
+  const cookedEntries = useLiveQuery(
+    async () => {
+      if (!data?.recipe?.id) return [];
+      return await db.activity
+        .where("[entityId+at]")
+        .between([data.recipe.id, Dexie.minKey], [data.recipe.id, Dexie.maxKey])
+        .filter((entry) => entry.module === "recipes" && entry.action === "cooked")
+        .toArray();
+    },
+    [data?.recipe?.id],
+  );
+  const timesCooked = cookedEntries?.length ?? 0;
+  const lastCookedAt = cookedEntries && cookedEntries.length > 0 ? cookedEntries[cookedEntries.length - 1].at : undefined;
   usePageCrumbs(data ? [{ label: data.recipe.name }] : null);
   useTrackVisit(data ? recipeHref(data.recipe.id) : null);
 
@@ -91,26 +107,13 @@ export function RecipeView() {
   }
 
   async function handleCopyText() {
-    const lines: string[] = [];
-    lines.push(`*${recipe.name}*`);
-    const details: string[] = [];
-    if (recipe.minutes > 0) details.push(t("recipes.minutes", { count: recipe.minutes }));
-    details.push(t("recipes.servings", { count: portions }));
-    lines.push(details.join(" · "));
-    lines.push("");
-    lines.push(`${t("recipes.ingredients")}:`);
-    for (const check of report.checks) {
-      const qty = formatQuantity(t, check.needed, check.ingredient.unit, format.number);
-      lines.push(`• ${qty} ${check.ingredient.name}`);
-    }
-    if (recipe.steps.length > 0) {
-      lines.push("");
-      lines.push(`${t("recipes.steps")}:`);
-      recipe.steps.forEach((step, idx) => {
-        lines.push(`${idx + 1}. ${step}`);
-      });
-    }
-    const text = lines.join("\n");
+    const text = formatRecipeShareText(recipe, report.checks, portions, {
+      minutes: (count) => t("recipes.minutes", { count }),
+      servings: (count) => t("recipes.servings", { count }),
+      ingredients: t("recipes.ingredients"),
+      steps: t("recipes.steps"),
+      formatQty: (qty, unit) => formatQuantity(t, qty, unit, format.number),
+    });
     try {
       if (navigator.clipboard?.writeText) {
         await navigator.clipboard.writeText(text);
@@ -167,6 +170,13 @@ export function RecipeView() {
                   <Users /> {t("recipes.servings", { count: recipe.servings })}
                 </span>
                 <RatingBadge rating={rating} />
+                {timesCooked > 0 && (
+                  <Tooltip title={lastCookedAt ? t("recipes.lastCooked", { date: format.date(lastCookedAt, { day: "numeric", month: "short", year: "numeric" }) }) : undefined}>
+                    <span style={{ display: "inline-flex", alignItems: "center", gap: 6, color: token.colorSuccessText, fontWeight: 500 }}>
+                      <ChefHat /> {t("recipes.cookedTimes", { count: timesCooked })}
+                    </span>
+                  </Tooltip>
+                )}
               </Flex>
               <Flex gap={8} wrap style={{ marginTop: 8 }}>
                 <ShareButton source={{ kind: "recipe", id: recipe.id }} />

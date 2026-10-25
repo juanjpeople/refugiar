@@ -245,3 +245,69 @@ export function averageRating(ratings: (number | undefined)[]): { average: numbe
 
 /** Identidad estable durante la revisión, aunque cambie el orden de la receta. */
 export const ingredientCheckKey = (check: IngredientCheck) => JSON.stringify([check.ingredient.itemId ?? "", check.ingredient.name, check.ingredient.unit]);
+
+export interface RecipeShareLabels {
+  minutes: (count: number) => string;
+  servings: (count: number) => string;
+  ingredients: string;
+  steps: string;
+  formatQty: (quantity: number, unit: string) => string;
+}
+
+/** Formatea una receta como texto plano limpio para compartir por portapapeles o mensajería. */
+export function formatRecipeShareText(
+  recipe: Pick<Recipe, "name" | "minutes" | "steps">,
+  checks: IngredientCheck[],
+  portions: number,
+  labels: RecipeShareLabels,
+): string {
+  const lines: string[] = [];
+  lines.push(`*${recipe.name}*`);
+  const details: string[] = [];
+  if (recipe.minutes > 0) details.push(labels.minutes(recipe.minutes));
+  details.push(labels.servings(portions));
+  lines.push(details.join(" · "));
+  lines.push("");
+  lines.push(`${labels.ingredients}:`);
+  for (const check of checks) {
+    const qty = labels.formatQty(check.needed, check.ingredient.unit);
+    lines.push(`• ${qty} ${check.ingredient.name}`);
+  }
+  if (recipe.steps.length > 0) {
+    lines.push("");
+    lines.push(`${labels.steps}:`);
+    recipe.steps.forEach((step, idx) => {
+      lines.push(`${idx + 1}. ${step}`);
+    });
+  }
+  return lines.join("\n");
+}
+
+export interface RecipeFilterOptions {
+  wanted?: string[];
+  show?: "all" | "ready";
+  tags?: RecipeTag[];
+  maxMinutes?: number | null;
+  query?: string;
+  recipeStockLink?: boolean;
+}
+
+/** Filtra y ordena recetas por disponibilidad, etiquetas, tiempo máximo y búsqueda sin tildes. */
+export function filterAndRankRecipes<T extends Recipe & { report: AvailabilityReport }>(
+  recipes: T[],
+  filters: RecipeFilterOptions,
+): T[] {
+  const { wanted = [], show = "all", tags = [], maxMinutes = null, query = "", recipeStockLink = true } = filters;
+  const words = normalizeIngredient(query).split(/\s+/).filter(Boolean);
+
+  return rankRecipes(recipes, wanted).filter((recipe) => {
+    if (recipeStockLink && show === "ready" && recipe.report.availability !== "ready") return false;
+    if (tags.length > 0 && !tags.every((tag) => recipe.tags.includes(tag))) return false;
+    if (maxMinutes && (recipe.minutes <= 0 || recipe.minutes > maxMinutes)) return false;
+    if (words.length > 0) {
+      const haystack = normalizeIngredient(`${recipe.name} ${recipe.ingredients.map((ingredient) => ingredient.name).join(" ")}`);
+      if (!words.every((word) => haystack.includes(word))) return false;
+    }
+    return true;
+  });
+}

@@ -59,6 +59,9 @@ export async function operatorTotp(secret: string, step: number, digits = 6): Pr
 async function configurationHash(env: OperatorConfig) {
   return operatorHash(JSON.stringify([env.APP_ORIGIN, env.OPERATOR_EMAIL, env.OPERATOR_KEY_HASH, env.OPERATOR_TOTP_SECRET]));
 }
+export async function passkeyOwnerHash(env: OperatorConfig) {
+  return operatorHash(JSON.stringify([env.APP_ORIGIN, env.OPERATOR_EMAIL]));
+}
 export function operatorOriginAllowed(request: Request, env: OperatorConfig): boolean {
   const url = new URL(request.url);
   const local = url.protocol === "http:" && ["localhost", "127.0.0.1"].includes(url.hostname);
@@ -122,19 +125,22 @@ async function consumeTotp(env: AppEnv["Bindings"], code: string): Promise<boole
     .bind(await configurationHash(env), accepted).first();
   return Boolean(used);
 }
+export const SEVEN_DAYS = 7 * 24 * HOUR;
+
 /** Abre la sesión del operador. De paso limpia lo que quedó de otra configuración o venció. */
-async function startSession(c: Context<AppEnv>, extraCookies: string[] = []) {
+async function startSession(c: Context<AppEnv>, extraCookies: string[] = [], ttlMs = HOUR) {
   const config = await configurationHash(c.env);
+  const owner = await passkeyOwnerHash(c.env);
   const token = randomToken();
   const now = Date.now();
   await c.env.DB.batch([
     c.env.DB.prepare("DELETE FROM operator_sessions WHERE expires_at <= ? OR config_hash != ?").bind(now, config),
     c.env.DB.prepare("DELETE FROM operator_totp WHERE config_hash != ?").bind(config),
-    c.env.DB.prepare("DELETE FROM operator_passkeys WHERE config_hash != ?").bind(config),
+    c.env.DB.prepare("DELETE FROM operator_passkeys WHERE config_hash != ? AND config_hash != ?").bind(config, owner),
     c.env.DB.prepare("DELETE FROM operator_challenges WHERE expires_at <= ? OR config_hash != ?").bind(now, config),
-    c.env.DB.prepare("INSERT INTO operator_sessions (token_hash, config_hash, expires_at) VALUES (?, ?, ?)").bind(await operatorHash(token), config, now + HOUR),
+    c.env.DB.prepare("INSERT INTO operator_sessions (token_hash, config_hash, expires_at) VALUES (?, ?, ?)").bind(await operatorHash(token), config, now + ttlMs),
   ]);
-  c.header("Set-Cookie", cookie(c.req.raw, token, HOUR / 1000));
+  c.header("Set-Cookie", cookie(c.req.raw, token, Math.floor(ttlMs / 1000)));
   for (const extra of extraCookies) c.header("Set-Cookie", extra, { append: true });
   return c.json({ email: c.env.OPERATOR_EMAIL });
 }
@@ -160,8 +166,10 @@ async function takeChallenge(c: Context<AppEnv>, purpose: "register" | "login"):
 const clearChallenge = (request: Request) => cookie(request, "", 0, challengeCookieName(request));
 interface OperatorPasskey { credential_id: string; public_key: string; counter: number; transports: string | null }
 async function passkeys(env: AppEnv["Bindings"]) {
-  return (await env.DB.prepare("SELECT credential_id, public_key, counter, transports, name, created_at, last_used_at FROM operator_passkeys WHERE config_hash = ? ORDER BY created_at")
-    .bind(await configurationHash(env)).all<OperatorPasskey & { name: string | null; created_at: number; last_used_at: number | null }>()).results;
+  const config = await configurationHash(env);
+  const owner = await passkeyOwnerHash(env);
+  return (await env.DB.prepare("SELECT credential_id, public_key, counter, transports, name, created_at, last_used_at FROM operator_passkeys WHERE config_hash = ? OR config_hash = ? ORDER BY created_at")
+    .bind(owner, config).all<OperatorPasskey & { name: string | null; created_at: number; last_used_at: number | null }>()).results;
 }
 const transportsOf = (value: string | null) => (value ? value.split(",") : undefined) as AuthenticatorTransportFuture[] | undefined;
 function isCredential(value: unknown): value is { id: string } {
@@ -210,8 +218,10 @@ operatorAuth.post("/passkey/login", async (c) => {
   const response = input && typeof input === "object" && "response" in input ? input.response : null;
   if (!isCredential(response)) return c.json({ error: "invalid-credentials" }, 401);
   const expectedChallenge = await takeChallenge(c, "login");
-  const stored = expectedChallenge && await c.env.DB.prepare("SELECT credential_id, public_key, counter, transports FROM operator_passkeys WHERE credential_id = ? AND config_hash = ?")
-    .bind(response.id, await configurationHash(c.env)).first<OperatorPasskey>();
+  const owner = await passkeyOwnerHash(c.env);
+  const config = await configurationHash(c.env);
+  const stored = expectedChallenge && await c.env.DB.prepare("SELECT credential_id, public_key, counter, transports FROM operator_passkeys WHERE credential_id = ? AND (config_hash = ? OR config_hash = ?)")
+    .bind(response.id, owner, config).first<OperatorPasskey>();
   if (!expectedChallenge || !stored) return c.json({ error: "invalid-credentials" }, 401);
   try {
     const { verified, authenticationInfo } = await verifyAuthenticationResponse({
@@ -227,7 +237,7 @@ operatorAuth.post("/passkey/login", async (c) => {
   } catch {
     return c.json({ error: "invalid-credentials" }, 401);
   }
-  return startSession(c, [clearChallenge(c.req.raw)]);
+  return startSession(c, [clearChallenge(c.req.raw)], SEVEN_DAYS);
 });
 
 /** Lo que sigue pide la sesión del operador abierta. */
@@ -272,8 +282,9 @@ operatorAuth.post("/passkeys", async (c) => {
     });
     if (!verified || !registrationInfo) return c.json({ error: "invalid" }, 400);
     const { credential } = registrationInfo;
+    const owner = await passkeyOwnerHash(c.env);
     await c.env.DB.prepare("INSERT INTO operator_passkeys (credential_id, config_hash, public_key, counter, transports, name, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)")
-      .bind(credential.id, await configurationHash(c.env), isoBase64URL.fromBuffer(credential.publicKey), credential.counter, credential.transports?.join(",") ?? null, (name as string | undefined)?.trim() || null, Date.now()).run();
+      .bind(credential.id, owner, isoBase64URL.fromBuffer(credential.publicKey), credential.counter, credential.transports?.join(",") ?? null, (name as string | undefined)?.trim() || null, Date.now()).run();
   } catch {
     return c.json({ error: "invalid" }, 400);
   }
@@ -281,6 +292,8 @@ operatorAuth.post("/passkeys", async (c) => {
   return c.json({ ok: true }, 201);
 });
 operatorAuth.delete("/passkeys/:id", async (c) => {
-  const result = await c.env.DB.prepare("DELETE FROM operator_passkeys WHERE credential_id = ? AND config_hash = ?").bind(c.req.param("id"), await configurationHash(c.env)).run();
+  const owner = await passkeyOwnerHash(c.env);
+  const config = await configurationHash(c.env);
+  const result = await c.env.DB.prepare("DELETE FROM operator_passkeys WHERE credential_id = ? AND (config_hash = ? OR config_hash = ?)").bind(c.req.param("id"), owner, config).run();
   return result.meta.changes ? c.json({ ok: true }) : c.json({ error: "not-found" }, 404);
 });

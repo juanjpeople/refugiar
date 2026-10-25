@@ -14,6 +14,7 @@ export async function operatorFixture(origin = "https://app.example") {
   database.exec("CREATE TABLE attempts (key TEXT PRIMARY KEY, count INTEGER NOT NULL, window_start INTEGER NOT NULL)");
   database.exec(readFileSync("server/migrations/0007_operator_sessions.sql", "utf8"));
   database.exec(readFileSync("server/migrations/0011_operator_passkeys.sql", "utf8"));
+  database.exec(readFileSync("server/migrations/0018_anonymous_pulse.sql", "utf8"));
   function prepare(sql: string, args: (string | number | null)[] = []) {
     return {
       bind: (...values: (string | number | null)[]) => prepare(sql, values),
@@ -33,6 +34,15 @@ export async function operatorFixture(origin = "https://app.example") {
   const app = new Hono<AppEnv>();
   app.use("*", async (c, next) => { await next(); c.header("Cache-Control", "no-store"); });
   app.route("/api/admin/auth", operatorAuth);
+  app.get("/api/admin/metrics", async (c) => {
+    const email = operatorRequestAllowed(c.req.raw, c.env) && await operatorSession(c.req.raw, c.env);
+    if (!email) return c.json({ error: "unauthorized" }, 404);
+    const cutoff = new Date(Date.now() - 30 * 86_400_000).toISOString().slice(0, 10);
+    const rows = await c.env.DB.prepare(
+      "select day, metric, count from daily_metrics where day >= ? order by day desc, metric asc",
+    ).bind(cutoff).all();
+    return c.json({ metrics: rows.results });
+  });
   app.use("/api/admin/platform/*", async (c, next) => {
     const email = operatorRequestAllowed(c.req.raw, c.env) && await operatorSession(c.req.raw, c.env);
     if (!email) return c.json({ error: "unauthorized" }, 404);

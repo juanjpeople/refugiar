@@ -1,14 +1,18 @@
 "use client";
 
 import { App } from "antd";
+import { useSearchParams } from "next/navigation";
 import { useLiveQuery } from "dexie-react-hooks";
 import type { InventoryItem } from "@/features/inventory/domain";
-import { useT } from "@/i18n";
+import { formatQuantity } from "@/features/inventory/format";
+import { useInventoryOptions } from "@/features/shopping/hooks";
+import { useI18n, useT } from "@/i18n";
 import { useCurrentUser } from "@/lib/auth/session";
+import { usePermission } from "@/lib/auth/hooks";
 import { db } from "@/lib/db";
 import { getErrorMessage } from "@/lib/errors";
 import { canSee } from "@/lib/sync/scope";
-import { averageRating, checkAvailability, type AvailabilityReport, type Recipe, type RecipeInput } from "./domain";
+import { averageRating, checkAvailability, filterAndRankRecipes, normalizeIngredient, RECIPE_TAGS, type AvailabilityReport, type Recipe, type RecipeInput, type RecipeTag } from "./domain";
 import { addMissingToList, undoCooking, cookRecipe, createRecipe, deleteRecipe, duplicateRecipe, importRecipePack, importStarterRecipe, setRecipeCover, updateRecipe, type Consumption } from "./service";
 
 export interface RecipeSummary extends Recipe {
@@ -90,5 +94,74 @@ export function useRecipeActions() {
     duplicate: (id: string, newName?: string) => run(() => duplicateRecipe(user, id, newName), t("recipes.toast.duplicated")),
     importPack: (packId: string) => run(() => importRecipePack(user, packId)),
     importStarter: (recipeId: string) => run(() => importStarterRecipe(user, recipeId)),
+  };
+}
+
+export type RecipeShowFilter = "all" | "ready";
+
+/** Encapsula la lectura de filtros URL, stock disponible y filtrado del catálogo de recetas. */
+export function useRecipeCatalogFilters(recipes: RecipeSummary[] | undefined, recipeStockLink: boolean) {
+  const { t, format } = useI18n();
+  const params = useSearchParams();
+  const show: RecipeShowFilter = params.get("show") === "ready" ? "ready" : "all";
+  const tags = params.getAll("tag").filter((tag): tag is RecipeTag => RECIPE_TAGS.includes(tag as RecipeTag));
+  const query = params.get("q") ?? "";
+  const wanted = params.getAll("use");
+  const timeParam = params.get("time");
+  const maxMinutes = timeParam ? Number.parseInt(timeParam, 10) : null;
+
+  function setFilter(key: string, values: string[]) {
+    const next = new URL(window.location.href);
+    next.searchParams.delete(key);
+    for (const value of values.filter(Boolean)) next.searchParams.append(key, value);
+    window.history.replaceState(null, "", `${next.pathname}${next.search}${next.hash}`);
+  }
+
+  const setShow = (value: RecipeShowFilter) => setFilter("show", value === "all" ? [] : [value]);
+  const setQuery = (value: string) => setFilter("q", [value]);
+  const setWanted = (values: string[]) => setFilter("use", [...new Map(values.map((value) => [normalizeIngredient(value), value.trim()])).values()]);
+
+  const canViewInventory = usePermission("inventory.view");
+  const inventory = useInventoryOptions(canViewInventory);
+  const pantry = canViewInventory ? (inventory ?? []).filter(({ item }) => !item.reusable && item.quantity > 0) : [];
+  const names = new Map((recipes ?? []).flatMap((recipe) => recipe.ingredients.map((ingredient) => [normalizeIngredient(ingredient.name), ingredient.name] as const)));
+  for (const { item } of pantry) names.set(normalizeIngredient(item.name), item.name);
+
+  const options = [...names.values()].map((name) => {
+    if (!recipeStockLink) {
+      return { value: name, label: name, available: false };
+    }
+    const matches = pantry.filter(({ item }) => normalizeIngredient(item.name) === normalizeIngredient(name));
+    const stock = matches.map(({ item, place }) => `${formatQuantity(t, item.quantity, item.unit, format.number)} · ${place}`).join("; ");
+    return { value: name, label: stock ? `${name} — ${stock}` : name, available: matches.length > 0 };
+  }).sort((a, b) => (recipeStockLink ? Number(b.available) - Number(a.available) : 0) || a.value.localeCompare(b.value));
+
+  const visible = filterAndRankRecipes(recipes ?? [], {
+    wanted,
+    show,
+    tags,
+    maxMinutes,
+    query,
+    recipeStockLink,
+  });
+
+  const readyCount = recipes?.filter((recipe) => recipe.report.availability === "ready").length ?? 0;
+  const usedTags = RECIPE_TAGS.filter((tag) => recipes?.some((recipe) => recipe.tags.includes(tag)));
+
+  return {
+    show,
+    setShow,
+    tags,
+    query,
+    setQuery,
+    wanted,
+    setWanted,
+    timeParam,
+    setFilter,
+    pantry,
+    options,
+    visible,
+    readyCount,
+    usedTags,
   };
 }

@@ -1,9 +1,11 @@
 "use client";
 import { ShareButton } from "@/features/sharing/ShareButton";
 
-import { App, Button, Col, DatePicker, Flex, Form, Grid, Input, Modal, Row, Select, Switch, TimePicker } from "antd";
+import { App, Button, Card, Col, DatePicker, Flex, Form, Grid, Input, Modal, Row, Select, Switch, TimePicker, Typography, theme } from "antd";
 import dayjs, { type Dayjs } from "dayjs";
-import { Trash2 } from "lucide-react";
+import { ChefHat, Trash2 } from "lucide-react";
+import Link from "next/link";
+import { recipeHref } from "@/lib/navigation/routes";
 import { useEffect, useRef, useState } from "react";
 import { ColorSwatches, IconGrid, PrivacySelect } from "@/components/ui";
 import { MemberAvatar } from "@/components/ui/MemberAvatar";
@@ -58,6 +60,7 @@ export function EventModal({ open, event, day, onClose, occurrence }: EventModal
   const eventKind = Form.useWatch("eventKind", form) as EventKind | undefined;
   const repeat = Form.useWatch("repeat", form) as Repeat | undefined;
   const color = (Form.useWatch("color", form) as AppearanceColor | undefined) ?? "blue";
+  const { token } = theme.useToken();
 
   useEffect(() => {
     if (!open) return;
@@ -177,6 +180,33 @@ export function EventModal({ open, event, day, onClose, occurrence }: EventModal
       }
     >
       <Form form={form} layout="vertical" requiredMark={false} disabled={!canManage || saving} aria-busy={saving} onFinish={onOk}>
+        {event?.meal && (
+          <Card
+            size="small"
+            style={{
+              background: token.colorFillAlter,
+              borderColor: token.colorBorderSecondary,
+              marginBottom: token.marginMD,
+            }}
+          >
+            <Flex justify="space-between" align="center" gap={token.marginSM} wrap>
+              <Flex align="center" gap={token.marginSM}>
+                <ChefHat style={{ color: token.colorWarning }} />
+                <Flex vertical>
+                  <Typography.Text strong>{t("meals.planned")}</Typography.Text>
+                  <Typography.Text type="secondary" style={{ fontSize: token.fontSizeSM }}>
+                    {t("recipes.servings", { count: event.meal.servings })}
+                  </Typography.Text>
+                </Flex>
+              </Flex>
+              <Link href={recipeHref(event.meal.recipeId)}>
+                <Button size="small" type="primary" ghost>
+                  {t("recipes.view")}
+                </Button>
+              </Link>
+            </Flex>
+          </Card>
+        )}
         <Form.Item name="eventKind" label={t("school.eventType")}>
           <Select options={EVENT_KINDS.map((value) => ({ value, label: ({ event: t("school.event"), class: t("school.schoolSubject"), homework: t("school.homework"), break: t("school.noSchool"), holiday: t("school.customHoliday") })[value] }))} onChange={(kind: EventKind) => {
             if (kind === "class") form.setFieldsValue({ repeat: "weekly", allDay: false });

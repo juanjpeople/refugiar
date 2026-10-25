@@ -12,6 +12,8 @@ import { useBreadcrumbStore } from "@/store/useBreadcrumbStore";
 import { useNavigationStore, useUiStore } from "@/store/useNavigationStore";
 import { persistStorage } from "@/features/cloud/diagnostics";
 import { useDeviceStore } from "@/store/useDeviceStore";
+import { DEMO_ENABLED } from "@/lib/demo";
+import { sendPulse } from "@/lib/cloud/pulse";
 
 /**
  * Botón de menú: en escritorio alterna completo ↔ solo íconos; si el menú está oculto
@@ -66,6 +68,18 @@ export function useNavigationTracking() {
   const visit = useNavigationStore((s) => s.visit);
   const tail = useBreadcrumbStore((s) => s.tail);
   const route = findRoute(pathname);
+
+  useEffect(() => {
+    sendPulse(DEMO_ENABLED ? "demo_open" : "pwa_boot");
+  }, []);
+
+  useEffect(() => {
+    if (!pathname) return;
+    if (pathname === "/") sendPulse("landing");
+    else if (pathname.startsWith("/recetas")) sendPulse("module:recipes");
+    else if (pathname.startsWith("/inventario")) sendPulse("module:inventory");
+    else if (pathname.startsWith("/proyectos")) sendPulse("module:projects");
+  }, [pathname]);
 
   // Las páginas con `?id=` registran su visita ellas mismas (ver `useTrackVisit`), con el id.
   useEffect(() => {

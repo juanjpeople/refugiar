@@ -134,14 +134,27 @@ app.use("*", async (c, next) => {
   return cors({ origin: dev, credentials: true, allowHeaders: ["Content-Type", "X-Refugiar-External"], allowMethods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"] })(c, next);
 });
 
+export const PULSE_METRICS = [
+  "landing",
+  "demo_open",
+  "pwa_boot",
+  "android_boot",
+  "waitlist_submit",
+  "module:recipes",
+  "module:inventory",
+  "module:projects",
+] as const;
+export type PulseMetric = (typeof PULSE_METRICS)[number];
+
 // CSRF: todo lo que cambia algo tiene que venir de la app (Origin conocido). Better Auth valida lo suyo.
 app.use("*", async (c, next) => {
-  if (["GET", "HEAD", "OPTIONS"].includes(c.req.method) || c.req.path.startsWith("/api/auth/") || c.req.path.startsWith("/api/admin/")) return next();
+  if (["GET", "HEAD", "OPTIONS"].includes(c.req.method) || c.req.path.startsWith("/api/auth/") || c.req.path.startsWith("/api/admin/") || c.req.path === "/api/pulse") return next();
   const origin = c.req.header("Origin");
   if (!origin || !allowedOrigins(c.env).includes(origin)) return c.json({ error: "forbidden-origin" }, 403);
   return next();
 });
 
+app.use("/pulse", bodyLimit({ maxSize: 512, onError: (c) => c.json({ error: "too-large" }, 413) }));
 app.use("/auth/*", bodyLimit({ maxSize: 16 * 1024, onError: (c) => c.json({ error: "too-large" }, 413) }));
 app.use("/feedback", bodyLimit({ maxSize: 8 * 1024, onError: (c) => c.json({ error: "too-large" }, 413) }));
 app.use("/waitlist", bodyLimit({ maxSize: 4 * 1024, onError: (c) => c.json({ error: "too-large" }, 413) }));
@@ -1357,6 +1370,20 @@ app.post("/waitlist", async (c) => {
   return c.json({ ok: true }, 201);
 });
 
+app.post("/pulse", async (c) => {
+  const body = (await c.req.json().catch(() => null)) as { metric?: unknown } | null;
+  if (!body || typeof body.metric !== "string" || !(PULSE_METRICS as readonly string[]).includes(body.metric)) {
+    return c.json({ error: "invalid" }, 400);
+  }
+  const day = new Date().toISOString().slice(0, 10);
+  await c.env.DB.prepare(
+    "insert into daily_metrics (day, metric, count) values (?, ?, 1) on conflict (day, metric) do update set count = count + 1",
+  )
+    .bind(day, body.metric)
+    .run();
+  return c.json({ ok: true });
+});
+
 const platformAdmin = new Hono<AppEnv>();
 
 platformAdmin.get("/overview", async (c) => {
@@ -1776,6 +1803,16 @@ platformAdmin.put("/households/:id/quotas", async (c) => {
   }
   await audit(c, "household.quotas", "household", id, input);
   return c.json({ ok: true });
+});
+
+admin.get("/metrics", async (c) => {
+  const cutoff = new Date(Date.now() - 30 * DAY).toISOString().slice(0, 10);
+  const rows = await c.env.DB.prepare(
+    "select day, metric, count from daily_metrics where day >= ? order by day desc, metric asc",
+  )
+    .bind(cutoff)
+    .all<{ day: string; metric: string; count: number }>();
+  return c.json({ metrics: rows.results });
 });
 
 admin.route("/platform", platformAdmin);

@@ -8,7 +8,7 @@ import { createId } from "@/lib/id";
 import { usePermission } from "@/lib/auth/hooks";
 import { useRef, useState } from "react";
 import { IconTile, QuantityStepper } from "@/components/ui";
-import { convertQuantity, roundQuantity } from "@/features/inventory/quantity";
+import { convertQuantity, isMeasuredUnit, roundQuantity } from "@/features/inventory/quantity";
 import { useInventoryOptions } from "@/features/shopping/hooks";
 import { type InventoryItem } from "@/features/inventory/domain";
 import { useI18n } from "@/i18n";
@@ -160,18 +160,31 @@ export function CookForm({ recipe, items, initialServings, onClose, onCook, onBu
                     {lacking ? t("recipes.cook.onlyHave", { have: item.quantity, unit: unit(item, item.quantity) }) : t("recipes.cook.have", { have: item.quantity, unit: unit(item, item.quantity) })}
                   </Typography.Text>
                 </Flex>
-                <InputNumber
-                  aria-label={t("recipes.cook.amountAria", { name: item.name })}
-                  min={0}
-                  max={100_000}
-                  precision={3}
-                  disabled={saving}
-                  value={amount}
-                  onChange={(value) => setAmounts((current) => ({ ...current, [sourceId]: value ?? 0 }))}
-                  suffix={unit(item, amount)}
-                  style={{ width: 150 }}
-                  status={lacking ? "warning" : undefined}
-                />
+                {!isMeasuredUnit(item.unit) ? (
+                  <QuantityStepper
+                    value={amount}
+                    min={0}
+                    max={100_000}
+                    unit={unit(item, amount)}
+                    disabled={saving}
+                    onStep={(delta) => setAmounts((current) => ({ ...current, [sourceId]: Math.max(0, (current[sourceId] ?? 0) + delta) }))}
+                    onChange={(val) => setAmounts((current) => ({ ...current, [sourceId]: val }))}
+                  />
+                ) : (
+                  <InputNumber
+                    aria-label={t("recipes.cook.amountAria", { name: item.name })}
+                    min={0}
+                    max={100_000}
+                    step={item.unit === "gr" || item.unit === "ml" ? 50 : 0.5}
+                    precision={item.unit === "gr" || item.unit === "ml" ? 0 : undefined}
+                    disabled={saving}
+                    value={amount}
+                    onChange={(value) => setAmounts((current) => ({ ...current, [sourceId]: value ?? 0 }))}
+                    suffix={unit(item, amount)}
+                    style={{ width: 140 }}
+                    status={lacking ? "warning" : undefined}
+                  />
+                )}
               </Flex>
             );
           })}

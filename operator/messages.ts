@@ -38,6 +38,7 @@ export const messages = {
     risks: "Señales de uso riesgoso",
     tabs: {
       households: "Casas",
+      traffic: "Tráfico",
       waitlist: "Lista de espera",
       capacity: "Capacidad",
       users: "Usuarios",

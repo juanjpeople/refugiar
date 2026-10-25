@@ -101,6 +101,9 @@ test("operador: llave de acceso con la sesión y un código nuevo; después entr
   assert.equal(login.body.userVerification, "required");
   const challengeCookie = [...phone];
   assert.equal((await call("/passkey/login", phone, { response: key.authenticate(login.body.challenge as string) })).status, 200);
+  const phoneToken = phone.get("__Host-od-operator")!;
+  const sessionRow = database.prepare("SELECT expires_at FROM operator_sessions WHERE token_hash = ?").get(await operatorHash(phoneToken)) as { expires_at: number };
+  assert.ok(sessionRow.expires_at > Date.now() + 6 * 24 * 3600 * 1000);
   const session = new Request(`${env.APP_ORIGIN}/api/admin/platform/overview`, { headers: { Cookie: `__Host-od-operator=${phone.get("__Host-od-operator")}` } });
   assert.equal(await operatorSession(session, env), "owner@example.com");
   assert.equal(phone.has("__Host-od-operator-webauthn"), false);
@@ -113,15 +116,30 @@ test("operador: llave de acceso con la sesión y un código nuevo; después entr
   const other = softwareAuthenticator({ origin: env.APP_ORIGIN, rpId: "app.example" });
   assert.equal((await call("/passkey/login", stranger, { response: other.authenticate(strangerOptions.body.challenge as string) })).status, 401);
 
-  // Si cambia la configuración del operador (otro TOTP), la llave deja de servir.
-  const rotated = { ...env, OPERATOR_TOTP_SECRET: "A".repeat(32) };
+  // Si cambia el TOTP o la clave del operador, la llave sigue sirviendo.
+  const rotatedTotp = { ...env, OPERATOR_TOTP_SECRET: "A".repeat(32) };
   const later = new Map<string, string>();
-  const rotatedOptions = await call("/passkey/login/options", later, {}, "POST", rotated);
-  assert.equal((await call("/passkey/login", later, { response: key.authenticate(rotatedOptions.body.challenge as string) }, "POST", rotated)).status, 401);
+  const rotatedOptions = await call("/passkey/login/options", later, {}, "POST", rotatedTotp);
+  assert.equal((await call("/passkey/login", later, { response: key.authenticate(rotatedOptions.body.challenge as string) }, "POST", rotatedTotp)).status, 200);
+
+  // Si cambia el correo del operador (otro operador), la llave deja de servir.
+  const rotatedEmail = { ...env, OPERATOR_EMAIL: "other@example.com" };
+  const otherOperator = new Map<string, string>();
+  const otherOptions = await call("/passkey/login/options", otherOperator, {}, "POST", rotatedEmail);
+  assert.equal((await call("/passkey/login", otherOperator, { response: key.authenticate(otherOptions.body.challenge as string) }, "POST", rotatedEmail)).status, 401);
 
   // Quitarla: ya no entra.
-  assert.equal((await call(`/passkeys/${key.id}`, operator, undefined, "DELETE")).status, 200);
+  assert.equal((await call(`/passkeys/${key.id}`, later, undefined, "DELETE", rotatedTotp)).status, 200);
   const removed = new Map<string, string>();
-  const removedOptions = await call("/passkey/login/options", removed, {});
-  assert.equal((await call("/passkey/login", removed, { response: key.authenticate(removedOptions.body.challenge as string) })).status, 401);
+  const removedOptions = await call("/passkey/login/options", removed, {}, "POST", rotatedTotp);
+  assert.equal((await call("/passkey/login", removed, { response: key.authenticate(removedOptions.body.challenge as string) }, "POST", rotatedTotp)).status, 401);
+});
+
+test("métricas anónimas en D1", async (t) => {
+  const { database } = await operatorFixture(); t.after(() => database.close());
+  const day = new Date().toISOString().slice(0, 10);
+  database.exec(`INSERT INTO daily_metrics (day, metric, count) VALUES ('${day}', 'landing', 1) ON CONFLICT(day, metric) DO UPDATE SET count = count + 1`);
+  database.exec(`INSERT INTO daily_metrics (day, metric, count) VALUES ('${day}', 'landing', 1) ON CONFLICT(day, metric) DO UPDATE SET count = count + 1`);
+  const row = database.prepare("SELECT count FROM daily_metrics WHERE day = ? AND metric = 'landing'").get(day) as { count: number };
+  assert.equal(row.count, 2);
 });

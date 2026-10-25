@@ -4,81 +4,41 @@ import { Button, Card, Flex, Segmented, Tag, Typography, theme } from "antd";
 import { motion } from "framer-motion";
 import { BookOpen, ChefHat, Clock, Plus, Sparkles, Users } from "lucide-react";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
 import { useState } from "react";
-import { useInventoryOptions } from "@/features/shopping/hooks";
-import { usePermission } from "@/lib/auth/hooks";
-import { formatQuantity } from "@/features/inventory/format";
 import { Can } from "@/components/auth/Can";
 import { RequirePermission } from "@/components/auth/RequirePermission";
 import { DisplayMenu, IngredientPicker, ListPage, PrivacyBadge } from "@/components/ui";
 import { usePreferences, useSetPreference } from "@/hooks/usePreferences";
 import { useI18n } from "@/i18n";
-import { normalizeIngredient, rankRecipes, recipeMatches, RECIPE_TAGS, type RecipeTag } from "../domain";
-import { useRecipes, type RecipeSummary } from "../hooks";
+import { normalizeIngredient, recipeMatches } from "../domain";
+import { useRecipeCatalogFilters, useRecipes, type RecipeShowFilter as Show, type RecipeSummary } from "../hooks";
 import { AvailabilityTag, RatingBadge, RecipeCover } from "./RecipeBits";
 import { RecipePacksModal } from "./RecipePacksModal";
 import { recipeHref } from "@/lib/navigation/routes";
 
-type Show = "all" | "ready";
-
-/** Minúsculas y sin tildes, para buscar "pure" y encontrar "Puré". */
-function normalize(text: string) {
-  return text.normalize("NFD").replace(/\p{Diacritic}/gu, "").toLowerCase();
-}
-
 export function RecipesPage() {
-  const { t, format } = useI18n();
+  const { t } = useI18n();
   const { token } = theme.useToken();
   const recipes = useRecipes();
   const { recipeStockLink } = usePreferences();
   const setPreference = useSetPreference();
   const [packsOpen, setPacksOpen] = useState(false);
-  const params = useSearchParams();
-  const show: Show = params.get("show") === "ready" ? "ready" : "all";
-  const tags = params.getAll("tag").filter((tag): tag is RecipeTag => RECIPE_TAGS.includes(tag as RecipeTag));
-  const query = params.get("q") ?? "";
-  const wanted = params.getAll("use");
-  const timeParam = params.get("time");
-  const maxMinutes = timeParam ? Number.parseInt(timeParam, 10) : null;
-
-  function setFilter(key: string, values: string[]) {
-    const next = new URL(window.location.href);
-    next.searchParams.delete(key);
-    for (const value of values.filter(Boolean)) next.searchParams.append(key, value);
-    window.history.replaceState(null, "", `${next.pathname}${next.search}${next.hash}`);
-  }
-
-  const setShow = (value: Show) => setFilter("show", value === "all" ? [] : [value]);
-  const setQuery = (value: string) => setFilter("q", [value]);
-  const setWanted = (values: string[]) => setFilter("use", [...new Map(values.map((value) => [normalizeIngredient(value), value.trim()])).values()]);
-
-  const canViewInventory = usePermission("inventory.view");
-  const inventory = useInventoryOptions(canViewInventory);
-  const pantry = canViewInventory ? (inventory ?? []).filter(({ item }) => !item.reusable && item.quantity > 0) : [];
-  const names = new Map((recipes ?? []).flatMap((recipe) => recipe.ingredients.map((ingredient) => [normalizeIngredient(ingredient.name), ingredient.name] as const)));
-  for (const { item } of pantry) names.set(normalizeIngredient(item.name), item.name);
-
-  const options = [...names.values()].map((name) => {
-    if (!recipeStockLink) {
-      return { value: name, label: name, available: false };
-    }
-    const matches = pantry.filter(({ item }) => normalizeIngredient(item.name) === normalizeIngredient(name));
-    const stock = matches.map(({ item, place }) => `${formatQuantity(t, item.quantity, item.unit, format.number)} · ${place}`).join("; ");
-    return { value: name, label: stock ? `${name} — ${stock}` : name, available: matches.length > 0 };
-  }).sort((a, b) => (recipeStockLink ? Number(b.available) - Number(a.available) : 0) || a.value.localeCompare(b.value));
-
-  const words = normalize(query).split(/\s+/).filter(Boolean);
-  const visible = rankRecipes(recipes ?? [], wanted).filter((recipe) => {
-    if (recipeStockLink && show === "ready" && recipe.report.availability !== "ready") return false;
-    if (!tags.every((tag) => recipe.tags.includes(tag))) return false;
-    if (maxMinutes && (recipe.minutes <= 0 || recipe.minutes > maxMinutes)) return false;
-    const haystack = normalize(`${recipe.name} ${recipe.ingredients.map((ingredient) => ingredient.name).join(" ")}`);
-    return words.every((word) => haystack.includes(word));
-  });
-
-  const readyCount = recipes?.filter((recipe) => recipe.report.availability === "ready").length ?? 0;
-  const usedTags = RECIPE_TAGS.filter((tag) => recipes?.some((recipe) => recipe.tags.includes(tag)));
+  const {
+    show,
+    setShow,
+    tags,
+    query,
+    setQuery,
+    wanted,
+    setWanted,
+    timeParam,
+    setFilter,
+    pantry,
+    options,
+    visible,
+    readyCount,
+    usedTags,
+  } = useRecipeCatalogFilters(recipes, recipeStockLink);
 
   const newButton = (
     <Can perform="recipes.manage">

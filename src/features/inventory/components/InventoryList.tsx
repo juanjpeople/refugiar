@@ -16,8 +16,9 @@ import { getStockStatus, isInStock } from "../domain";
 import { useInventoryActions, useInventoryItems } from "../hooks";
 import { ConsumeButton } from "./ConsumeButton";
 import { ExpirationBadge } from "./ExpirationBadge";
-import { findCatalogProduct } from "../catalog";
-import { CATEGORY_APPEARANCE } from "../catalog-appearance";
+import { itemAppearance } from "../catalog-appearance";
+import { usePhoto, useObjectUrl } from "@/features/media/hooks";
+import type { InventoryItem } from "../domain";
 
 interface InventoryListProps {
   containerId: string;
@@ -32,6 +33,30 @@ interface InventoryListProps {
  * queda una línea con cuántos se ocultaron y un botón para verlos. Lo que se agota mientras mirás
  * sigue en su lugar, así no desaparece debajo del dedo y se puede deshacer o sumar.
  */
+function ItemLeading({ item }: { item: InventoryItem }) {
+  const { token } = theme.useToken();
+  const blob = usePhoto(item.coverPhotoId, "thumb");
+  const url = useObjectUrl(blob, `${item.coverPhotoId}:thumb`);
+  const appearance = itemAppearance(item);
+
+  if (url) {
+    return (
+      // eslint-disable-next-line @next/next/no-img-element -- Blob local (IndexedDB): next/image no aplica.
+      <img
+        src={url}
+        alt={item.name}
+        style={{
+          width: token.controlHeight,
+          height: token.controlHeight,
+          objectFit: "cover",
+          borderRadius: token.borderRadiusSM,
+        }}
+      />
+    );
+  }
+  return <IconTile icon={appearance.Icon} color={appearance.color} size={token.controlHeight} />;
+}
+
 export function InventoryList({ containerId, onOpen, highlightId }: InventoryListProps) {
   const { token } = theme.useToken();
   const { t, format } = useI18n();
@@ -66,15 +91,18 @@ export function InventoryList({ containerId, onOpen, highlightId }: InventoryLis
       <AnimatePresence>
         {visible?.map((item, index) => {
           const price = prices?.get(item.id);
-          const category = findCatalogProduct(item.name)?.category;
-          const appearance = category ? CATEGORY_APPEARANCE[category] : undefined;
           return (
             <ListRow key={item.id} id={`item-${item.id}`} highlighted={item.id === highlightId} index={index} divider={index < visible.length - 1 || hidden > 0}
-              title={item.name} leading={<IconTile icon={appearance?.Icon ?? PackageOpen} color={appearance?.color} size={token.controlHeight} />}
+              title={item.name} leading={<ItemLeading item={item} />}
               onOpen={() => onOpen(item.id)} openLabel={t("inventory.list.openAria", { name: item.name })}
               meta={<>
                       <StockTag status={getStockStatus(item)} tool={item.reusable} />
                       <ExpirationBadge expiresAt={item.expiresAt} />
+                      {item.reusable && item.toolStatus && (
+                        <Typography.Text type="secondary" style={{ fontSize: token.fontSizeSM }}>
+                          {t(`inventory.toolStatuses.${item.toolStatus}`)}
+                        </Typography.Text>
+                      )}
                       {!item.reusable && (
                         <Typography.Text type="secondary" style={{ fontSize: token.fontSizeSM }}>
                           {t("inventory.list.min", { min: item.minThreshold, unit: unitLabel(item.unit, item.minThreshold) })}

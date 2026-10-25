@@ -8,7 +8,7 @@
  * los bajan cuando la ven (ver `src/lib/sync/photos.ts`).
  */
 
-export type PhotoOwner = "recipe" | "container" | "project";
+export type PhotoOwner = "recipe" | "container" | "project" | "item";
 
 export interface Photo {
   id: string;

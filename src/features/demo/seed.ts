@@ -3,6 +3,8 @@ import type { Transaction } from "dexie";
 import type { InventoryItem } from "@/features/inventory/domain";
 import fixture from "./house.json" with { type: "json" };
 import { demoSchool } from "./school";
+import { demoPet } from "./pets";
+import { demoMeals } from "./meals";
 import previousRecipes from "./recipes-previous.json" with { type: "json" };
 import type { Recipe } from "@/features/recipes/domain";
 
@@ -41,6 +43,8 @@ export async function populateDemo(tx: Transaction) {
     if (missing.length) await table.bulkAdd(missing);
   }
   await addDemoSchool(tx);
+  await addDemoPets(tx);
+  await addDemoMeals(tx);
 }
 
 /** Escuela de ejemplo (fichas, materias y la agenda de Inicio). Solo suma lo que falta. */
@@ -52,6 +56,25 @@ export async function addDemoSchool(tx: Transaction) {
     const missing = rows.filter((row) => !existing.has(row.id));
     if (missing.length) await table.bulkAdd(missing);
   }
+}
+
+
+/** Mascota de ejemplo (ficha, vacunas y medicación). Solo suma si falta. */
+export async function addDemoPets(tx: Transaction) {
+  const pet = demoPet();
+  const table = tx.table("houseSettings");
+  if (!await table.get(pet.id)) {
+    await table.add(pet);
+  }
+}
+
+/** Comidas planificadas de ejemplo en el calendario de la semana. Solo suma lo que falta. */
+export async function addDemoMeals(tx: Transaction) {
+  const events = demoMeals();
+  const table = tx.table("events");
+  const existing = new Set(await table.toCollection().primaryKeys());
+  const missing = events.filter((row) => !existing.has(row.id));
+  if (missing.length) await table.bulkAdd(missing);
 }
 
 export async function backfillDemoTools(tx: Transaction) {

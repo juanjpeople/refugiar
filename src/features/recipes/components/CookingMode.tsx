@@ -99,13 +99,12 @@ export function CookingMode({
 
   const report = checkAvailability(recipe, items, servings);
   const currentStepSeconds = durations[value.step] ?? 0;
-  const otherTimers = timers.timers.filter(
-    (item) => item.step !== value.step && item.remaining > 0,
-  );
+  const stepTimers = timers.timers.filter((t) => t.step === value.step);
+  const otherTimers = timers.timers.filter((item) => item.step !== value.step);
 
   // Bloque de temporizador contextual para el paso activo
   const stepExtra = (currentStepSeconds > 0 ||
-    timers.timers.some((t) => t.step === value.step) ||
+    stepTimers.length > 0 ||
     showTimeEditor) && (
     <Card
       size="small"
@@ -149,7 +148,7 @@ export function CookingMode({
 
         <KitchenTimers
           seconds={currentStepSeconds}
-          timers={timers.timers.filter((t) => t.step === value.step || t.remaining === 0)}
+          timers={stepTimers}
           busy={timers.busy}
           notifications={timers.notifications}
           onNotifications={isAndroidApp() ? timers.setNotifications : undefined}
@@ -206,19 +205,41 @@ export function CookingMode({
           {storageError && <Alert type="warning" title={t("recipes.mode.storageError")} />}
           {timers.error && <Alert type="warning" title={t("kitchen.error")} />}
 
-          {/* Aviso discreto si hay timers corriendo en otros pasos */}
+          {/* Aviso discreto si hay timers corriendo o terminados en otros pasos */}
           {otherTimers.length > 0 && (
             <Alert
               type="info"
               showIcon
               message={
                 <Flex vertical gap={token.marginXXS}>
-                  {otherTimers.map((ot) => (
-                    <Typography.Text key={ot.id} style={{ fontSize: token.fontSizeSM }}>
-                      {t("kitchen.step", { step: ot.step + 1 })}:{" "}
-                      {Math.floor(ot.remaining / 60)}:{String(ot.remaining % 60).padStart(2, "0")}
-                    </Typography.Text>
-                  ))}
+                  {otherTimers.map((ot) => {
+                    const isDone = ot.remaining === 0;
+                    return (
+                      <Flex key={ot.id} justify="space-between" align="center" gap={token.marginSM}>
+                        <Typography.Text
+                          style={{
+                            fontSize: token.fontSizeSM,
+                            color: isDone ? token.colorSuccessText : undefined,
+                            fontWeight: isDone ? 600 : undefined,
+                          }}
+                        >
+                          {t("kitchen.step", { step: ot.step + 1 })}:{" "}
+                          {isDone
+                            ? t("kitchen.done")
+                            : `${Math.floor(ot.remaining / 60)}:${String(ot.remaining % 60).padStart(2, "0")}`}
+                        </Typography.Text>
+                        <Button
+                          type="text"
+                          size="small"
+                          onClick={() => void timers.cancel(ot.id)}
+                          aria-label={t("common.delete")}
+                          style={{ padding: 0, fontSize: token.fontSizeSM }}
+                        >
+                          {t("kitchen.dismiss")}
+                        </Button>
+                      </Flex>
+                    );
+                  })}
                 </Flex>
               }
             />
