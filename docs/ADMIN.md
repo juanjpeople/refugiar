@@ -36,11 +36,12 @@ un plan pago, este código no lo cancela ni impone un tope monetario.
    una cuenta doméstica. Un TOTP aceptado no puede volver a usarse; esperar el siguiente
    código para otra sesión. El panel pide los dos factores al vencer la hora de sesión.
 
-Con la migración `0011_operator_passkeys.sql`, la pestaña **Mi acceso** permite sumar
+Con las migraciones `0011_operator_passkeys.sql` y `0018_anonymous_pulse.sql`, la pestaña **Mi acceso** permite sumar
 una llave del dispositivo (huella, cara o PIN). Pide la sesión abierta y un código nuevo
-del autenticador. Después, esa llave alcanza para ingresar al panel; la clave y el
-autenticador siguen disponibles como respaldo. Cambiar las credenciales del operador
-invalida también sus llaves. No permite registrar llaves antes del primer ingreso.
+del autenticador. Al ingresar con Passkey, la sesión se extiende a 7 días. Las llaves se vinculan
+al hash del operador (`passkeyOwnerHash`), por lo que rotar la clave o TOTP no las elimina.
+Además, la pestaña **Tráfico** consolida métricas anónimas diarias (`/api/pulse`) de visitas,
+inicios de PWA/Android, apertura de demo y uso de módulos sin almacenar IPs ni cookies.
 
 El correo identifica al único operador de esta configuración para auditoría. No se
 verifica su propiedad durante el ingreso. El envío opcional de avisos permite mandar
