@@ -11,10 +11,14 @@ export interface OperatorPasskey {
   lastUsedAt: number | null;
 }
 
-export async function registerOperatorPasskey(name?: string) {
+export async function registerOperatorPasskey(name?: string, code?: string) {
   const optionsJSON = await api<PublicKeyCredentialCreationOptionsJSON>("POST", "/api/admin/auth/passkeys/options", {});
   const response = await startRegistration({ optionsJSON });
-  await api("POST", "/api/admin/auth/passkeys", { response, name: name?.trim() || undefined });
+  await api("POST", "/api/admin/auth/passkeys", {
+    response,
+    name: name?.trim() || undefined,
+    ...(code?.trim() ? { code: code.trim() } : {}),
+  });
 }
 
 /**
@@ -28,19 +32,20 @@ export function OperatorAccess({ passkeys, busy, onRemove, onAdded }: { passkeys
   const [open, setOpen] = useState(false);
   const [adding, setAdding] = useState(false);
   const [error, setError] = useState("");
-  const [form] = Form.useForm<{ name?: string }>();
+  const [form] = Form.useForm<{ name?: string; code?: string }>();
   const unnamed = t("platformAdmin.access.unnamed");
 
-  async function add(values: { name?: string }) {
+  async function add(values: { name?: string; code?: string }) {
     setAdding(true);
     setError("");
     try {
-      await registerOperatorPasskey(values.name);
+      await registerOperatorPasskey(values.name, values.code);
       setOpen(false);
       form.resetFields();
       void message.success(t("platformAdmin.access.added"));
       onAdded();
     } catch {
+      form.setFieldValue("code", "");
       setError(t("platformAdmin.access.failed"));
     } finally {
       setAdding(false);
@@ -89,6 +94,9 @@ export function OperatorAccess({ passkeys, busy, onRemove, onAdded }: { passkeys
           {error && <Alert type="error" showIcon title={error} style={{ marginBottom: token.margin }} />}
           <Form.Item name="name" label={t("platformAdmin.access.name")} rules={[{ max: 40 }]}>
             <Input maxLength={40} placeholder={t("platformAdmin.access.namePlaceholder")} style={{ minHeight: 44 }} />
+          </Form.Item>
+          <Form.Item name="code" label={t("platformAdmin.access.code")} normalize={(value: string) => value.replace(/\D/g, "").slice(0, 6)} rules={[{ pattern: /^\d{6}$/, message: t("operator.codeRequired") }]}>
+            <Input inputMode="numeric" autoComplete="one-time-code" style={{ minHeight: 44 }} />
           </Form.Item>
           <Button type="primary" htmlType="submit" block loading={adding} icon={<Fingerprint />} style={{ minHeight: 44 }}>
             {t("platformAdmin.access.add")}
