@@ -61,6 +61,58 @@ export async function queueTestEmail(env: Env) {
   ).bind(crypto.randomUUID(), env.OPERATOR_EMAIL, sender(env), t("testSubject"), t("test"), now, now).run();
 }
 
+function escapeHtml(value: string): string {
+  return value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
+/**
+ * Plantilla HTML accesible y liviana siguiendo la firma visual de /design, sin imágenes remotas
+ * ni píxeles de seguimiento. Acompaña siempre al cuerpo en texto plano (`text`).
+ */
+export function renderEmailHtml(subject: string, text: string): string {
+  const paragraphs = text.split(/\n{2,}/).map((block) => {
+    const escaped = escapeHtml(block.trim());
+    const linked = escaped.replace(/(https?:\/\/[^\s<]+)/g, '<a href="$1" style="color:#1E7A56;font-weight:600;text-decoration:underline">$1</a>');
+    const withCode = linked.replace(/(^|\s)([0-9]{6}|[A-Z0-9]{4}(?:-[A-Z0-9]{4}){2,})(?=\s|$)/g, '$1<code style="display:inline-block;padding:2px 8px;border-radius:6px;background:#F1EFEA;color:#1C1917;font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;font-size:16px;font-weight:700;letter-spacing:0.06em">$2</code>');
+    return `<p style="margin:0 0 16px;line-height:1.6;color:#1C1917;font-size:15px">${withCode.replace(/\n/g, "<br>")}</p>`;
+  }).join("");
+  return `<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${escapeHtml(subject)}</title></head><body style="margin:0;padding:24px 12px;background:#F8F7F4;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:#1C1917"><table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:520px;margin:0 auto;background:#FFFFFF;border:1px solid #E7E5E4;border-radius:14px;padding:28px 24px"><tr><td><div style="margin-bottom:16px;font-size:13px;font-weight:700;letter-spacing:0.04em;text-transform:uppercase;color:#1E7A56">Refugiar</div><h1 style="margin:0 0 18px;font-size:20px;line-height:1.35;color:#1C1917">${escapeHtml(subject)}</h1>${paragraphs}<hr style="border:none;border-top:1px solid #E7E5E4;margin:20px 0 12px"><p style="margin:0;font-size:12px;line-height:1.5;color:#78716C">Correo automático de Refugiar · Sin seguimiento de lectura.</p></td></tr></table></body></html>`;
+}
+
+/**
+ * Envía en el acto un código de acceso de un solo uso únicamente al OPERATOR_EMAIL configurado
+ * en el servidor. Respeta el presupuesto diario/mensual y borra el código del cuerpo al enviarse.
+ */
+export async function sendOperatorRecoveryEmail(env: Env, code: string, now = Date.now(), request: typeof fetch = fetch): Promise<"sent" | "unconfigured" | "quota" | "failed"> {
+  if (!isEmailAddress(env.OPERATOR_EMAIL) || mailConfigState(env) !== "configured") return "unconfigured";
+  if (!(await reserveEmailBudget(env, now))) return "quota";
+  const id = `operator-recovery/${crypto.randomUUID()}`;
+  const from = sender(env);
+  const subject = t("operatorRecoverySubject");
+  const body = t("operatorRecovery").replace("{code}", code).replace("{url}", `${env.APP_ORIGIN}/admin?code=${code}`);
+  await env.DB.prepare(
+    `insert into email_outbox (id, recipient, sender, subject, body, status, created_at, next_attempt_at, first_attempt_at, attempts)
+     values (?, ?, ?, ?, ?, 'sending', ?, ?, ?, 1)`,
+  ).bind(id, env.OPERATOR_EMAIL, from, subject, body, now, now, now).run();
+  try {
+    const providerId = await sendEmail(env, {
+      id, user_id: null, household_id: null, notice_days: null, notice_due_at: null,
+      recipient: env.OPERATOR_EMAIL, sender: from, subject, body, first_attempt_at: now, attempts: 1,
+    }, request);
+    await env.DB.prepare("update email_outbox set status = 'sent', provider_id = ?, last_error = null, body = '' where id = ?").bind(providerId, id).run();
+    return "sent";
+  } catch (error) {
+    const errCode = error instanceof DeliveryError ? error.code : "network";
+    await env.DB.prepare("update email_outbox set status = 'failed', last_error = ?, body = '' where id = ?").bind(errCode, id).run();
+    return "failed";
+  }
+}
+
 /** Atomic budget shared by all Worker isolates. Retries also spend budget. */
 export async function reserveEmailBudget(env: Pick<Env, "DB">, now: number) {
   const day = new Date(now).toISOString().slice(0, 10);
@@ -124,7 +176,7 @@ async function sendEmail(env: Env, job: EmailJob, request: typeof fetch) {
     response = await request("https://api.resend.com/emails", {
       method: "POST",
       headers: { Authorization: `Bearer ${env.RESEND_API_KEY}`, "Content-Type": "application/json", "Idempotency-Key": job.id },
-      body: JSON.stringify({ from: job.sender, to: [job.recipient], subject: job.subject, text: job.body }),
+      body: JSON.stringify({ from: job.sender, to: [job.recipient], subject: job.subject, text: job.body, html: renderEmailHtml(job.subject, job.body) }),
       signal: AbortSignal.timeout(15_000),
     });
   } catch {
@@ -195,7 +247,7 @@ export async function processEmails(env: Env, now = Date.now(), request: typeof 
     try {
       const id = await sendEmail(env, job, request);
       // Un código de acceso no queda guardado en claro una vez entregado.
-      await env.DB.prepare("update email_outbox set status = 'sent', provider_id = ?, last_error = null, body = case when id like 'access/%' then '' else body end where id = ?").bind(id, job.id).run();
+      await env.DB.prepare("update email_outbox set status = 'sent', provider_id = ?, last_error = null, body = case when id like 'access/%' or id like 'operator-recovery/%' then '' else body end where id = ?").bind(id, job.id).run();
       accepted++;
     } catch (error) {
       if (!(error instanceof DeliveryError)) throw error;

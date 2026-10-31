@@ -12,8 +12,10 @@ export const TEST_TOTP = "GEZDGNBVGY3TQOJQGEZDGNBVGY3TQOJQ";
 export async function operatorFixture(origin = "https://app.example") {
   const database = new DatabaseSync(":memory:");
   database.exec("CREATE TABLE attempts (key TEXT PRIMARY KEY, count INTEGER NOT NULL, window_start INTEGER NOT NULL)");
+  database.exec('CREATE TABLE "user" (id TEXT PRIMARY KEY, email TEXT); CREATE TABLE households (id TEXT PRIMARY KEY);');
   database.exec(readFileSync("server/migrations/0007_operator_sessions.sql", "utf8"));
   database.exec(readFileSync("server/migrations/0011_operator_passkeys.sql", "utf8"));
+  database.exec(readFileSync("server/migrations/0012_email_outbox.sql", "utf8"));
   database.exec(readFileSync("server/migrations/0018_anonymous_pulse.sql", "utf8"));
   function prepare(sql: string, args: (string | number | null)[] = []) {
     return {
@@ -25,6 +27,7 @@ export async function operatorFixture(origin = "https://app.example") {
   }
   const env = {
     APP_ORIGIN: origin, OPERATOR_EMAIL: "owner@example.com", OPERATOR_KEY_HASH: await operatorHash(TEST_KEY), OPERATOR_TOTP_SECRET: TEST_TOTP,
+    EMAIL_ENABLED: "1", EMAIL_FROM: "avisos@app.example", RESEND_API_KEY: "re_test_operator",
     DB: { prepare, batch: async (statements: { run(): Promise<unknown> }[]) => {
       database.exec("BEGIN");
       try { const result = []; for (const statement of statements) result.push(await statement.run()); database.exec("COMMIT"); return result; }

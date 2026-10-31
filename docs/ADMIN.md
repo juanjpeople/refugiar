@@ -64,10 +64,11 @@ individuales hará falta extender el modelo; no compartir la clave y el autentic
 
 ## Sesiones, recuperación y límites
 
-Cookie de una hora, HttpOnly, Secure y SameSite=Strict. D1 conserva solo el hash de
+Cookie de una hora (o 7 días al ingresar con Passkey o código de correo), HttpOnly, Secure y SameSite=Strict. D1 conserva solo el hash de
 la sesión. Cerrar sesión la revoca; cambiar email, hash de clave o secreto TOTP
-invalida todas las sesiones. Para recuperar acceso, generar nuevas credenciales y
-cargar los tres valores desde la cuenta Cloudflare. No existe recuperación por email.
+invalida todas las sesiones.
+
+Cuando el envío de correos (`EMAIL_ENABLED="1"` y `RESEND_API_KEY`) está activo, la pantalla de `/admin` permite tocar **Mandarme código de acceso a mi correo** sin pedir usuario ni dirección: el Worker envía en el acto un código de 6 dígitos (y enlace directo, válido por 15 minutos y de un solo uso) exclusivamente al `OPERATOR_EMAIL` configurado en los secretos del servidor. Ese mismo código por correo también sirve dentro de **Mi acceso** para registrar una llave de acceso (Passkey) del dispositivo sin depender del reloj del autenticador TOTP. Si no hay correo configurado o se quiere rotar todo desde cero, se pueden generar nuevas credenciales y cargar los tres valores desde la cuenta Cloudflare.
 
 Las cuentas domésticas se recuperan solo con su kit (`/cuenta?modo=recuperar`). Si se perdieron
 la contraseña y el kit, la pestaña Usuarios permite eliminar la cuenta, confirmando con su correo,

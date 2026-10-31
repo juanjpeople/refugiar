@@ -6,6 +6,7 @@ import { useCalendarReminders } from "@/features/calendar/useCalendarReminders";
 import { haloBackground } from "@/skins/surface";
 import { useSkin } from "@/skins/useSkin";
 import { DEMO_ENABLED } from "@/lib/demo";
+import { sendPulse } from "@/lib/cloud/pulse";
 import { Alert, Button, ConfigProvider, Drawer, Flex, Grid, Layout, Tooltip, Typography, theme } from "antd";
 import { motion } from "framer-motion";
 import { House, Menu, PanelLeftClose, PanelLeftOpen } from "lucide-react";
@@ -71,6 +72,10 @@ export function AppShell({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (firstVisit) router.replace(DEMO_ENABLED ? "/empezar" : "/bienvenida");
   }, [firstVisit, router]);
+
+  useEffect(() => {
+    if (pathname === "/bienvenida" || pathname === "/empezar") sendPulse("landing");
+  }, [pathname]);
 
   // Páginas fijas que se leen antes de hidratar (buscadores, revisión de Play Store): no dependen del dispositivo.
   if (isPublic && STATIC_PUBLIC_ROUTES.includes(pathname)) return children;

@@ -11,9 +11,15 @@ export interface OperatorPasskey {
   lastUsedAt: number | null;
 }
 
+export async function registerOperatorPasskey(name?: string) {
+  const optionsJSON = await api<PublicKeyCredentialCreationOptionsJSON>("POST", "/api/admin/auth/passkeys/options", {});
+  const response = await startRegistration({ optionsJSON });
+  await api("POST", "/api/admin/auth/passkeys", { response, name: name?.trim() || undefined });
+}
+
 /**
- * Mi acceso: las llaves del operador (huella, cara o PIN del celular o la computadora). Sumar una
- * pide un código nuevo del autenticador; la clave y el autenticador siguen sirviendo de respaldo.
+ * Mi acceso: las llaves del operador (huella, cara o PIN del celular o la computadora).
+ * Se registran directo con la sesión activa y la verificación biométrica/PIN del dispositivo.
  */
 export function OperatorAccess({ passkeys, busy, onRemove, onAdded }: { passkeys: OperatorPasskey[]; busy: boolean; onRemove: (id: string) => Promise<unknown>; onAdded: () => void }) {
   const t = useT();
@@ -22,22 +28,19 @@ export function OperatorAccess({ passkeys, busy, onRemove, onAdded }: { passkeys
   const [open, setOpen] = useState(false);
   const [adding, setAdding] = useState(false);
   const [error, setError] = useState("");
-  const [form] = Form.useForm<{ name?: string; code: string }>();
+  const [form] = Form.useForm<{ name?: string }>();
   const unnamed = t("platformAdmin.access.unnamed");
 
-  async function add(values: { name?: string; code: string }) {
+  async function add(values: { name?: string }) {
     setAdding(true);
     setError("");
     try {
-      const optionsJSON = await api<PublicKeyCredentialCreationOptionsJSON>("POST", "/api/admin/auth/passkeys/options", {});
-      const response = await startRegistration({ optionsJSON });
-      await api("POST", "/api/admin/auth/passkeys", { response, code: values.code, name: values.name?.trim() || undefined });
+      await registerOperatorPasskey(values.name);
       setOpen(false);
       form.resetFields();
       void message.success(t("platformAdmin.access.added"));
       onAdded();
     } catch {
-      form.setFieldValue("code", "");
       setError(t("platformAdmin.access.failed"));
     } finally {
       setAdding(false);
@@ -86,9 +89,6 @@ export function OperatorAccess({ passkeys, busy, onRemove, onAdded }: { passkeys
           {error && <Alert type="error" showIcon title={error} style={{ marginBottom: token.margin }} />}
           <Form.Item name="name" label={t("platformAdmin.access.name")} rules={[{ max: 40 }]}>
             <Input maxLength={40} placeholder={t("platformAdmin.access.namePlaceholder")} style={{ minHeight: 44 }} />
-          </Form.Item>
-          <Form.Item name="code" label={t("platformAdmin.access.code")} normalize={(value: string) => value.replace(/\D/g, "").slice(0, 6)} rules={[{ required: true, pattern: /^\d{6}$/, message: t("operator.codeRequired") }]}>
-            <Input inputMode="numeric" autoComplete="one-time-code" style={{ minHeight: 44 }} />
           </Form.Item>
           <Button type="primary" htmlType="submit" block loading={adding} icon={<Fingerprint />} style={{ minHeight: 44 }}>
             {t("platformAdmin.access.add")}

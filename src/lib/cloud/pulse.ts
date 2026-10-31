@@ -4,9 +4,14 @@ export const PULSE_METRICS = [
   "pwa_boot",
   "android_boot",
   "waitlist_submit",
+  "module:dashboard",
   "module:recipes",
   "module:inventory",
+  "module:shopping",
   "module:projects",
+  "module:calendar",
+  "module:pets",
+  "module:family",
 ] as const;
 
 export type PulseMetric = (typeof PULSE_METRICS)[number];

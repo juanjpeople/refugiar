@@ -34,6 +34,8 @@ export const en: Messages = {
     test: "This is a test email sent from the administration panel.",
     accessSubject: "Refugiar: the cloud is ready for you",
     access: "Hi, {name}. There's room for you in the Refugiar cloud.\n\nYour access code is {code}\n\nGo to {url} and type it when asked. What you already have on this device goes up to the cloud, encrypted.\n\nThe code is good for one home. Don't share it.",
+    operatorRecoverySubject: "Refugiar: operator panel access code",
+    operatorRecovery: "You requested access to the Refugiar administration panel.\n\nYour one-time access code is {code}\n\nYou can also open directly: {url}\n\nIt expires in 15 minutes. If this wasn't you, ignore this message.",
   },
   school: {
     enable: "Use the school planner",
