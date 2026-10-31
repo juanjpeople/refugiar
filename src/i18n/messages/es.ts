@@ -39,6 +39,8 @@ export const es = {
     test: "Este es un correo de prueba enviado desde el panel de administración.",
     accessSubject: "Refugiar: ya podés usar la nube",
     access: "Hola, {name}. Ya tenés lugar en la nube de Refugiar.\n\nTu código de acceso es {code}\n\nEntrá a {url} y escribilo cuando te lo pida. Lo que ya cargaste en este dispositivo se sube a la nube, cifrado.\n\nEl código sirve para una casa. No lo compartas.",
+    operatorRecoverySubject: "Refugiar: código de acceso al panel de operador",
+    operatorRecovery: "Pediste entrar al panel de administración de Refugiar.\n\nTu código de acceso de un solo uso es {code}\n\nTambién podés abrir directamente: {url}\n\nVence en 15 minutos. Si no fuiste vos, ignorá este mensaje.",
   },
   school: {
     enable: "Usar la agenda escolar",

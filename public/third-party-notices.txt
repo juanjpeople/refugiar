@@ -213,7 +213,7 @@ https://github.com/cozmo/jsQR
 
 
 ========================================================================
-@capacitor/core 8.4.3
+@capacitor/core 8.6.0
 git+https://github.com/ionic-team/capacitor.git
 
 MIT License
@@ -240,7 +240,7 @@ SOFTWARE.
 
 
 ========================================================================
-@capacitor/android 8.4.3
+@capacitor/android 8.6.0
 git+https://github.com/ionic-team/capacitor.git
 
 MIT License

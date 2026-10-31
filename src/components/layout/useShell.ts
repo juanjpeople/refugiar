@@ -13,6 +13,7 @@ import { useNavigationStore, useUiStore } from "@/store/useNavigationStore";
 import { persistStorage } from "@/features/cloud/diagnostics";
 import { useDeviceStore } from "@/store/useDeviceStore";
 import { DEMO_ENABLED } from "@/lib/demo";
+import { isAndroidApp } from "@/lib/platform";
 import { sendPulse } from "@/lib/cloud/pulse";
 
 /**
@@ -70,15 +71,19 @@ export function useNavigationTracking() {
   const route = findRoute(pathname);
 
   useEffect(() => {
-    sendPulse(DEMO_ENABLED ? "demo_open" : "pwa_boot");
+    sendPulse(DEMO_ENABLED ? "demo_open" : isAndroidApp() ? "android_boot" : "pwa_boot");
   }, []);
 
   useEffect(() => {
     if (!pathname) return;
-    if (pathname === "/") sendPulse("landing");
+    if (pathname === "/") sendPulse("module:dashboard");
     else if (pathname.startsWith("/recetas")) sendPulse("module:recipes");
     else if (pathname.startsWith("/inventario")) sendPulse("module:inventory");
+    else if (pathname.startsWith("/compras")) sendPulse("module:shopping");
     else if (pathname.startsWith("/proyectos")) sendPulse("module:projects");
+    else if (pathname.startsWith("/calendario")) sendPulse("module:calendar");
+    else if (pathname.startsWith("/mascotas")) sendPulse("module:pets");
+    else if (pathname.startsWith("/familia") || pathname.startsWith("/escuela")) sendPulse("module:family");
   }, [pathname]);
 
   // Las páginas con `?id=` registran su visita ellas mismas (ver `useTrackVisit`), con el id.

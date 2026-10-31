@@ -11,6 +11,7 @@ import {
 } from "@simplewebauthn/server";
 import { isoBase64URL } from "@simplewebauthn/server/helpers";
 import type { AppEnv } from "./env";
+import { mailConfigState, sendOperatorRecoveryEmail } from "./mail";
 
 export interface OperatorConfig {
   APP_ORIGIN: string;
@@ -24,6 +25,7 @@ const CHALLENGE_COOKIE = "__Host-od-operator-webauthn";
 const LOCAL_CHALLENGE_COOKIE = "od-operator-webauthn-local";
 const HOUR = 3_600_000;
 const CHALLENGE_MINUTES = 5;
+const RECOVERY_MINUTES = 15;
 
 export function operatorConfigured(env: OperatorConfig): boolean {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(env.OPERATOR_EMAIL ?? "") &&
@@ -125,6 +127,24 @@ async function consumeTotp(env: AppEnv["Bindings"], code: string): Promise<boole
     .bind(await configurationHash(env), accepted).first();
   return Boolean(used);
 }
+function randomSixDigitCode(): string {
+  const array = new Uint32Array(1);
+  while (true) {
+    crypto.getRandomValues(array);
+    if (array[0] < 4_294_000_000) return String(array[0] % 1_000_000).padStart(6, "0");
+  }
+}
+async function emailRecoveryHash(env: OperatorConfig, code: string) {
+  return operatorHash(`email-recovery:${await configurationHash(env)}:${code}`);
+}
+async function consumeEmailRecoveryCode(env: AppEnv["Bindings"], code: string): Promise<boolean> {
+  const config = await configurationHash(env);
+  const tokenHash = await emailRecoveryHash(env, code);
+  const row = await env.DB.prepare(
+    "DELETE FROM operator_challenges WHERE token_hash = ? AND purpose = 'login' AND challenge = 'email-recovery' AND config_hash = ? AND expires_at > ? RETURNING challenge",
+  ).bind(tokenHash, config, Date.now()).first<{ challenge: string }>();
+  return Boolean(row);
+}
 export const SEVEN_DAYS = 7 * 24 * HOUR;
 
 /** Abre la sesión del operador. De paso limpia lo que quedó de otra configuración o venció. */
@@ -206,10 +226,48 @@ operatorAuth.post("/logout", async (c) => {
   return c.json({ ok: true });
 });
 
+/**
+ * Recuperación de acceso sin pedir usuario ni correo: envía un código de un solo uso (15 min)
+ * exclusivamente al OPERATOR_EMAIL configurado en el servidor.
+ */
+operatorAuth.post("/recover", async (c) => {
+  if (mailConfigState(c.env) !== "configured") return c.json({ error: "mail-not-configured" }, 503);
+  if (await ipLimited(c) || await limited(c.env, "operator:recover:send", 3)) return c.json({ error: "rate-limited" }, 429);
+  const code = randomSixDigitCode();
+  const config = await configurationHash(c.env);
+  const tokenHash = await emailRecoveryHash(c.env, code);
+  const now = Date.now();
+  await c.env.DB.batch([
+    c.env.DB.prepare("DELETE FROM operator_challenges WHERE purpose = 'login' AND challenge = 'email-recovery'"),
+    c.env.DB.prepare("INSERT INTO operator_challenges (token_hash, purpose, challenge, config_hash, expires_at) VALUES (?, 'login', 'email-recovery', ?, ?)")
+      .bind(tokenHash, config, now + RECOVERY_MINUTES * 60_000),
+  ]);
+  const delivery = await sendOperatorRecoveryEmail(c.env, code, now);
+  if (delivery !== "sent") {
+    await c.env.DB.prepare("DELETE FROM operator_challenges WHERE token_hash = ?").bind(tokenHash).run();
+    return c.json({ error: delivery === "quota" ? "mail-quota" : "mail-failed" }, delivery === "quota" ? 429 : 502);
+  }
+  return c.json({ ok: true });
+});
+operatorAuth.post("/recover/verify", async (c) => {
+  const input: unknown = await c.req.json().catch(() => null);
+  if (!input || typeof input !== "object" || !("code" in input) || typeof input.code !== "string" || !/^\d{6}$/.test(input.code)) {
+    return c.json({ error: "invalid-credentials" }, 401);
+  }
+  if (await ipLimited(c) || await limited(c.env, "operator:recover:verify", 5)) return c.json({ error: "rate-limited" }, 429);
+  if (!(await consumeEmailRecoveryCode(c.env, input.code))) return c.json({ error: "invalid-credentials" }, 401);
+  return startSession(c, [], SEVEN_DAYS);
+});
+
 /** Entrar con una llave: el navegador elige la del dispositivo (huella, cara o PIN obligatorios). */
 operatorAuth.post("/passkey/login/options", async (c) => {
   if (await ipLimited(c)) return c.json({ error: "rate-limited" }, 429);
-  const options = await generateAuthenticationOptions({ rpID: rpID(c.env), userVerification: "required", allowCredentials: [] });
+  const existing = await passkeys(c.env);
+  const options = await generateAuthenticationOptions({
+    rpID: rpID(c.env),
+    userVerification: "required",
+    allowCredentials: existing.map((entry) => ({ id: entry.credential_id, transports: transportsOf(entry.transports) })),
+  });
   await saveChallenge(c, "login", options.challenge);
   return c.json(options);
 });
@@ -262,14 +320,16 @@ operatorAuth.post("/passkeys/options", async (c) => {
   await saveChallenge(c, "register", options.challenge);
   return c.json(options);
 });
-/** Sumar una llave pide un código nuevo del autenticador: una sesión robada no alcanza. */
+/** Sumar una llave con la sesión activa y verificación biométrica/PIN obligatoria en el dispositivo. */
 operatorAuth.post("/passkeys", async (c) => {
   const input: unknown = await c.req.json().catch(() => null);
   if (!input || typeof input !== "object") return c.json({ error: "invalid" }, 400);
   const { response, code, name } = input as { response?: unknown; code?: unknown; name?: unknown };
-  if (!isCredential(response) || typeof code !== "string" || !/^\d{6}$/.test(code) || (name !== undefined && (typeof name !== "string" || name.length > 40))) return c.json({ error: "invalid" }, 400);
-  if (await limited(c.env, "operator:totp", 10)) return c.json({ error: "rate-limited" }, 429);
-  if (!(await consumeTotp(c.env, code))) return c.json({ error: "invalid-credentials" }, 401);
+  if (!isCredential(response) || (code !== undefined && (typeof code !== "string" || !/^\d{6}$/.test(code))) || (name !== undefined && (typeof name !== "string" || name.length > 40))) return c.json({ error: "invalid" }, 400);
+  if (typeof code === "string") {
+    if (await limited(c.env, "operator:totp", 10)) return c.json({ error: "rate-limited" }, 429);
+    if (!(await consumeTotp(c.env, code)) && !(await consumeEmailRecoveryCode(c.env, code))) return c.json({ error: "invalid-credentials" }, 401);
+  }
   const expectedChallenge = await takeChallenge(c, "register");
   if (!expectedChallenge) return c.json({ error: "challenge-expired" }, 400);
   try {

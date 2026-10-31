@@ -89,9 +89,9 @@ test("operador: llave de acceso con la sesión y un código nuevo; después entr
   const options = await call("/passkeys/options", operator, {});
   assert.equal((options.body.authenticatorSelection as { userVerification: string }).userVerification, "required");
   const response = key.register(options.body.challenge as string);
-  assert.equal((await call("/passkeys", operator, { response, name: "Celular" })).status, 400);
+  assert.equal((await call("/passkeys", operator, { response, code: "12", name: "Celular" })).status, 400);
   assert.equal((await call("/passkeys", operator, { response, code: await operatorTotp(TEST_TOTP, step), name: "Celular" })).status, 401);
-  assert.equal((await call("/passkeys", operator, { response, code: await operatorTotp(TEST_TOTP, step + 1), name: "Celular" })).status, 201);
+  assert.equal((await call("/passkeys", operator, { response, name: "Celular" })).status, 201);
   const listed = (await call("/passkeys", operator)).body.passkeys as { id: string; name: string }[];
   assert.deepEqual(listed.map((entry) => [entry.id, entry.name]), [[key.id, "Celular"]]);
 
@@ -142,4 +142,55 @@ test("métricas anónimas en D1", async (t) => {
   database.exec(`INSERT INTO daily_metrics (day, metric, count) VALUES ('${day}', 'landing', 1) ON CONFLICT(day, metric) DO UPDATE SET count = count + 1`);
   const row = database.prepare("SELECT count FROM daily_metrics WHERE day = ? AND metric = 'landing'").get(day) as { count: number };
   assert.equal(row.count, 2);
+});
+
+test("operador: recuperación por correo envía código solo al OPERATOR_EMAIL, abre sesión de 7d y permite sumar passkey", async (t) => {
+  const { app, env, database } = await operatorFixture(); t.after(() => database.close());
+  const headers = { Origin: env.APP_ORIGIN, "Content-Type": "application/json", "X-Refugiar-Operator": "browser" };
+  const sent: { to: string[]; text: string; html: string }[] = [];
+  t.mock.method(globalThis, "fetch", async (_url: unknown, init?: RequestInit) => {
+    sent.push(JSON.parse(String(init?.body)));
+    return Response.json({ id: "re_msg_1" });
+  });
+
+  // No acepta ni usa ningún correo externo; ignora email enviado en el body y manda solo a OPERATOR_EMAIL.
+  const recoverRes = await app.request(`${env.APP_ORIGIN}/api/admin/auth/recover`, {
+    method: "POST", headers, body: JSON.stringify({ email: "attacker@evil.example" }),
+  }, env);
+  assert.equal(recoverRes.status, 200);
+  assert.equal(sent.length, 1);
+  assert.deepEqual(sent[0].to, ["owner@example.com"]);
+  const match = sent[0].text.match(/\b(\d{6})\b/);
+  assert.ok(match, "El correo debe incluir el código de 6 dígitos");
+  const code = match[1];
+  // El cuerpo en email_outbox queda limpio una vez entregado.
+  const outboxRow = database.prepare("SELECT status, body FROM email_outbox").get() as { status: string; body: string };
+  assert.equal(outboxRow.status, "sent");
+  assert.equal(outboxRow.body, "");
+
+  // Código incorrecto falla; el código correcto abre sesión de 7 días y no puede reutilizarse.
+  const wrongCode = String((Number(code) + 1) % 1_000_000).padStart(6, "0");
+  assert.equal((await app.request(`${env.APP_ORIGIN}/api/admin/auth/recover/verify`, { method: "POST", headers, body: JSON.stringify({ code: wrongCode }) }, env)).status, 401);
+  const verifyRes = await app.request(`${env.APP_ORIGIN}/api/admin/auth/recover/verify`, { method: "POST", headers, body: JSON.stringify({ code }) }, env);
+  assert.equal(verifyRes.status, 200);
+  assert.equal((await app.request(`${env.APP_ORIGIN}/api/admin/auth/recover/verify`, { method: "POST", headers, body: JSON.stringify({ code }) }, env)).status, 401);
+
+  const sessionCookie = verifyRes.headers.get("set-cookie")!.split(";")[0];
+  const sessionReq = new Request(`${env.APP_ORIGIN}/api/admin/platform/overview`, { headers: { Cookie: sessionCookie } });
+  assert.equal(await operatorSession(sessionReq, env), "owner@example.com");
+
+  // Con la sesión abierta, un nuevo código por correo también sirve para registrar una Passkey sin TOTP.
+  assert.equal((await app.request(`${env.APP_ORIGIN}/api/admin/auth/recover`, { method: "POST", headers }, env)).status, 200);
+  const passkeyCode = sent[1].text.match(/\b(\d{6})\b/)![1];
+  const optRes = await app.request(`${env.APP_ORIGIN}/api/admin/auth/passkeys/options`, { method: "POST", headers: { ...headers, Cookie: sessionCookie }, body: "{}" }, env);
+  assert.equal(optRes.status, 200);
+  const challengeCookie = optRes.headers.get("set-cookie")!.split(";")[0];
+  const optBody = await optRes.json() as { challenge: string };
+  const authenticator = softwareAuthenticator({ origin: env.APP_ORIGIN, rpId: "app.example" });
+  const regRes = await app.request(`${env.APP_ORIGIN}/api/admin/auth/passkeys`, {
+    method: "POST",
+    headers: { ...headers, Cookie: `${sessionCookie}; ${challengeCookie}` },
+    body: JSON.stringify({ response: authenticator.register(optBody.challenge), code: passkeyCode, name: "PC Admin" }),
+  }, env);
+  assert.equal(regRes.status, 201);
 });

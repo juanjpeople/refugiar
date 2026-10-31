@@ -140,9 +140,14 @@ export const PULSE_METRICS = [
   "pwa_boot",
   "android_boot",
   "waitlist_submit",
+  "module:dashboard",
   "module:recipes",
   "module:inventory",
+  "module:shopping",
   "module:projects",
+  "module:calendar",
+  "module:pets",
+  "module:family",
 ] as const;
 export type PulseMetric = (typeof PULSE_METRICS)[number];
 
@@ -1364,9 +1369,13 @@ app.post("/waitlist", async (c) => {
   const input = await parse(c, waitlistInput);
   if (!input) return c.json({ error: "invalid" }, 400);
   if (await tooMany(c.env, `waitlist:ip:${clientIp(c)}`, 5, DAY)) return c.json({ error: "rate-limited" }, 429);
-  await c.env.DB.prepare("insert into cloud_waitlist (id, name, email, created_at) values (?, ?, ?, ?) on conflict (email) do nothing")
-    .bind(crypto.randomUUID(), input.name, input.email, Date.now())
-    .run();
+  const day = new Date().toISOString().slice(0, 10);
+  await c.env.DB.batch([
+    c.env.DB.prepare("insert into cloud_waitlist (id, name, email, created_at) values (?, ?, ?, ?) on conflict (email) do nothing")
+      .bind(crypto.randomUUID(), input.name, input.email, Date.now()),
+    c.env.DB.prepare("insert into daily_metrics (day, metric, count) values (?, 'waitlist_submit', 1) on conflict (day, metric) do update set count = count + 1")
+      .bind(day),
+  ]);
   return c.json({ ok: true }, 201);
 });
 

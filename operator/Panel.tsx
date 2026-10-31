@@ -1,8 +1,9 @@
 "use client";
 import { App, Alert, Button, Card, Col, Descriptions, Dropdown, Flex, Form, Grid, Input, InputNumber, Modal, Row, Select, Segmented, Skeleton, Statistic, Table, Tabs, Tag, Typography, theme } from "antd";
-import { CircleAlert, Gauge, KeyRound, MessageSquare, RefreshCw, ShieldCheck, Users } from "lucide-react";
+import { browserSupportsWebAuthn } from "@simplewebauthn/browser";
+import { CircleAlert, Fingerprint, Gauge, KeyRound, MessageSquare, RefreshCw, ShieldCheck, Users } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { OperatorAccess, type OperatorPasskey } from "./Access";
+import { OperatorAccess, registerOperatorPasskey, type OperatorPasskey } from "./Access";
 import { HouseholdQuotaModal, OperatorCapacity, type CapacityData } from "./Capacity";
 import { OperatorWaitlist, type WaitlistEntry } from "./Waitlist";
 import { OperatorTraffic, type DailyMetricEntry } from "./Traffic";
@@ -117,13 +118,14 @@ export function PlatformAdminPage() {
   const t = useT();
   const { token } = theme.useToken();
   const screens = Grid.useBreakpoint();
-  const [section, setSection] = useState("households");
-  const { modal } = App.useApp();
+  const [section, setSection] = useState("traffic");
+  const { modal, message } = App.useApp();
   const [data, setData] = useState<AdminData | null>(null);
   const [forbidden, setForbidden] = useState(false);
   const [loading, setLoading] = useState(true);
   const [failure, setFailure] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [enrollingPasskey, setEnrollingPasskey] = useState(false);
   const pending = useRef(false);
   const notice = useRef<{ destroy: () => void } | null>(null);
   const [licenseOpen, setLicenseOpen] = useState(false);
@@ -290,6 +292,40 @@ export function PlatformAdminPage() {
             </Flex>
           </Card></Reveal>
         )}
+        {data.passkeys.length === 0 && browserSupportsWebAuthn() && (
+          <Alert
+            type="info"
+            showIcon
+            icon={<Fingerprint />}
+            title={t("platformAdmin.access.bannerTitle")}
+            description={
+              <Flex vertical gap={token.marginXS} align="flex-start">
+                <Typography.Text>{t("platformAdmin.access.bannerText")}</Typography.Text>
+                <Button
+                  type="primary"
+                  icon={<Fingerprint />}
+                  loading={enrollingPasskey}
+                  disabled={busy || enrollingPasskey}
+                  style={{ minHeight: 44 }}
+                  onClick={async () => {
+                    setEnrollingPasskey(true);
+                    try {
+                      await registerOperatorPasskey();
+                      void message.success(t("platformAdmin.access.added"));
+                      await load();
+                    } catch {
+                      void message.error(t("platformAdmin.access.failed"));
+                    } finally {
+                      setEnrollingPasskey(false);
+                    }
+                  }}
+                >
+                  {t("platformAdmin.access.bannerAction")}
+                </Button>
+              </Flex>
+            }
+          />
+        )}
         {overview && overview.risks.length > 0 && (
           <Alert type="warning" showIcon icon={<CircleAlert />} title={t("platformAdmin.risks")} description={<Flex vertical gap={token.margin} style={{ overflowWrap: "anywhere" }}>
             <Typography.Text>{t("operator.risks.help")}</Typography.Text>
@@ -308,13 +344,13 @@ export function PlatformAdminPage() {
         <Reveal delay={0.15}><Card>
           {!screens.sm && <Select virtual={false} aria-label={t("operator.section")} value={section} onChange={setSection}
             style={{ width: "100%", minHeight: 44, marginBottom: token.margin }}
-            options={["households", "traffic", "waitlist", "capacity", "users", "licenses", "feedback", "notices", "mail", "access"].map(value => ({ value, label: t(`platformAdmin.tabs.${value}`) }))} />}
+            options={["traffic", "households", "waitlist", "capacity", "users", "licenses", "feedback", "notices", "mail", "access"].map(value => ({ value, label: t(`platformAdmin.tabs.${value}`) }))} />}
           <Tabs activeKey={section} onChange={setSection} tabBarStyle={screens.sm ? undefined : { display: "none" }}
             items={[
               {
                 key: "traffic",
                 label: t("platformAdmin.tabs.traffic"),
-                children: <OperatorTraffic metrics={data?.metrics ?? []} />,
+                children: <OperatorTraffic metrics={data?.metrics ?? []} overview={data.overview} capacity={data.capacity} mail={data.mail} />,
               },
               {
                 key: "households",

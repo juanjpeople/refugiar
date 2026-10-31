@@ -1,6 +1,6 @@
 # Android autónomo
 
-Android empaqueta la interfaz de Next dentro del APK mediante Capacitor 8.4.3.
+Android empaqueta la interfaz de Next dentro del APK mediante Capacitor 8.6.0.
 No carga las pantallas desde un `server.url`. JavaScript, fuentes y estilos vienen
 incluidos. La nube sigue habilitada como opción: el build no usa `--local`.
 

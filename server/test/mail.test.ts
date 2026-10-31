@@ -4,7 +4,7 @@ import { readFileSync } from "node:fs";
 import { test } from "node:test";
 import type { Env } from "../src/env";
 import { DAY } from "../src/inactivity";
-import { mailConfigState, mailOverview, processEmails, queueTestEmail, reserveEmailBudget, securityEmailStatements } from "../src/mail";
+import { mailConfigState, mailOverview, processEmails, queueTestEmail, renderEmailHtml, reserveEmailBudget, securityEmailStatements, sendOperatorRecoveryEmail } from "../src/mail";
 
 const now = Date.UTC(2026, 9, 11, 12);
 function fixture(t: { after(fn: () => void): void }) {
@@ -172,4 +172,21 @@ test("mail: resuming a house cancels queued notices instead of sending stale war
   database.exec("update inactivity_notices set status = 'cancelled'");
   await processEmails(env, now + 5 * 60_000, async () => { throw new Error("Stale warning sent"); });
   assert.equal(database.prepare("select status from email_outbox").get()?.status, "cancelled");
+});
+
+test("mail: HTML template escapes unsafe markup and operator recovery email scrubs code after send", async t => {
+  const { env, database } = fixture(t);
+  const html = renderEmailHtml("Aviso <script>", "Hola <b>mundo</b>\n\nCódigo 123456 en https://refugi.ar/admin");
+  assert.ok(!html.includes("<script>"));
+  assert.ok(!html.includes("<b>mundo</b>"));
+  assert.match(html, /&lt;script&gt;/);
+  assert.match(html, /<code[^>]*>123456<\/code>/);
+  assert.match(html, /href="https:\/\/refugi\.ar\/admin"/);
+
+  const state = await sendOperatorRecoveryEmail(env, "654321", now, async () => Response.json({ id: "re_rec_1" }));
+  assert.equal(state, "sent");
+  const row = database.prepare("select recipient, status, body from email_outbox where id like 'operator-recovery/%'").get() as { recipient: string; status: string; body: string };
+  assert.equal(row.recipient, "operator@example.test");
+  assert.equal(row.status, "sent");
+  assert.equal(row.body, "");
 });
