@@ -4,6 +4,7 @@ import type { InventoryItem } from "@/features/inventory/domain";
 import fixture from "./house.json" with { type: "json" };
 import { demoSchool } from "./school";
 import { demoPet } from "./pets";
+import { demoEmergency } from "./emergency";
 import { demoMeals } from "./meals";
 import previousRecipes from "./recipes-previous.json" with { type: "json" };
 import type { Recipe } from "@/features/recipes/domain";
@@ -45,6 +46,16 @@ export async function populateDemo(tx: Transaction) {
   await addDemoSchool(tx);
   await addDemoPets(tx);
   await addDemoMeals(tx);
+  await addDemoEmergency(tx);
+}
+
+/** Emergencias de ejemplo (contactos, fichas, plan, lugares, radio y llaves). Solo suma lo que falta. */
+export async function addDemoEmergency(tx: Transaction) {
+  const table = tx.table("houseSettings");
+  const rows = demoEmergency();
+  const existing = new Set(await table.toCollection().primaryKeys());
+  const missing = rows.filter((row) => !existing.has(row.id));
+  if (missing.length) await table.bulkAdd(missing);
 }
 
 /** Escuela de ejemplo (fichas, materias y la agenda de Inicio). Solo suma lo que falta. */

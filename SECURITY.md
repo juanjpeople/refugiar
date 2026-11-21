@@ -49,6 +49,16 @@ Revocar una sesión o retirar a un miembro limita el acceso futuro. No borra cop
 fotos o exportaciones que ese dispositivo ya recibió. La rotación de claves tampoco
 retira información previamente conocida.
 
+## Encabezados del sitio
+
+`public/_headers` aplica una Content-Security-Policy: scripts solo de refugi.ar (Next exporta
+scripts en línea, por eso `'unsafe-inline'`, sin `eval`), conexiones solo a refugi.ar y a los dos
+servicios optativos que la persona activa en Ajustes → Conexiones (Open Food Facts y Overpass de
+OpenStreetMap), sin marcos ni objetos. Cámara y ubicación quedan solo para la app y se piden al
+tocar el botón que las usa. Un servicio externo nuevo se suma en el mismo cambio que lo usa.
+
+Las acciones de GitHub se fijan por SHA, no por etiqueta.
+
 ## Identidad y administración
 
 Las cuentas domésticas y el operador tienen autorizaciones independientes.
@@ -89,6 +99,9 @@ cifrados con `BETTER_AUTH_SECRET`; de cada passkey solo se guarda la clave públ
 Encender, apagar o regenerar códigos pide la contraseña. Quien pierde el teléfono,
 los códigos de respaldo y las passkeys queda afuera de la cuenta en la nube (sus datos
 siguen en sus dispositivos): todavía no hay un camino de soporte para eso.
+
+Borrar la cuenta pide el email, la contraseña y, si la cuenta tiene verificación en dos pasos,
+un código de la app autenticadora: una sesión robada sola no alcanza.
 
 ## Altas, claves y topes de la nube
 

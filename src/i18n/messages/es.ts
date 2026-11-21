@@ -481,6 +481,7 @@ export const es = {
       system: "Sistema",
     },
     routes: {
+      emergency: "Emergencias",
       home: "Inicio",
       calendar: "Calendario",
       family: "Familia",
@@ -2944,6 +2945,348 @@ export const es = {
       deleted: "Mascota eliminada.",
       eventScheduled: "Recordatorio agendado en el Calendario.",
     },
+  },
+  emergency: {
+    "title": "Emergencias",
+    "description": "Lo que necesitás a mano en una emergencia. Queda en el celular y funciona sin Internet.",
+    "print": "Hoja para la heladera",
+    "saved": "Guardado.",
+    "deleted": "Borrado.",
+    "add": "Agregar",
+    "edit": "Editar",
+    "save": "Guardar",
+    "cancel": "Cancelar",
+    "delete": "Borrar",
+    "deleteConfirm": "¿Borrar esto?",
+    "readOnly": "Lo prepara quien organiza la casa. Vos lo podés ver y usar.",
+    "offline": "Todo esto queda guardado en el celular. Sin Internet se ve igual.",
+    "call": "Llamar",
+    "calling": "Llamar a {name}",
+    "callLandline": "Fijo",
+    "callMobile": "Celular",
+    "sendSms": "Mensaje",
+    "openMap": "Abrir en el mapa",
+    "notSet": "Sin completar",
+    "ready": {
+      "one": "Tenés 1 de {total} cosas listas",
+      "other": "Tenés {count} de {total} cosas listas"
+    },
+    "readyHint": "Preparalo con calma, ahora. En una emergencia nadie tiene tiempo de cargar datos.",
+    "back": "Volver a Emergencias",
+    "sectionsLabel": "Secciones de Emergencias",
+    "public": {
+      "title": "Números de emergencia",
+      "911": "Emergencias",
+      "911Hint": "Policía y emergencias en general",
+      "107": "Ambulancia",
+      "107Hint": "SAME: emergencias médicas",
+      "100": "Bomberos",
+      "100Hint": "Incendios y rescates",
+      "103": "Defensa Civil",
+      "103Hint": "Inundaciones, temporales, derrumbes",
+      "poison": "Intoxicaciones",
+      "poisonHint": "Hospital Posadas, las 24 horas",
+      "144": "Violencia de género",
+      "144Hint": "Las 24 horas, gratis",
+      "note": "Son números de Argentina. Algunas provincias tienen otros: sumalos en Contactos."
+    },
+    "ok": {
+      "button": "Estoy bien",
+      "hint": "Manda un SMS a tu familia con dónde estás. Un SMS sale aunque no haya datos.",
+      "noContacts": "Elegí a quién avisar: en Contactos, marcá \"Recibe Estoy bien\".",
+      "locating": "Buscando dónde estás…",
+      "noPosition": "No pudimos saber dónde estás. El mensaje sale sin la ubicación.",
+      "default": "Estoy bien.",
+      "here": "Estoy acá:",
+      "to": {
+        "one": "Le avisa a 1 persona",
+        "other": "Les avisa a {count} personas"
+      },
+      "copy": "Copiar mensaje",
+      "copied": "Mensaje copiado."
+    },
+    "sections": {
+      "contact": "Contactos",
+      "contactSummary": {
+        "one": "1 contacto",
+        "other": "{count} contactos"
+      },
+      "contactIntro": "Familia, vecinos, médico y escuela. Sumá un teléfono fijo si tienen: a veces anda cuando los celulares no.",
+      "card": "Fichas médicas",
+      "cardSummary": {
+        "one": "1 ficha",
+        "other": "{count} fichas"
+      },
+      "cardIntro": "Grupo sanguíneo, alergias y remedios de cada persona. Es lo primero que te preguntan en una guardia.",
+      "plan": "Plan de la familia",
+      "planSummary": "Punto de encuentro y quién busca a los chicos",
+      "planIntro": "Lo que hacen si no se pueden comunicar. Hablenlo entre todos y repásenlo una vez por año.",
+      "place": "Lugares cercanos",
+      "placeSummary": {
+        "one": "1 lugar guardado",
+        "other": "{count} lugares guardados"
+      },
+      "placeIntro": "Hospitales, comisarías, bomberos, farmacias, agua y refugios. Guardalos con Internet; después se ven sin conexión, con tu posición del GPS.",
+      "radio": "Radio",
+      "radioSummary": {
+        "one": "1 canal",
+        "other": "{count} canales"
+      },
+      "radioIntro": "Frecuencias para tu radio de mano: noticias en FM, el canal de la familia y repetidoras de la zona.",
+      "shutoff": "Llaves de paso",
+      "shutoffSummary": {
+        "one": "1 llave anotada",
+        "other": "{count} llaves anotadas"
+      },
+      "shutoffIntro": "Dónde se corta el agua, el gas y la luz, y cómo. Que lo sepa más de una persona.",
+      "doc": "Documentos",
+      "docSummary": {
+        "one": "1 documento",
+        "other": "{count} documentos"
+      },
+      "docIntro": "Fotos de DNI, carnet de la obra social y papeles importantes, por si se pierden los originales.",
+      "guide": "Guías rápidas",
+      "guideSummary": "Primeros auxilios, agua segura, gas y cortes de luz",
+      "guideIntro": "Pasos cortos para los primeros minutos. No reemplazan un curso: si podés, hacé uno de RCP."
+    },
+    "contact": {
+      "name": "Nombre",
+      "role": "Quién es",
+      "mobile": "Celular",
+      "landline": "Teléfono fijo",
+      "address": "Dirección",
+      "note": "Nota",
+      "notify": "Recibe Estoy bien",
+      "notifyHint": "Le llega el SMS cuando tocás Estoy bien.",
+      "roles": {
+        "family": "Familia",
+        "neighbor": "Vecino",
+        "doctor": "Médico",
+        "school": "Escuela",
+        "work": "Trabajo",
+        "other": "Otro"
+      },
+      "empty": "Todavía no hay contactos.",
+      "add": "Agregar contacto"
+    },
+    "card": {
+      "member": "Persona",
+      "bloodType": "Grupo sanguíneo",
+      "allergies": "Alergias",
+      "medications": "Remedios que toma",
+      "conditions": "Enfermedades o condiciones",
+      "insurance": "Obra social o prepaga",
+      "insuranceNumber": "Número de afiliado",
+      "doctor": "Médico de cabecera",
+      "note": "Otros datos",
+      "empty": "Sin ficha",
+      "fill": "Completar ficha",
+      "none": "Sin alergias anotadas"
+    },
+    "plan": {
+      "meetingNear": "Punto de encuentro cerca de casa",
+      "meetingNearHint": "Si hay que salir de casa (incendio, gas). Ej.: la esquina de la plaza.",
+      "meetingFar": "Punto de encuentro fuera del barrio",
+      "meetingFarHint": "Si no se puede volver al barrio. Ej.: la casa de la abuela.",
+      "pickups": "Quién busca a los chicos",
+      "pickupsHint": "Quién va a la escuela de cada uno, y quién si esa persona no puede.",
+      "outOfTown": "Contacto fuera de la ciudad",
+      "outOfTownHint": "Todos le avisan a esta persona. A veces es más fácil llamar lejos que cerca.",
+      "pets": "Mascotas",
+      "petsHint": "Quién las lleva y qué hay que llevar.",
+      "okMessage": "Mensaje de Estoy bien",
+      "okMessageHint": "Lo que dice el SMS. Se le suma dónde estás y la hora.",
+      "note": "Otras decisiones",
+      "empty": "Todavía no armaron el plan.",
+      "fill": "Armar el plan"
+    },
+    "places": {
+      "here": "Vos",
+      "search": "Buscar cerca",
+      "searching": "Buscando lugares cerca tuyo…",
+      "locate": "Dónde estoy",
+      "locating": "Buscando tu posición…",
+      "noLocation": "No pudimos saber dónde estás. Revisá que la ubicación esté encendida y con permiso para la app.",
+      "accuracy": "Precisión: unos {meters} m",
+      "searchHint": "Busca en OpenStreetMap a 3 km. Manda tu posición aproximada. Elegí cuáles guardar.",
+      "permission": "Para buscar cerca, activá \"Buscar lugares cercanos en Internet\" en Ajustes → Datos → Conexiones.",
+      "openSettings": "Abrir Conexiones",
+      "found": {
+        "one": "Encontramos 1 lugar",
+        "other": "Encontramos {count} lugares"
+      },
+      "noneFound": "No encontramos lugares cargados en OpenStreetMap cerca tuyo. Podés agregarlos a mano.",
+      "searchFailed": "La búsqueda no respondió. Probá de nuevo en un rato o agregalos a mano.",
+      "saveSelected": {
+        "one": "Guardar 1 lugar",
+        "other": "Guardar {count} lugares"
+      },
+      "savedMany": {
+        "one": "Se guardó 1 lugar.",
+        "other": "Se guardaron {count} lugares."
+      },
+      "addHere": "Guardar dónde estoy",
+      "addManual": "Agregar a mano",
+      "name": "Nombre",
+      "category": "Qué es",
+      "lat": "Latitud",
+      "lng": "Longitud",
+      "address": "Dirección",
+      "phone": "Teléfono",
+      "note": "Nota",
+      "coordsHint": "Podés pegar un enlace de Google Maps o \"latitud, longitud\".",
+      "paste": "Enlace o coordenadas",
+      "pasteInvalid": "No encontramos coordenadas en ese texto.",
+      "empty": "Todavía no hay lugares guardados.",
+      "away": "{distance} al {direction}",
+      "radar": "Lugares guardados alrededor tuyo. Arriba es el norte.",
+      "noMap": "Sin mapa ni rutas: cada lugar muestra a qué distancia y hacia dónde está. Para ir, abrilo en el mapa del celular. Si bajaste la zona en Google Maps, funciona sin datos.",
+      "credit": "Datos de lugares © colaboradores de OpenStreetMap",
+      "categories": {
+        "hospital": "Hospital o guardia",
+        "police": "Comisaría",
+        "fire": "Bomberos",
+        "pharmacy": "Farmacia",
+        "fuel": "Estación de servicio",
+        "water": "Agua potable",
+        "shelter": "Refugio",
+        "meeting": "Punto de encuentro",
+        "other": "Otro"
+      },
+      "compass": {
+        "n": "norte",
+        "ne": "noreste",
+        "e": "este",
+        "se": "sureste",
+        "s": "sur",
+        "sw": "suroeste",
+        "w": "oeste",
+        "nw": "noroeste"
+      }
+    },
+    "radio": {
+      "name": "Nombre",
+      "use": "Para qué",
+      "frequency": "Frecuencia (MHz)",
+      "tone": "Tono (CTCSS/DCS)",
+      "offset": "Desplazamiento",
+      "note": "Nota",
+      "uses": {
+        "broadcast": "Noticias (FM)",
+        "family": "Familia",
+        "repeater": "Repetidora",
+        "emergency": "Emergencia",
+        "other": "Otro"
+      },
+      "empty": "Todavía no hay canales.",
+      "add": "Agregar canal",
+      "legal": "Escuchar es libre. Para transmitir en las bandas de radioaficionados hace falta licencia de ENACOM, salvo en una emergencia real con riesgo de vida.",
+      "tips": "Una radio de mano tipo Baofeng UV-5R recibe FM comercial (87,5 a 108 MHz) y las bandas de 2 m y 70 cm. Buscá las repetidoras de tu zona en el radio club más cercano.",
+      "frequencyHint": "Como en la radio: 146.520 o 98.7."
+    },
+    "shutoff": {
+      "utility": "Qué se corta",
+      "where": "Dónde está",
+      "how": "Cómo se cierra",
+      "space": "Lugar de la casa",
+      "spaceHint": "Opcional: lo une al lugar de Inventario.",
+      "utilities": {
+        "water": "Agua",
+        "gas": "Gas",
+        "power": "Luz"
+      },
+      "empty": "Todavía no anotaste dónde están.",
+      "add": "Agregar llave",
+      "openSpace": "Ver el lugar"
+    },
+    "doc": {
+      "name": "Qué documento es",
+      "member": "De quién",
+      "note": "Nota",
+      "everyone": "De la casa",
+      "empty": "Todavía no hay documentos.",
+      "add": "Agregar documento",
+      "privacy": "Las fotos quedan en este celular. Con la casa en la nube, viajan cifradas: el servidor no las puede ver. Cualquiera que abra la app en este celular las ve.",
+      "photos": "Fotos del documento"
+    },
+    "guides": {
+      "cpr": {
+        "title": "No responde y no respira",
+        "1": "Fijate que el lugar sea seguro para vos.",
+        "2": "Llamá al 107 y poné el altavoz. Pedí que alguien busque un desfibrilador (DEA).",
+        "3": "Manos en el centro del pecho, una sobre otra. Brazos rectos.",
+        "4": "Empujá fuerte y rápido: 5 cm de profundidad, unas 2 veces por segundo. Dejá que el pecho suba.",
+        "5": "No pares hasta que llegue la ayuda o vuelva a respirar. Si llega el DEA, prendelo y seguí lo que dice."
+      },
+      "choking": {
+        "title": "Atragantamiento",
+        "1": "Si tose, dejalo toser. No le pegues en la espalda.",
+        "2": "Si no puede hablar ni respirar: 5 golpes fuertes entre los omóplatos, con la persona inclinada hacia adelante.",
+        "3": "Después, 5 compresiones abdominales: desde atrás, puño arriba del ombligo, hacia adentro y arriba.",
+        "4": "Alterná 5 y 5 hasta que salga. Si se desmaya, llamá al 107 y empezá RCP.",
+        "5": "Bebés: boca abajo sobre tu brazo, 5 golpes en la espalda y 5 empujes en el pecho con dos dedos. Nunca en la panza."
+      },
+      "bleeding": {
+        "title": "Sangra mucho",
+        "1": "Apretá fuerte sobre la herida con una tela limpia.",
+        "2": "No la levantes para mirar. Si se empapa, poné otra encima.",
+        "3": "Si es un brazo o una pierna, levantalo por arriba del corazón.",
+        "4": "Llamá al 107 si no para o si sale a chorros.",
+        "5": "Si no para y corre peligro su vida, atá un torniquete 5 cm arriba de la herida y anotá la hora."
+      },
+      "burns": {
+        "title": "Quemaduras",
+        "1": "Enfriá con agua de la canilla durante 20 minutos. Sin hielo.",
+        "2": "Sacá anillos, relojes y ropa que no esté pegada.",
+        "3": "No revientes ampollas. Nada de cremas, manteca ni pasta de dientes.",
+        "4": "Tapá suelto con film o una tela limpia.",
+        "5": "Llamá al 107 si es grande, en la cara, manos o genitales, por electricidad, o en un chico."
+      },
+      "water": {
+        "title": "Agua segura para tomar",
+        "1": "Hervir: que hierva con burbujas 1 minuto. Dejala enfriar tapada.",
+        "2": "Sin fuego: 2 gotas de lavandina común (sin perfume ni aditivos) por cada litro. Mezclá y esperá 30 minutos.",
+        "3": "Si está turbia, filtrala antes con una tela limpia y dejala reposar. Después, 4 gotas por litro.",
+        "4": "Guardala en bidones limpios y tapados, lejos del sol.",
+        "5": "Calculá 3 litros por persona por día, solo para tomar y cocinar."
+      },
+      "gas": {
+        "title": "Olor a gas",
+        "1": "No prendas ni apagues luces ni aparatos. No uses fósforos.",
+        "2": "Abrí puertas y ventanas.",
+        "3": "Cerrá la llave de paso del gas (mirá Llaves de paso).",
+        "4": "Salgan todos de la casa.",
+        "5": "Llamá a la empresa de gas o al 100 desde afuera, lejos del olor."
+      },
+      "outage": {
+        "title": "Corte de luz",
+        "1": "Desenchufá heladera, computadora y tele: al volver la luz puede haber picos.",
+        "2": "Usá linternas. Velas solo a la vista y lejos de cortinas.",
+        "3": "No abras la heladera: aguanta unas 4 horas. Un freezer lleno, unas 48.",
+        "4": "Nunca uses un generador, brasero o parrilla adentro: el monóxido mata sin olor.",
+        "5": "Cuidá la batería: poné el celular en ahorro de energía."
+      }
+    },
+    "printSheet": {
+      "title": "Emergencias de la casa",
+      "updated": "Actualizada: {date}",
+      "print": "Imprimir",
+      "hint": "Imprimila y pegala en la heladera. Volvé a imprimirla cuando cambie algo.",
+      "numbers": "Números de emergencia",
+      "contacts": "Contactos",
+      "people": "Fichas médicas",
+      "plan": "Plan",
+      "shutoffs": "Llaves de paso",
+      "places": "Lugares cercanos",
+      "address": "Dirección de la casa"
+    },
+    "errors": {
+      "phone": "Ese teléfono no parece válido. Usá solo números, espacios, guiones y el + inicial.",
+      "phoneRequired": "Sumá al menos un teléfono: celular o fijo.",
+      "frequency": "Escribí la frecuencia en MHz, por ejemplo 146.520.",
+      "position": "Esa posición no es válida.",
+      "limit": "Llegaste al máximo de {max} en esta sección."
+    }
   },
 };
 

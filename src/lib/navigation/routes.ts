@@ -1,4 +1,4 @@
-import { Boxes, Dog, Ellipsis, CalendarDays, ChefHat, GraduationCap, HardHat, House, Images, ListChecks, MapPin, MessageSquare, Palette, ScanBarcode, ScanLine, Settings, ShieldCheck, ShoppingCart, Sparkles, Users, type LucideIcon } from "lucide-react";
+import { Boxes, Dog, LifeBuoy, Printer, Ellipsis, CalendarDays, ChefHat, GraduationCap, HardHat, House, Images, ListChecks, MapPin, MessageSquare, Palette, ScanBarcode, ScanLine, Settings, ShieldCheck, ShoppingCart, Sparkles, Users, type LucideIcon } from "lucide-react";
 import type { MessageKey } from "@/i18n/translate";
 import type { Permission } from "@/lib/auth/permissions";
 
@@ -49,6 +49,9 @@ export const APP_ROUTES: AppRoute[] = [
   { id: "calendar", href: "/calendario", labelKey: "nav.routes.calendar", icon: CalendarDays, permission: "calendar.view", section: "main", width: "wide" },
   { id: "school", href: "/escuela", labelKey: "nav.routes.school", icon: GraduationCap, permission: "calendar.view", section: "main" },
   { id: "pets", href: "/mascotas", labelKey: "nav.routes.pets", icon: Dog, permission: "calendar.view", section: "main" },
+  // Sin permiso: los chicos también tienen que poder llamar y ver el plan.
+  { id: "emergency", href: "/emergencias", labelKey: "nav.routes.emergency", icon: LifeBuoy, section: "main" },
+  { id: "emergencyPrint", href: "/emergencias/imprimir", labelKey: "emergency.print", icon: Printer, section: "main", parent: "emergency", hidden: true },
   { id: "compras", href: "/compras", labelKey: "nav.routes.compras", icon: ShoppingCart, permission: "shopping.view", section: "main", width: "wide" },
   { id: "recipes", href: "/recetas", labelKey: "nav.routes.recipes", icon: ChefHat, permission: "recipes.view", section: "main" },
   { id: "projects", href: "/proyectos", labelKey: "nav.routes.projects", icon: HardHat, permission: "projects.view", section: "main" },

@@ -9,6 +9,7 @@ import type { Photo } from "@/features/media/domain";
 import { DEFAULT_MEMBERS, type Member } from "@/features/members/domain";
 import type { PriceRecord } from "@/features/prices/domain";
 import type { PetProfile } from "@/features/pets/domain";
+import type { EmergencyRecord } from "@/features/emergency/domain";
 import type { SchoolProfile } from "@/features/school/domain";
 import type { ReservedLabel } from "@/features/storage/domain";
 import type { Recipe } from "@/features/recipes/domain";
@@ -46,8 +47,8 @@ export const db = new Dexie(HOUSE_DB) as Dexie & {
   prices: EntityTable<PriceRecord, "id">;
   members: EntityTable<Member, "id">;
   events: EntityTable<CalendarEvent, "id">;
-  /** Calendario (`calendar`), la escuela de cada chico (`school:<miembro>`), mascotas (`pet:<id>`) y las etiquetas en blanco (`label:<código>`). */
-  houseSettings: EntityTable<CalendarSettings | SchoolProfile | ReservedLabel | PetProfile, "id">;
+  /** Calendario (`calendar`), la escuela de cada chico (`school:<miembro>`), mascotas (`pet:<id>`), Emergencias (`emergency:<sección>:<id>`) y las etiquetas en blanco (`label:<código>`). */
+  houseSettings: EntityTable<CalendarSettings | SchoolProfile | ReservedLabel | PetProfile | EmergencyRecord, "id">;
   recipes: EntityTable<Recipe, "id">;
   photos: EntityTable<Photo, "id">;
   comments: EntityTable<Comment, "id">;
@@ -243,6 +244,12 @@ export function declareSchema(target: Dexie, upTo = Infinity) {
   });
   // Publication secrets belong to this publishing device, never to house sync or backups.
   if (upTo >= 18) target.version(18).stores({ publications: "id, ownerId, actorId, expiresAt", shareImports: "id" });
+  // Emergencias de ejemplo para las casas demo que ya existían (solo suma lo que falta).
+  if (upTo >= 19) target.version(19).stores({}).upgrade(async (tx) => {
+    if (!["RefugiarDemoDB", "RefugiarTestDB"].includes(target.name)) return;
+    const { addDemoEmergency } = await Dexie.waitFor(import("@/features/demo/seed"));
+    await addDemoEmergency(tx);
+  });
 }
 
 declareSchema(db);

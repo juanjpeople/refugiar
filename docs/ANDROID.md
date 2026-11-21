@@ -409,3 +409,18 @@ Revisión del dueño: actualizar sin desinstalar, comprobar datos; abrir un paso
 ## Enlaces de contenido compartido
 
 ✅ `/compartido` está permitido en Android App Links y en el encaminamiento nativo, conservando el fragmento con los secretos. El acceso a `/proyecto-compartido` se mantiene. Configuración local e ingreso conservan la intención de importar dentro de la sesión; después de una instalación nueva se debe volver a abrir el enlace original. El APK no comparte la casa local de Chrome. Lectura sin cuenta, retorno después de configurar la casa, descarga ICS y recepción de compras quedan en el recorrido manual del dueño indicado en [Compartir](features/compartir.md). No se activan recordatorios por importar un evento.
+
+## Atajos, compartir y Emergencias (2026-11)
+
+- **Atajos del ícono**: mantener apretado el ícono muestra Compras, Escanear, Calendario y
+  Emergencias. Son atajos dinámicos (`MainActivity.publishShortcuts`): sirven igual en la
+  instalación de laboratorio. Solo abren rutas de una lista fija.
+- **Compartir a Refugiar**: un `ACTION_SEND` de texto (una lista de WhatsApp o Notas) abre
+  `/compras?pegar=…`. Compras muestra lo recibido y pide confirmar antes de sumarlo. Se cortan
+  textos de más de 8000 caracteres.
+- **Ubicación**: `ACCESS_COARSE_LOCATION` y `ACCESS_FINE_LOCATION`, solo en primer plano. Se piden
+  la primera vez que se toca un botón de Emergencias que la usa. No hay ubicación en segundo plano.
+  Para Play: declararla en Seguridad de los datos como "ubicación aproximada y precisa, no se
+  comparte, se procesa en el dispositivo", salvo la búsqueda de lugares cercanos (posición
+  redondeada a ~100 m enviada a Overpass, solo si la persona activa el permiso).
+- `tel:`, `sms:`, `smsto:` y `geo:` salen de la app hacia el marcador, mensajes o mapas.

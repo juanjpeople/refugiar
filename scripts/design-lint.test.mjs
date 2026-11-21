@@ -12,6 +12,8 @@ const ALLOWED = {
   "src/components/providers/ThemeProvider.tsx": { color: 2 },
   // Etiqueta impresa: blanco y negro puros, para que el QR se lea en cualquier impresora.
   "src/features/storage/components/ContainerLabel.tsx": { color: 2 },
+  // Hoja de Emergencias impresa: igual, negro sobre blanco aunque la app esté en modo oscuro.
+  "src/features/emergency/components/PrintSheet.tsx": { color: 2 },
   // Ícono PNG generado (ImageResponse): no hay tema en el servidor.
   "src/lib/pwa/icon.tsx": { color: 3 },
 };

@@ -476,6 +476,7 @@ export const en: Messages = {
       system: "System",
     },
     routes: {
+      emergency: "Emergency",
       home: "Home",
       calendar: "Calendar",
       family: "Family",
@@ -2938,5 +2939,347 @@ export const en: Messages = {
       deleted: "Pet deleted.",
       eventScheduled: "Reminder added to Calendar.",
     },
+  },
+  emergency: {
+    "title": "Emergency",
+    "description": "What you need at hand in an emergency. It stays on the phone and works offline.",
+    "print": "Fridge sheet",
+    "saved": "Saved.",
+    "deleted": "Deleted.",
+    "add": "Add",
+    "edit": "Edit",
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "deleteConfirm": "Delete this?",
+    "readOnly": "The person who organizes the home prepares this. You can view and use it.",
+    "offline": "All of this is saved on the phone. It looks the same without Internet.",
+    "call": "Call",
+    "calling": "Call {name}",
+    "callLandline": "Landline",
+    "callMobile": "Mobile",
+    "sendSms": "Text",
+    "openMap": "Open in maps",
+    "notSet": "Not filled in",
+    "ready": {
+      "one": "You have 1 of {total} things ready",
+      "other": "You have {count} of {total} things ready"
+    },
+    "readyHint": "Prepare it calmly, now. Nobody has time to enter data during an emergency.",
+    "back": "Back to Emergency",
+    "sectionsLabel": "Emergency sections",
+    "public": {
+      "title": "Emergency numbers",
+      "911": "Emergency",
+      "911Hint": "Police and general emergencies",
+      "107": "Ambulance",
+      "107Hint": "SAME: medical emergencies",
+      "100": "Fire department",
+      "100Hint": "Fires and rescues",
+      "103": "Civil Defense",
+      "103Hint": "Floods, storms, collapses",
+      "poison": "Poisoning",
+      "poisonHint": "Hospital Posadas, 24 hours",
+      "144": "Gender violence",
+      "144Hint": "24 hours, free",
+      "note": "These are Argentine numbers. Some provinces use others: add them in Contacts."
+    },
+    "ok": {
+      "button": "I'm OK",
+      "hint": "Texts your family where you are. A text message goes out even without mobile data.",
+      "noContacts": "Choose who to notify: in Contacts, turn on \"Gets I'm OK\".",
+      "locating": "Finding where you are…",
+      "noPosition": "We couldn't get your location. The message goes out without it.",
+      "default": "I'm OK.",
+      "here": "I'm here:",
+      "to": {
+        "one": "Notifies 1 person",
+        "other": "Notifies {count} people"
+      },
+      "copy": "Copy message",
+      "copied": "Message copied."
+    },
+    "sections": {
+      "contact": "Contacts",
+      "contactSummary": {
+        "one": "1 contact",
+        "other": "{count} contacts"
+      },
+      "contactIntro": "Family, neighbors, doctor and school. Add a landline if they have one: sometimes it works when mobile phones don't.",
+      "card": "Medical cards",
+      "cardSummary": {
+        "one": "1 card",
+        "other": "{count} cards"
+      },
+      "cardIntro": "Each person's blood type, allergies and medicines. It's the first thing an emergency room asks.",
+      "plan": "Family plan",
+      "planSummary": "Meeting point and who picks up the kids",
+      "planIntro": "What everyone does if you can't reach each other. Talk it through together and review it once a year.",
+      "place": "Nearby places",
+      "placeSummary": {
+        "one": "1 saved place",
+        "other": "{count} saved places"
+      },
+      "placeIntro": "Hospitals, police, fire stations, pharmacies, water and shelters. Save them while online; later they show offline, with your GPS position.",
+      "radio": "Radio",
+      "radioSummary": {
+        "one": "1 channel",
+        "other": "{count} channels"
+      },
+      "radioIntro": "Frequencies for your handheld radio: FM news, the family channel and local repeaters.",
+      "shutoff": "Shutoff valves",
+      "shutoffSummary": {
+        "one": "1 shutoff noted",
+        "other": "{count} shutoffs noted"
+      },
+      "shutoffIntro": "Where to shut off water, gas and power, and how. More than one person should know.",
+      "doc": "Documents",
+      "docSummary": {
+        "one": "1 document",
+        "other": "{count} documents"
+      },
+      "docIntro": "Photos of IDs, health insurance cards and important papers, in case the originals are lost.",
+      "guide": "Quick guides",
+      "guideSummary": "First aid, safe water, gas and power outages",
+      "guideIntro": "Short steps for the first minutes. They don't replace a course: take a CPR class if you can."
+    },
+    "contact": {
+      "name": "Name",
+      "role": "Who they are",
+      "mobile": "Mobile",
+      "landline": "Landline",
+      "address": "Address",
+      "note": "Note",
+      "notify": "Gets I'm OK",
+      "notifyHint": "They receive the text when you tap I'm OK.",
+      "roles": {
+        "family": "Family",
+        "neighbor": "Neighbor",
+        "doctor": "Doctor",
+        "school": "School",
+        "work": "Work",
+        "other": "Other"
+      },
+      "empty": "No contacts yet.",
+      "add": "Add contact"
+    },
+    "card": {
+      "member": "Person",
+      "bloodType": "Blood type",
+      "allergies": "Allergies",
+      "medications": "Medicines they take",
+      "conditions": "Illnesses or conditions",
+      "insurance": "Health insurance",
+      "insuranceNumber": "Member number",
+      "doctor": "Primary doctor",
+      "note": "Other information",
+      "empty": "No card",
+      "fill": "Fill in card",
+      "none": "No allergies noted"
+    },
+    "plan": {
+      "meetingNear": "Meeting point near home",
+      "meetingNearHint": "If you have to leave home (fire, gas). E.g. the corner by the square.",
+      "meetingFar": "Meeting point outside the neighborhood",
+      "meetingFarHint": "If you can't get back to the neighborhood. E.g. grandma's house.",
+      "pickups": "Who picks up the kids",
+      "pickupsHint": "Who goes to each child's school, and who goes if that person can't.",
+      "outOfTown": "Out-of-town contact",
+      "outOfTownHint": "Everyone checks in with this person. Long-distance calls sometimes get through more easily.",
+      "pets": "Pets",
+      "petsHint": "Who takes them and what to bring.",
+      "okMessage": "I'm OK message",
+      "okMessageHint": "What the text says. Your location and the time are added.",
+      "note": "Other decisions",
+      "empty": "You haven't made the plan yet.",
+      "fill": "Make the plan"
+    },
+    "places": {
+      "here": "You",
+      "search": "Search nearby",
+      "searching": "Searching for places near you…",
+      "locate": "Where am I",
+      "locating": "Finding your position…",
+      "noLocation": "We couldn't get your location. Check that location is on and allowed for the app.",
+      "accuracy": "Accuracy: about {meters} m",
+      "searchHint": "Searches OpenStreetMap within 3 km. Sends your approximate position. Choose which ones to save.",
+      "permission": "To search nearby, turn on \"Look up nearby places online\" in Settings → Data → Connections.",
+      "openSettings": "Open Connections",
+      "found": {
+        "one": "Found 1 place",
+        "other": "Found {count} places"
+      },
+      "noneFound": "We found no places on OpenStreetMap near you. You can add them manually.",
+      "searchFailed": "The search didn't respond. Try again later or add them manually.",
+      "saveSelected": {
+        "one": "Save 1 place",
+        "other": "Save {count} places"
+      },
+      "savedMany": {
+        "one": "1 place saved.",
+        "other": "{count} places saved."
+      },
+      "addHere": "Save where I am",
+      "addManual": "Add manually",
+      "name": "Name",
+      "category": "What it is",
+      "lat": "Latitude",
+      "lng": "Longitude",
+      "address": "Address",
+      "phone": "Phone",
+      "note": "Note",
+      "coordsHint": "You can paste a Google Maps link or \"latitude, longitude\".",
+      "paste": "Link or coordinates",
+      "pasteInvalid": "We found no coordinates in that text.",
+      "empty": "No saved places yet.",
+      "away": "{distance} {direction}",
+      "radar": "Saved places around you. Up is north.",
+      "noMap": "No map or routes: each place shows how far and in which direction it is. To go there, open it in your phone's maps. If you downloaded the area in Google Maps, it works without data.",
+      "credit": "Place data © OpenStreetMap contributors",
+      "categories": {
+        "hospital": "Hospital or ER",
+        "police": "Police station",
+        "fire": "Fire station",
+        "pharmacy": "Pharmacy",
+        "fuel": "Gas station",
+        "water": "Drinking water",
+        "shelter": "Shelter",
+        "meeting": "Meeting point",
+        "other": "Other"
+      },
+      "compass": {
+        "n": "north",
+        "ne": "northeast",
+        "e": "east",
+        "se": "southeast",
+        "s": "south",
+        "sw": "southwest",
+        "w": "west",
+        "nw": "northwest"
+      }
+    },
+    "radio": {
+      "name": "Name",
+      "use": "Used for",
+      "frequency": "Frequency (MHz)",
+      "tone": "Tone (CTCSS/DCS)",
+      "offset": "Offset",
+      "note": "Note",
+      "uses": {
+        "broadcast": "News (FM)",
+        "family": "Family",
+        "repeater": "Repeater",
+        "emergency": "Emergency",
+        "other": "Other"
+      },
+      "empty": "No channels yet.",
+      "add": "Add channel",
+      "legal": "Listening is free. Transmitting on amateur bands requires an ENACOM license, except in a real life-threatening emergency.",
+      "tips": "A handheld like the Baofeng UV-5R receives commercial FM (87.5 to 108 MHz) and the 2 m and 70 cm bands. Ask the nearest radio club for local repeaters.",
+      "frequencyHint": "As on the radio: 146.520 or 98.7."
+    },
+    "shutoff": {
+      "utility": "What it shuts off",
+      "where": "Where it is",
+      "how": "How to close it",
+      "space": "Place in the home",
+      "spaceHint": "Optional: links it to the Inventory place.",
+      "utilities": {
+        "water": "Water",
+        "gas": "Gas",
+        "power": "Power"
+      },
+      "empty": "You haven't noted where they are yet.",
+      "add": "Add shutoff",
+      "openSpace": "View the place"
+    },
+    "doc": {
+      "name": "Which document",
+      "member": "Whose",
+      "note": "Note",
+      "everyone": "The home's",
+      "empty": "No documents yet.",
+      "add": "Add document",
+      "privacy": "Photos stay on this phone. With the home in the cloud they travel encrypted: the server can't see them. Anyone who opens the app on this phone can see them.",
+      "photos": "Document photos"
+    },
+    "guides": {
+      "cpr": {
+        "title": "Unresponsive and not breathing",
+        "1": "Make sure the area is safe for you.",
+        "2": "Call 107 on speaker. Ask someone to find a defibrillator (AED).",
+        "3": "Hands in the center of the chest, one on top of the other. Arms straight.",
+        "4": "Push hard and fast: 5 cm deep, about 2 times per second. Let the chest rise.",
+        "5": "Don't stop until help arrives or they breathe again. If an AED arrives, turn it on and follow it."
+      },
+      "choking": {
+        "title": "Choking",
+        "1": "If they can cough, let them cough. Don't hit their back.",
+        "2": "If they can't speak or breathe: 5 firm blows between the shoulder blades, leaning them forward.",
+        "3": "Then 5 abdominal thrusts: from behind, fist above the navel, inward and upward.",
+        "4": "Alternate 5 and 5 until it comes out. If they pass out, call 107 and start CPR.",
+        "5": "Babies: face down on your arm, 5 back blows and 5 chest pushes with two fingers. Never on the belly."
+      },
+      "bleeding": {
+        "title": "Heavy bleeding",
+        "1": "Press hard on the wound with a clean cloth.",
+        "2": "Don't lift it to look. If it soaks through, add another on top.",
+        "3": "If it's an arm or leg, raise it above the heart.",
+        "4": "Call 107 if it doesn't stop or if it spurts.",
+        "5": "If it won't stop and their life is at risk, tie a tourniquet 5 cm above the wound and note the time."
+      },
+      "burns": {
+        "title": "Burns",
+        "1": "Cool with tap water for 20 minutes. No ice.",
+        "2": "Remove rings, watches and clothing that isn't stuck.",
+        "3": "Don't pop blisters. No creams, butter or toothpaste.",
+        "4": "Cover loosely with cling film or a clean cloth.",
+        "5": "Call 107 if it's large, on the face, hands or genitals, electrical, or on a child."
+      },
+      "water": {
+        "title": "Safe drinking water",
+        "1": "Boil: a rolling boil for 1 minute. Let it cool covered.",
+        "2": "No fire: 2 drops of plain bleach (no scent or additives) per liter. Mix and wait 30 minutes.",
+        "3": "If cloudy, filter it first through a clean cloth and let it settle. Then use 4 drops per liter.",
+        "4": "Store it in clean, closed containers, away from sunlight.",
+        "5": "Plan 3 liters per person per day, just for drinking and cooking."
+      },
+      "gas": {
+        "title": "Gas smell",
+        "1": "Don't turn lights or appliances on or off. Don't use matches.",
+        "2": "Open doors and windows.",
+        "3": "Close the gas shutoff valve (see Shutoff valves).",
+        "4": "Get everyone out of the house.",
+        "5": "Call the gas company or 100 from outside, away from the smell."
+      },
+      "outage": {
+        "title": "Power outage",
+        "1": "Unplug the fridge, computer and TV: there may be surges when power returns.",
+        "2": "Use flashlights. Candles only in sight and away from curtains.",
+        "3": "Keep the fridge closed: it lasts about 4 hours. A full freezer, about 48.",
+        "4": "Never use a generator, brazier or grill indoors: carbon monoxide kills without a smell.",
+        "5": "Save battery: turn on power saving on your phone."
+      }
+    },
+    "printSheet": {
+      "title": "Home emergency sheet",
+      "updated": "Updated: {date}",
+      "print": "Print",
+      "hint": "Print it and stick it on the fridge. Print it again when something changes.",
+      "numbers": "Emergency numbers",
+      "contacts": "Contacts",
+      "people": "Medical cards",
+      "plan": "Plan",
+      "shutoffs": "Shutoff valves",
+      "places": "Nearby places",
+      "address": "Home address"
+    },
+    "errors": {
+      "phone": "That phone number doesn't look valid. Use only digits, spaces, dashes and a leading +.",
+      "phoneRequired": "Add at least one phone: mobile or landline.",
+      "frequency": "Enter the frequency in MHz, for example 146.520.",
+      "position": "That position isn't valid.",
+      "limit": "You reached the maximum of {max} in this section."
+    }
   },
 };
