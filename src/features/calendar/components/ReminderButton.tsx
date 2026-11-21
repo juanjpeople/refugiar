@@ -37,7 +37,7 @@ function ReminderModal({ onClose }: { onClose: () => void }) {
   }
   return <Modal open title={t("reminders.title")} onCancel={onClose} closable={!busy} mask={{ closable: !busy }} keyboard={!busy} footer={null}>
     {!isAndroidApp() || DEMO_ENABLED ? <Typography.Paragraph>{t("reminders.androidOnly")}</Typography.Paragraph> : <>
-      <ReminderPreferences events={(events ?? []).map(event => ({ value: event.id, label: event.title }))} selected={choice.events} minutes={choice.minutes} busy={busy} onChange={setChoice} onSave={save} />
+      <ReminderPreferences events={(events ?? []).map(event => ({ value: event.id, label: event.title }))} selected={choice.events} minutes={choice.minutes} all={choice.all} tasks={choice.tasks} busy={busy} onChange={setChoice} onSave={save} />
       {status !== "idle" && <Typography.Paragraph role="status" type={status === "error" || status === "denied" ? "danger" : "secondary"}>{t(`reminders.${status}`)}</Typography.Paragraph>}
     </>}
   </Modal>;

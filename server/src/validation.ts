@@ -134,7 +134,8 @@ export const feedbackStatusInput = z.object({ status: z.enum(["open", "resolved"
 export const deleteHouseholdInput = z.object({ confirm: uuid });
 
 /** Borrar una cuenta desde el panel: se confirma con su email. */
-export const deleteUserInput = z.object({ confirm: email });
+/** Borrar la cuenta: el email, la contraseña (clave derivada) y, si tiene dos pasos, el código. */
+export const deleteUserInput = z.object({ confirm: email, password: z.string().min(1).max(512).optional(), code: z.string().regex(/^\d{6}$/).optional() });
 
 export const inactivityNoticeStatusInput = z.object({ status: z.enum(["sent", "cancelled"]) });
 

@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Atajo del ícono: círculo de color y un dibujo simple en blanco. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="48dp" android:height="48dp" android:viewportWidth="48" android:viewportHeight="48">
+    <path android:fillColor="#722ED1" android:pathData="M24,0a24,24 0,1 1,0 48a24,24 0,1 1,0 -48z" />
+    <path android:fillColor="#FFFFFF" android:fillType="evenOdd" android:pathData="M14,15h20v4h-20zM14,21h20v13h-20zM17,24v3h3v-3zM22.5,24v3h3v-3zM28,24v3h3v-3zM17,29v3h3v-3z" />
+</vector>

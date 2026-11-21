@@ -1,8 +1,9 @@
 "use client";
 
-import { AutoComplete, Button, Card, Flex, Grid, InputNumber, Select, Tag, Typography, theme, type GetRef } from "antd";
+import { Alert, AutoComplete, Button, Card, Flex, Grid, InputNumber, Select, Tag, Typography, theme, type GetRef } from "antd";
 import { AnimatePresence, motion } from "framer-motion";
 import { Link2, Plus, X } from "lucide-react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useRef, useState } from "react";
 import { StockTag } from "@/components/ui";
 import { getStockStatus, isUnit, UNITS, type Unit } from "@/features/inventory/domain";
@@ -31,6 +32,18 @@ export function QuickAdd({ listId }: { listId: string }) {
   const [quantity, setQuantity] = useState(1);
   const [unit, setUnit] = useState<Unit>("unidades");
   const [saving, setSaving] = useState(false);
+  // Texto compartido desde otra app (Android → Compartir → Refugiar): se revisa antes de sumarlo.
+  const router = useRouter();
+  const pathname = usePathname();
+  const params = useSearchParams();
+  const shared = params.get("pegar");
+  const sharedNames = shared ? sharedList(shared) : [];
+  function clearShared() {
+    const next = new URLSearchParams(params.toString());
+    next.delete("pegar");
+    const query = next.toString();
+    router.replace(query ? `${pathname}?${query}` : pathname);
+  }
 
   const query = name.trim().toLowerCase();
   const matches = query && !linked ? (options ?? []).filter(({ item, place }) => `${item.name} ${place}`.toLowerCase().includes(query)).slice(0, 8) : [];
@@ -62,8 +75,8 @@ export function QuickAdd({ listId }: { listId: string }) {
   }
 
   /** Una lista pegada (varios renglones) se anota entera. Lo que coincide con el inventario se vincula. */
-  async function pasteList(text: string) {
-    const names = parsePastedList(text);
+  async function pasteList(text: string | string[]) {
+    const names = Array.isArray(text) ? text : parsePastedList(text);
     if (names.length === 0 || saving) return;
     setSaving(true);
     const byName = new Map((options ?? []).map((option) => [option.item.name.toLowerCase(), option.item]));
@@ -78,6 +91,25 @@ export function QuickAdd({ listId }: { listId: string }) {
 
   return (
     <Card styles={{ body: { padding: screens.sm ? 16 : 12 } }} style={{ marginBottom: 16 }}>
+      {sharedNames.length > 0 && (
+        <Alert
+          type="info"
+          showIcon
+          style={{ marginBottom: token.marginSM }}
+          title={t("shopping.add.sharedTitle", { count: sharedNames.length })}
+          description={
+            <Flex vertical gap={token.marginSM}>
+              <Typography.Text>{sharedNames.slice(0, 12).join(" · ")}{sharedNames.length > 12 ? " …" : ""}</Typography.Text>
+              <Flex gap={token.marginXS} wrap>
+                <Button type="primary" icon={<Plus />} loading={saving} onClick={() => void pasteList(sharedNames).then(clearShared)}>
+                  {t("shopping.add.sharedAdd")}
+                </Button>
+                <Button onClick={clearShared}>{t("shopping.add.sharedDiscard")}</Button>
+              </Flex>
+            </Flex>
+          }
+        />
+      )}
       <Flex
         gap={8}
         wrap
@@ -199,4 +231,10 @@ export function QuickAdd({ listId }: { listId: string }) {
       </AnimatePresence>
     </Card>
   );
+}
+
+/** Lo que llega de otra app: una cosa por renglón o, en un solo renglón, separadas por comas. */
+function sharedList(text: string): string[] {
+  const lines = /\r?\n/.test(text.trim()) ? text : text.split(/[,;]/).join("\n");
+  return parsePastedList(lines);
 }

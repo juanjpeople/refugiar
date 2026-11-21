@@ -30,7 +30,7 @@ export function ConnectionSettings() {
   }
   return <Flex vertical gap={token.marginLG}>
     <Typography.Paragraph>{t("connections.scope")}</Typography.Paragraph>
-    {(["products", "weather", "news"] as const).map(service => <SettingRow key={service} label={t(`connections.${service}`)} description={t(`connections.${service}Hint`)}>
+    {(["products", "weather", "news", "places"] as const).map(service => <SettingRow key={service} label={t(`connections.${service}`)} description={t(`connections.${service}Hint`)}>
       <Switch aria-label={t(`connections.${service}`)} disabled={!admin || DEMO_ENABLED} checked={policy[service]} onChange={value => policy.allow(service, value)} />
     </SettingRow>)}
     {!admin && <Typography.Text type="secondary">{t("connections.adminOnly")}</Typography.Text>}

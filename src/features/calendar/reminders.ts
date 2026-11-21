@@ -5,8 +5,16 @@ import { create } from "zustand";
 import { houseStorageKey } from "@/lib/demo";
 import { isAndroidApp } from "@/lib/platform";
 
-export interface ReminderChoice { events: string[]; minutes: number }
+/**
+ * Qué avisa este perfil en este dispositivo. `all`: todos los eventos que ve (también los que se
+ * sumen después). `tasks`: las tareas de proyectos con fecha, sin hacer, a las 9 de ese día.
+ */
+export interface ReminderChoice { events: string[]; minutes: number; all?: boolean; tasks?: boolean }
 export const NO_REMINDERS: ReminderChoice = { events: [], minutes: 15 };
+export const REMINDER_MINUTES = [0, 15, 60, 1440] as const;
+/** Un aviso ya armado: cuándo sale y qué dice. */
+export interface ReminderNotice { at: number; title: string; body: string; route: "calendar" | "projects" }
+export const hasReminders = (choice: ReminderChoice) => choice.all || choice.tasks || choice.events.length > 0;
 const key = houseStorageKey("refugiar-reminders");
 export const useReminders = create<{ choices: Record<string, ReminderChoice>; loaded: boolean; status: "idle" | "saved" | "denied" | "error" }>(() => ({ choices: {}, loaded: false, status: "idle" }));
 
@@ -17,7 +25,7 @@ export function loadReminders() {
     const choices: Record<string, ReminderChoice> = {};
     for (const [id, value] of Object.entries(raw)) {
       const choice = value as ReminderChoice;
-      if (choice && Array.isArray(choice.events) && choice.events.every(id => typeof id === "string") && [0, 15, 60].includes(choice.minutes)) choices[id] = choice;
+      if (choice && Array.isArray(choice.events) && choice.events.every(id => typeof id === "string") && (REMINDER_MINUTES as readonly number[]).includes(choice.minutes)) choices[id] = { events: choice.events, minutes: choice.minutes, all: choice.all === true, tasks: choice.tasks === true };
     }
     useReminders.setState({ choices, loaded: true });
   } catch { useReminders.setState({ loaded: true, status: "error" }); }
@@ -26,7 +34,7 @@ export function loadReminders() {
 /** El permiso sólo se pide después de Guardar, nunca desde la reconciliación. */
 export async function saveReminders(profile: string, choice: ReminderChoice) {
   if (!isAndroidApp()) return false;
-  if (choice.events.length && (await LocalNotifications.requestPermissions()).display !== "granted") {
+  if (hasReminders(choice) && (await LocalNotifications.requestPermissions()).display !== "granted") {
     useReminders.setState({ status: "denied" });
     return false;
   }
@@ -39,7 +47,7 @@ export async function saveReminders(profile: string, choice: ReminderChoice) {
 // Una cola evita que un guardado anterior vuelva a programar avisos tras cambiar de perfil.
 let queue = Promise.resolve();
 let scheduledProfile: string | null | undefined;
-export function replaceReminders(times: number[], title: string, body: string, profile: string | null) {
+export function replaceReminders(notices: ReminderNotice[], channel: string, profile: string | null) {
   queue = queue.catch(() => {}).then(async () => {
     const pending = await LocalNotifications.getPending();
     await LocalNotifications.cancel({ notifications: pending.notifications.filter(n => n.id >= 1700000000 && n.id < 1700000064).map(n => ({ id: n.id })) });
@@ -48,10 +56,11 @@ export function replaceReminders(times: number[], title: string, body: string, p
       await LocalNotifications.removeDeliveredNotifications({ notifications: delivered.notifications.filter(n => n.id >= 1700000000 && n.id < 1700000064) });
       scheduledProfile = profile;
     }
-    if (!times.length) { useReminders.setState({ status: "saved" }); return; }
+    if (!notices.length) { useReminders.setState({ status: "saved" }); return; }
     if ((await LocalNotifications.checkPermissions()).display !== "granted") { useReminders.setState({ status: "denied" }); return; }
-    await LocalNotifications.createChannel({ id: "calendar", name: title, importance: 3, visibility: -1 });
-    await LocalNotifications.schedule({ notifications: times.filter(time => time > Date.now()).slice(0, 64).map((time, i) => ({ id: 1700000000 + i, title, body, channelId: "calendar", schedule: { at: new Date(time), allowWhileIdle: true }, extra: { route: "calendar" } })) });
+    // Visibilidad privada: en la pantalla bloqueada no se lee el título del evento.
+    await LocalNotifications.createChannel({ id: "calendar", name: channel, importance: 3, visibility: -1 });
+    await LocalNotifications.schedule({ notifications: notices.filter(notice => notice.at > Date.now()).slice(0, 64).map((notice, i) => ({ id: 1700000000 + i, title: notice.title, body: notice.body, channelId: "calendar", schedule: { at: new Date(notice.at), allowWhileIdle: true }, extra: { route: notice.route } })) });
     useReminders.setState({ status: "saved" });
   }).catch(() => { useReminders.setState({ status: "error" }); });
   return queue;
