@@ -4,17 +4,19 @@ import { DEMO_ENABLED, houseStorageKey } from "@/lib/demo";
 import { useDeviceStore } from "@/store/useDeviceStore";
 import { AppError } from "@/lib/errors";
 
-export type ExternalService = "products" | "weather" | "news";
+export type ExternalService = "products" | "weather" | "news" | "places";
 interface NetworkState {
   products: boolean;
   weather: boolean;
   news: boolean;
+  /** Lugares cercanos (OpenStreetMap, por Overpass) para Emergencias. */
+  places: boolean;
   node: string;
   allow: (service: ExternalService, value: boolean) => void;
   setNode: (node: string) => void;
 }
 export const useNetworkPolicy = create<NetworkState>()(persist(set => ({
-  products: false, weather: false, news: false, node: "",
+  products: false, weather: false, news: false, places: false, node: "",
   allow: (service, value) => set({ [service]: value }),
   setNode: node => set({ node }),
 }), { name: houseStorageKey("refugiar-connections"), version: 1 }));
@@ -66,6 +68,8 @@ export async function serviceFetch(service: ExternalService, url: string, init: 
   const backend = new URL(process.env.NEXT_PUBLIC_API_URL || origin);
   const allowed = service === "products"
     ? target.origin === "https://world.openfoodfacts.org" && /^\/api\/v2\/product\/\d+\.json$/.test(target.pathname)
+    : service === "places"
+    ? target.origin === "https://overpass-api.de" && target.pathname === "/api/interpreter"
     : target.origin === backend.origin && target.pathname.startsWith(`/api/brief/${service}/`);
   if (!allowed || target.username || target.password) throw new AppError("connections.blocked");
   const controller = new AbortController();

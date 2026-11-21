@@ -770,7 +770,10 @@ test("cada persona borra su cuenta: sola, de una casa compartida y como última 
   assert.equal((await solo.client.call("POST", "/api/account/delete", { confirm: "otra@casa.test" })).status, 400);
   assert.equal((await solo.client.call("POST", "/api/account/delete", { confirm: soloEmail }, { origin: "https://ajeno.test" })).status, 403);
   assert.equal((await new Client().call("POST", "/api/account/delete", { confirm: soloEmail })).status, 401);
-  const soloDeleted = await solo.client.call("POST", "/api/account/delete", { confirm: soloEmail.toUpperCase() });
+  // Con la sesión sola no alcanza: hace falta la contraseña.
+  assert.equal((await solo.client.call("POST", "/api/account/delete", { confirm: soloEmail })).status, 403);
+  assert.equal((await solo.client.call("POST", "/api/account/delete", { confirm: soloEmail, password: "no-es-la-clave" })).status, 403);
+  const soloDeleted = await solo.client.call("POST", "/api/account/delete", { confirm: soloEmail.toUpperCase(), password: solo.keys.authKey });
   assert.equal(soloDeleted.status, 200, JSON.stringify(soloDeleted.body));
   assert.equal((await solo.client.call("GET", "/api/me")).body.user, null);
   assert.ok(!(await users()).some((user) => user.id === solo.userId));
@@ -784,13 +787,13 @@ test("cada persona borra su cuenta: sola, de una casa compartida y como última 
   const guest = await signUp("Invitada", guestEmail, "una frase larga para la invitada", "203.0.113.24");
   const home = await createHome(owner, sharedLicense.code);
   await joinHome(owner, guest, home);
-  const blocked = await owner.client.call("POST", "/api/account/delete", { confirm: `borrar-duena-${unique}@casa.test` });
+  const blocked = await owner.client.call("POST", "/api/account/delete", { confirm: `borrar-duena-${unique}@casa.test`, password: owner.keys.authKey });
   assert.equal(blocked.status, 409);
   assert.deepEqual(blocked.body, { error: "last-admin", households: [home.householdId] });
 
   // La invitada se va: queda sin email, nombre, sesión ni claves privadas, pero su firma sigue
   // verificando sus cambios viejos.
-  assert.equal((await guest.client.call("POST", "/api/account/delete", { confirm: guestEmail })).status, 200);
+  assert.equal((await guest.client.call("POST", "/api/account/delete", { confirm: guestEmail, password: guest.keys.authKey })).status, 200);
   assert.equal((await guest.client.call("GET", "/api/me")).body.user, null);
   assert.notEqual((await new Client("203.0.113.25").call("POST", "/api/auth/sign-in/email", { email: guestEmail, password: guest.keys.authKey })).status, 200);
   const roster = await owner.client.call("GET", `/api/households/${home.householdId}/members`);
@@ -803,7 +806,7 @@ test("cada persona borra su cuenta: sola, de una casa compartida y como última 
   assert.ok(!(await users()).some((user) => user.email === guestEmail));
 
   // Ya sola, la dueña se puede ir: la casa y su cuenta se borran.
-  assert.equal((await owner.client.call("POST", "/api/account/delete", { confirm: `borrar-duena-${unique}@casa.test` })).status, 200);
+  assert.equal((await owner.client.call("POST", "/api/account/delete", { confirm: `borrar-duena-${unique}@casa.test`, password: owner.keys.authKey })).status, 200);
   assert.ok(!(await households()).includes(home.householdId));
   assert.ok(!(await users()).some((user) => user.id === owner.userId));
 });

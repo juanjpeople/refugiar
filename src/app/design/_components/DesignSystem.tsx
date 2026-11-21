@@ -8,6 +8,7 @@ import { belowHeader } from "@/components/layout/constants";
 import { useUiStore } from "@/store/useNavigationStore";
 import { DailyFlows } from "./DailyFlows";
 import { ActionsSection } from "./ActionsSection";
+import { EmergencyFlow } from "./EmergencyFlow";
 import { DataSection } from "./DataSection";
 import { FormsSection } from "./FormsSection";
 import { FoundationsSection } from "./FoundationsSection";
@@ -38,7 +39,7 @@ const TOC = [
     group: "Componentes propios",
     items: [["componentes-estructura", "Estructura"], ["componentes-estados", "Estados"], ["componentes-seleccion", "Selección"], ["componentes-datos", "Datos"], ["componentes-fichas", "Fichas"], ["componentes-espacios", "Espacios"], ["componentes-entrada", "Entrada"], ["componentes-paneles", "Paneles"], ["componentes-barra", "Barra de abajo"], ["componentes-plantillas", "Plantillas"], ["componentes-plantillas-detalle", "Detalle"]],
   },
-  { group: "Flujos", items: [["flujo-almacenamiento", "Almacenamiento"], ["etiquetas", "Etiquetas QR"], ["flujo-catalogo", "Catálogo"], ["flujo-recetas", "Recetas"], ["flujo-guardar-compra", "Guardar compra"], ["flujo-cocina", "Modo cocina"], ["flujo-sincronizacion", "Sincronización"], ["flujo-menu-semanal", "Menú semanal"], ["flujo-recordatorios", "Recordatorios"], ["flujo-entrada", "Entrada"], ["flujo-compartir", "Compartir"]] },
+  { group: "Flujos", items: [["flujo-almacenamiento", "Almacenamiento"], ["etiquetas", "Etiquetas QR"], ["flujo-catalogo", "Catálogo"], ["flujo-recetas", "Recetas"], ["flujo-guardar-compra", "Guardar compra"], ["flujo-cocina", "Modo cocina"], ["flujo-sincronizacion", "Sincronización"], ["flujo-menu-semanal", "Menú semanal"], ["flujo-recordatorios", "Recordatorios"], ["flujo-emergencias", "Emergencias"], ["flujo-entrada", "Entrada"], ["flujo-compartir", "Compartir"]] },
   { group: "Calidad", items: [["revision", "Revisión antes de un PR"]] },
   { group: "Seguridad", items: [["permisos", "Matriz de permisos"], ["can", "<Can>"], ["servicios", "Servicios"]] },
 ] as const;
@@ -103,6 +104,7 @@ export function DesignSystem() {
             <RecipesFlow />
             <EntryFlow />
             <SharingFlow />
+            <EmergencyFlow />
           </Section>
           <Section title="Calidad">
             <ReviewSection />

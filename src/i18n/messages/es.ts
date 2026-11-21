@@ -21,7 +21,7 @@ export const es = {
     save: "Guardar en mi Refugiar", importTitle: "Revisar antes de guardar", privacy: "Quién lo ve en tu casa", confirmImport: "Guardar copia", another: "Guardar otra copia", imported: "La copia ya está guardada.", openImported: "Abrir mi copia", ownCopy: "Crea una copia independiente. No reemplaza datos ni modifica la casa de origen.", setup: "Preparar mi casa para guardar", install: "Podés instalar Refugiar para tenerlo a mano. También funciona en el navegador.", installLink: "Conocer Refugiar", week: "Lunes de la semana de destino", calendar: "Descargar evento para mi calendario", ingredients: "Ingredientes", steps: "Preparación", tasks: "Procedimiento", materials: "Materiales", outcome: "Resultado", lessons: "Aprendizajes", minutes: "{count} min", servings: "{count} porciones", seconds: "{count} segundos", allDay: "Todo el día", timezone: "Zona horaria: {zone}", summary: "{kind} compartido desde Refugiar. Podés abrirlo sin instalar la app.", summaryText: "{kind} compartido desde Refugiar.", readOnly: "Sólo lectura", guestBought: "Comprado por invitado", confirmReceived: "Confirmar recepción", received: "Recibido en casa", confirmed: "Recepción confirmada.", guestHint: "Confirmá al recibirlo. Recién entonces se suma al inventario si está vinculado.", deleteBlocked: "Conectate con la cuenta que publicó para revocar sus enlaces antes de borrar este contenido.", pending: "Falta comprar", download: "Descargar {name}", resetDemo: "Reiniciar ejemplo", previewRequired: "Revisá el contenido antes de compartir.", consent: "Sólo se publica esta ficha. Los datos restantes de tu casa no se suben.", photo: "Foto", sourceMissing: "El contenido ya no está disponible para este perfil.", publishersDevice: "Esta lista se actualiza desde el dispositivo que creó el enlace. No borres sus datos mientras quieras mantenerla actualizada.",
   },
 
-  connections: {"blocked": "Conexión bloqueada. Revisá los permisos en Ajustes → Datos.", "consentTitle": "¿Querés conectarte al servidor?", "consentText": "Tu casa está en modo local. Continuar permite acceder al servidor de cuentas durante esta sesión. No sube tu inventario ni cambia de modo hasta que elijas vincular una casa.", "allowSession": "Permitir esta conexión", "stayLocal": "Seguir en mi casa local", "scope": "Modo local: los servicios externos quedan bloqueados salvo los permisos que actives acá. En la web, descargar la app y sus actualizaciones requiere contactar su alojamiento. Para funcionar dentro de tu red usá el paquete local o Android. Los permisos se guardan en este dispositivo, separados de la demo.", "products": "Consultar productos en Internet", "productsHint": "Permite enviar el código de barras a Open Food Facts. El proveedor también recibe tu IP. No envía tu inventario.", "weather": "Consultar clima en Internet", "weatherHint": "Permite consultar MET Norway mediante el servidor de Refugiar. Solo se envía la ciudad elegida, sin ubicación precisa.", "news": "Consultar noticias en Internet", "newsHint": "Permite consultar las fuentes elegidas mediante el servidor de Refugiar. Las palabras silenciadas se filtran en este dispositivo.", "adminOnly": "Un administrador de la casa puede cambiar los permisos de conexión.", "node": "Nodo de tu casa", "nodeHint": "Guardá la dirección privada de tu servidor. Comprobar solo consulta su estado; no envía credenciales. Abrir nodo lleva a su propia casa y requiere iniciar sesión allí. No migra ni sincroniza automáticamente esta casa. Un certificado no confiable, HTTP o falta de permiso de red puede impedir la comprobación.", "checkNode": "Guardar y comprobar", "openNode": "Abrir nodo local", "forgetNode": "Olvidar nodo", "nodeState": {"idle": "Sin comprobar.", "checking": "Comprobando conexión…", "ready": "El nodo respondió.", "failed": "No pudimos comprobar el nodo. Revisá dirección, certificado y permisos de red.", "invalid": "Usá una dirección IP privada o localhost, sin rutas ni credenciales."}, "myHouse": "Mi casa", "switchHouse": "Cambiar de casa", "switchHint": "Tu casa y la demo guardan sus datos por separado. El cambio recarga la app. Los cambios ya guardados se conservan."},
+  connections: {"blocked": "Conexión bloqueada. Revisá los permisos en Ajustes → Datos.", "consentTitle": "¿Querés conectarte al servidor?", "consentText": "Tu casa está en modo local. Continuar permite acceder al servidor de cuentas durante esta sesión. No sube tu inventario ni cambia de modo hasta que elijas vincular una casa.", "allowSession": "Permitir esta conexión", "stayLocal": "Seguir en mi casa local", "scope": "Modo local: los servicios externos quedan bloqueados salvo los permisos que actives acá. En la web, descargar la app y sus actualizaciones requiere contactar su alojamiento. Para funcionar dentro de tu red usá el paquete local o Android. Los permisos se guardan en este dispositivo, separados de la demo.", "products": "Consultar productos en Internet", "productsHint": "Permite enviar el código de barras a Open Food Facts. El proveedor también recibe tu IP. No envía tu inventario.", "weather": "Consultar clima en Internet", "weatherHint": "Permite consultar MET Norway mediante el servidor de Refugiar. Solo se envía la ciudad elegida, sin ubicación precisa.", "news": "Consultar noticias en Internet", "newsHint": "Permite consultar las fuentes elegidas mediante el servidor de Refugiar. Las palabras silenciadas se filtran en este dispositivo.", "places": "Buscar lugares cercanos en Internet", "placesHint": "Emergencias: busca hospitales, comisarías, bomberos, farmacias, estaciones de servicio, agua y refugios cerca tuyo en OpenStreetMap (Overpass). Envía tu posición aproximada (redondeada a unos 100 m) solo cuando tocás Buscar. Lo que guardás queda en el celular y funciona sin Internet.", "adminOnly": "Un administrador de la casa puede cambiar los permisos de conexión.", "node": "Nodo de tu casa", "nodeHint": "Guardá la dirección privada de tu servidor. Comprobar solo consulta su estado; no envía credenciales. Abrir nodo lleva a su propia casa y requiere iniciar sesión allí. No migra ni sincroniza automáticamente esta casa. Un certificado no confiable, HTTP o falta de permiso de red puede impedir la comprobación.", "checkNode": "Guardar y comprobar", "openNode": "Abrir nodo local", "forgetNode": "Olvidar nodo", "nodeState": {"idle": "Sin comprobar.", "checking": "Comprobando conexión…", "ready": "El nodo respondió.", "failed": "No pudimos comprobar el nodo. Revisá dirección, certificado y permisos de red.", "invalid": "Usá una dirección IP privada o localhost, sin rutas ni credenciales.", "saved": "Guardado. Desde la web el navegador no deja comprobar un nodo privado: tocá Abrir nodo local."}, "myHouse": "Mi casa", "switchHouse": "Cambiar de casa", "switchHint": "Tu casa y la demo guardan sus datos por separado. El cambio recarga la app. Los cambios ya guardados se conservan."},
   brief: {"title": "Un vistazo afuera", "refresh": "Actualizar resumen", "hint": "Información guardada. Revisá la fecha antes de usarla.", "error": "Alguna fuente no respondió. Conservamos los datos anteriores. Podés volver a intentar más tarde.", "city": "Ciudad de referencia", "cityHint": "Argentina. Elegí una ciudad cercana; no representa el pronóstico exacto de tu domicilio. No usamos GPS.", "sources": "Fuentes de noticias", "muted": "Palabras que querés silenciar", "mutedHint": "Separalas con comas. Oculta títulos que las contienen. No cambia las fuentes ni reescribe noticias.", "automatic": "Actualizar mientras miro el inicio", "automaticHint": "Solo con la app visible y permisos activos. Con datos guardados, consulta cada hora. Si falla, reintenta a partir de los 15 minutos. Sin avisos ni tareas en segundo plano.", "clear": "Borrar el resumen guardado", "forecast": "Pronóstico: {temperature} °C · próximas 24 h: {min}–{max} °C", "savedAt": "Guardado: {date}", "noWeather": "Todavía no hay un pronóstico guardado.", "noNews": "No hay titulares guardados que coincidan con tu selección.", "end": "Hasta acá el resumen. Podés abrir las fuentes cuando quieras.", "weatherCredit": "Pronóstico resumido de MET Norway · CC BY 4.0"},
   kitchen: {"duration": "Tiempo del paso (minutos; 0 = sin tiempo)", "suggest": "Usar {seconds} minutos del texto", "notify": "Avisarme al terminar los próximos temporizadores", "start": "Iniciar temporizador ({duration})", "step": "Paso {step}", "done": "Terminó el temporizador", "channel": "Temporizadores de cocina", "error": "No se pudo guardar el temporizador o programar el aviso. Revisá el permiso de notificaciones.", "hint": "Los tiempos son orientativos. Android puede demorar el aviso al ahorrar batería. Los temporizadores siguen al cerrar este modo.", "undo": "Deshacer la cocinada completa", "dismiss": "Descartar"},
   emails: {
@@ -481,6 +481,7 @@ export const es = {
       system: "Sistema",
     },
     routes: {
+      emergency: "Emergencias",
       home: "Inicio",
       calendar: "Calendario",
       family: "Familia",
@@ -1316,6 +1317,9 @@ export const es = {
       linkedHint: "Al comprarlo, se suma solo al inventario.",
       unlink: "Desvincular del inventario",
       pasteHint: "Podés pegar una lista entera: una cosa por renglón.",
+      sharedTitle: { one: "Llegó 1 cosa desde otra app", other: "Llegaron {count} cosas desde otra app" },
+      sharedAdd: "Sumar a esta lista",
+      sharedDiscard: "Descartar",
     },
     summary: {
       pending: "Por comprar",
@@ -1445,7 +1449,7 @@ export const es = {
       button: "Instalar",
     },
   },
-  reminders: {"save": "Guardar recordatorios", "title": "Recordatorios en este dispositivo", "hint": "Elegí los eventos que querés recordar. Para apagarlos, quitá todos y guardá. Los eventos de todo el día avisan a las 9.", "events": "Eventos", "before": "Cuándo avisar", "minutes": "{count} minutos antes", "atTime": "A la hora del evento", "limits": "Se programan hasta 64 avisos de los próximos 30 días. Abrí la app para renovar la agenda. Android puede demorar avisos por ahorro de batería. Cambiar de perfil cancela los del anterior.", "androidOnly": "Los avisos locales están disponibles en la app Android, fuera de la casa demo. No necesitan un servicio de notificaciones en la nube.", "saved": "Preferencias guardadas. Los avisos se actualizan en este dispositivo.", "denied": "Android no permite notificaciones. Habilitalas en los ajustes de la app y volvé a guardar.", "error": "No pudimos actualizar los recordatorios. Volvé a guardar para reintentar.", "notificationTitle": "Refugiar · Calendario", "notificationBody": "Tenés un evento próximo. Abrí el calendario para verlo."},
+  reminders: {"save": "Guardar recordatorios", "title": "Recordatorios en este dispositivo", "hint": "Elegí qué querés que te avise este celular. Para apagarlos, desactivá todo y guardá. Los eventos de todo el día avisan a las 9.", "all": "Todos los eventos", "allHint": "También los que se sumen después.", "events": "Eventos", "before": "Cuándo avisar", "minutes": "{count} minutos antes", "atTime": "A la hora del evento", "dayBefore": "El día anterior", "tasks": "Tareas de proyectos", "tasksHint": "Las que tienen fecha y no están hechas. Avisan a las 9 de ese día.", "limits": "Se programan hasta 64 avisos de los próximos 30 días. Abrí la app para renovar la agenda. Android puede demorar avisos por ahorro de batería. Con el celular bloqueado no se muestran. Cambiar de perfil cancela los del anterior.", "androidOnly": "Los avisos locales están disponibles en la app Android, fuera de la casa demo. No necesitan un servicio de notificaciones en la nube.", "saved": "Preferencias guardadas. Los avisos se actualizan en este dispositivo.", "denied": "Android no permite notificaciones. Habilitalas en los ajustes de la app y volvé a guardar.", "error": "No pudimos actualizar los recordatorios. Volvé a guardar para reintentar.", "channel": "Calendario y tareas", "eventBody": "{when}", "taskBody": "Tarea de {project}"},
   meals: {
     title: "Menú semanal",
     description: "Elegí recetas guardadas y reuní los faltantes de la semana.",
@@ -2222,6 +2226,10 @@ export const es = {
         },
         emailLabel: "Para confirmar, escribí {email}",
         mismatch: "No coincide con el email de tu cuenta.",
+        passwordLabel: "Tu contraseña",
+        passwordRequired: "Escribí tu contraseña.",
+        codeLabel: "Código de 6 números de tu app autenticadora",
+        codeRequired: "Escribí el código de 6 números.",
         final: "No se puede deshacer. Para volver, vas a tener que crear una cuenta nueva.",
         confirm: "Borrar mi cuenta para siempre",
         done: "Tu cuenta se borró.",
@@ -2594,7 +2602,7 @@ export const es = {
       sections: {
         steps: {
           title: "Desde la app",
-          body: "Entrá a {domain} o abrí la app de Android con tu cuenta.\nAndá a Ajustes → Cuenta.\nTocá \"Borrar mi cuenta\" y escribí tu email para confirmar.\nSi administrás una casa donde vive más gente, antes pasale la administración a alguien.",
+          body: "Entrá a {domain} o abrí la app de Android con tu cuenta.\nAndá a Ajustes → Cuenta.\nTocá \"Borrar mi cuenta\" y confirmá con tu email, tu contraseña y, si la usás, el código de dos pasos.\nSi administrás una casa donde vive más gente, antes pasale la administración a alguien.",
         },
         deleted: {
           title: "Qué se borra",
@@ -2937,6 +2945,348 @@ export const es = {
       deleted: "Mascota eliminada.",
       eventScheduled: "Recordatorio agendado en el Calendario.",
     },
+  },
+  emergency: {
+    "title": "Emergencias",
+    "description": "Lo que necesitás a mano en una emergencia. Queda en el celular y funciona sin Internet.",
+    "print": "Hoja para la heladera",
+    "saved": "Guardado.",
+    "deleted": "Borrado.",
+    "add": "Agregar",
+    "edit": "Editar",
+    "save": "Guardar",
+    "cancel": "Cancelar",
+    "delete": "Borrar",
+    "deleteConfirm": "¿Borrar esto?",
+    "readOnly": "Lo prepara quien organiza la casa. Vos lo podés ver y usar.",
+    "offline": "Todo esto queda guardado en el celular. Sin Internet se ve igual.",
+    "call": "Llamar",
+    "calling": "Llamar a {name}",
+    "callLandline": "Fijo",
+    "callMobile": "Celular",
+    "sendSms": "Mensaje",
+    "openMap": "Abrir en el mapa",
+    "notSet": "Sin completar",
+    "ready": {
+      "one": "Tenés 1 de {total} cosas listas",
+      "other": "Tenés {count} de {total} cosas listas"
+    },
+    "readyHint": "Preparalo con calma, ahora. En una emergencia nadie tiene tiempo de cargar datos.",
+    "back": "Volver a Emergencias",
+    "sectionsLabel": "Secciones de Emergencias",
+    "public": {
+      "title": "Números de emergencia",
+      "911": "Emergencias",
+      "911Hint": "Policía y emergencias en general",
+      "107": "Ambulancia",
+      "107Hint": "SAME: emergencias médicas",
+      "100": "Bomberos",
+      "100Hint": "Incendios y rescates",
+      "103": "Defensa Civil",
+      "103Hint": "Inundaciones, temporales, derrumbes",
+      "poison": "Intoxicaciones",
+      "poisonHint": "Hospital Posadas, las 24 horas",
+      "144": "Violencia de género",
+      "144Hint": "Las 24 horas, gratis",
+      "note": "Son números de Argentina. Algunas provincias tienen otros: sumalos en Contactos."
+    },
+    "ok": {
+      "button": "Estoy bien",
+      "hint": "Manda un SMS a tu familia con dónde estás. Un SMS sale aunque no haya datos.",
+      "noContacts": "Elegí a quién avisar: en Contactos, marcá \"Recibe Estoy bien\".",
+      "locating": "Buscando dónde estás…",
+      "noPosition": "No pudimos saber dónde estás. El mensaje sale sin la ubicación.",
+      "default": "Estoy bien.",
+      "here": "Estoy acá:",
+      "to": {
+        "one": "Le avisa a 1 persona",
+        "other": "Les avisa a {count} personas"
+      },
+      "copy": "Copiar mensaje",
+      "copied": "Mensaje copiado."
+    },
+    "sections": {
+      "contact": "Contactos",
+      "contactSummary": {
+        "one": "1 contacto",
+        "other": "{count} contactos"
+      },
+      "contactIntro": "Familia, vecinos, médico y escuela. Sumá un teléfono fijo si tienen: a veces anda cuando los celulares no.",
+      "card": "Fichas médicas",
+      "cardSummary": {
+        "one": "1 ficha",
+        "other": "{count} fichas"
+      },
+      "cardIntro": "Grupo sanguíneo, alergias y remedios de cada persona. Es lo primero que te preguntan en una guardia.",
+      "plan": "Plan de la familia",
+      "planSummary": "Punto de encuentro y quién busca a los chicos",
+      "planIntro": "Lo que hacen si no se pueden comunicar. Hablenlo entre todos y repásenlo una vez por año.",
+      "place": "Lugares cercanos",
+      "placeSummary": {
+        "one": "1 lugar guardado",
+        "other": "{count} lugares guardados"
+      },
+      "placeIntro": "Hospitales, comisarías, bomberos, farmacias, agua y refugios. Guardalos con Internet; después se ven sin conexión, con tu posición del GPS.",
+      "radio": "Radio",
+      "radioSummary": {
+        "one": "1 canal",
+        "other": "{count} canales"
+      },
+      "radioIntro": "Frecuencias para tu radio de mano: noticias en FM, el canal de la familia y repetidoras de la zona.",
+      "shutoff": "Llaves de paso",
+      "shutoffSummary": {
+        "one": "1 llave anotada",
+        "other": "{count} llaves anotadas"
+      },
+      "shutoffIntro": "Dónde se corta el agua, el gas y la luz, y cómo. Que lo sepa más de una persona.",
+      "doc": "Documentos",
+      "docSummary": {
+        "one": "1 documento",
+        "other": "{count} documentos"
+      },
+      "docIntro": "Fotos de DNI, carnet de la obra social y papeles importantes, por si se pierden los originales.",
+      "guide": "Guías rápidas",
+      "guideSummary": "Primeros auxilios, agua segura, gas y cortes de luz",
+      "guideIntro": "Pasos cortos para los primeros minutos. No reemplazan un curso: si podés, hacé uno de RCP."
+    },
+    "contact": {
+      "name": "Nombre",
+      "role": "Quién es",
+      "mobile": "Celular",
+      "landline": "Teléfono fijo",
+      "address": "Dirección",
+      "note": "Nota",
+      "notify": "Recibe Estoy bien",
+      "notifyHint": "Le llega el SMS cuando tocás Estoy bien.",
+      "roles": {
+        "family": "Familia",
+        "neighbor": "Vecino",
+        "doctor": "Médico",
+        "school": "Escuela",
+        "work": "Trabajo",
+        "other": "Otro"
+      },
+      "empty": "Todavía no hay contactos.",
+      "add": "Agregar contacto"
+    },
+    "card": {
+      "member": "Persona",
+      "bloodType": "Grupo sanguíneo",
+      "allergies": "Alergias",
+      "medications": "Remedios que toma",
+      "conditions": "Enfermedades o condiciones",
+      "insurance": "Obra social o prepaga",
+      "insuranceNumber": "Número de afiliado",
+      "doctor": "Médico de cabecera",
+      "note": "Otros datos",
+      "empty": "Sin ficha",
+      "fill": "Completar ficha",
+      "none": "Sin alergias anotadas"
+    },
+    "plan": {
+      "meetingNear": "Punto de encuentro cerca de casa",
+      "meetingNearHint": "Si hay que salir de casa (incendio, gas). Ej.: la esquina de la plaza.",
+      "meetingFar": "Punto de encuentro fuera del barrio",
+      "meetingFarHint": "Si no se puede volver al barrio. Ej.: la casa de la abuela.",
+      "pickups": "Quién busca a los chicos",
+      "pickupsHint": "Quién va a la escuela de cada uno, y quién si esa persona no puede.",
+      "outOfTown": "Contacto fuera de la ciudad",
+      "outOfTownHint": "Todos le avisan a esta persona. A veces es más fácil llamar lejos que cerca.",
+      "pets": "Mascotas",
+      "petsHint": "Quién las lleva y qué hay que llevar.",
+      "okMessage": "Mensaje de Estoy bien",
+      "okMessageHint": "Lo que dice el SMS. Se le suma dónde estás y la hora.",
+      "note": "Otras decisiones",
+      "empty": "Todavía no armaron el plan.",
+      "fill": "Armar el plan"
+    },
+    "places": {
+      "here": "Vos",
+      "search": "Buscar cerca",
+      "searching": "Buscando lugares cerca tuyo…",
+      "locate": "Dónde estoy",
+      "locating": "Buscando tu posición…",
+      "noLocation": "No pudimos saber dónde estás. Revisá que la ubicación esté encendida y con permiso para la app.",
+      "accuracy": "Precisión: unos {meters} m",
+      "searchHint": "Busca en OpenStreetMap a 3 km. Manda tu posición aproximada. Elegí cuáles guardar.",
+      "permission": "Para buscar cerca, activá \"Buscar lugares cercanos en Internet\" en Ajustes → Datos → Conexiones.",
+      "openSettings": "Abrir Conexiones",
+      "found": {
+        "one": "Encontramos 1 lugar",
+        "other": "Encontramos {count} lugares"
+      },
+      "noneFound": "No encontramos lugares cargados en OpenStreetMap cerca tuyo. Podés agregarlos a mano.",
+      "searchFailed": "La búsqueda no respondió. Probá de nuevo en un rato o agregalos a mano.",
+      "saveSelected": {
+        "one": "Guardar 1 lugar",
+        "other": "Guardar {count} lugares"
+      },
+      "savedMany": {
+        "one": "Se guardó 1 lugar.",
+        "other": "Se guardaron {count} lugares."
+      },
+      "addHere": "Guardar dónde estoy",
+      "addManual": "Agregar a mano",
+      "name": "Nombre",
+      "category": "Qué es",
+      "lat": "Latitud",
+      "lng": "Longitud",
+      "address": "Dirección",
+      "phone": "Teléfono",
+      "note": "Nota",
+      "coordsHint": "Podés pegar un enlace de Google Maps o \"latitud, longitud\".",
+      "paste": "Enlace o coordenadas",
+      "pasteInvalid": "No encontramos coordenadas en ese texto.",
+      "empty": "Todavía no hay lugares guardados.",
+      "away": "{distance} al {direction}",
+      "radar": "Lugares guardados alrededor tuyo. Arriba es el norte.",
+      "noMap": "Sin mapa ni rutas: cada lugar muestra a qué distancia y hacia dónde está. Para ir, abrilo en el mapa del celular. Si bajaste la zona en Google Maps, funciona sin datos.",
+      "credit": "Datos de lugares © colaboradores de OpenStreetMap",
+      "categories": {
+        "hospital": "Hospital o guardia",
+        "police": "Comisaría",
+        "fire": "Bomberos",
+        "pharmacy": "Farmacia",
+        "fuel": "Estación de servicio",
+        "water": "Agua potable",
+        "shelter": "Refugio",
+        "meeting": "Punto de encuentro",
+        "other": "Otro"
+      },
+      "compass": {
+        "n": "norte",
+        "ne": "noreste",
+        "e": "este",
+        "se": "sureste",
+        "s": "sur",
+        "sw": "suroeste",
+        "w": "oeste",
+        "nw": "noroeste"
+      }
+    },
+    "radio": {
+      "name": "Nombre",
+      "use": "Para qué",
+      "frequency": "Frecuencia (MHz)",
+      "tone": "Tono (CTCSS/DCS)",
+      "offset": "Desplazamiento",
+      "note": "Nota",
+      "uses": {
+        "broadcast": "Noticias (FM)",
+        "family": "Familia",
+        "repeater": "Repetidora",
+        "emergency": "Emergencia",
+        "other": "Otro"
+      },
+      "empty": "Todavía no hay canales.",
+      "add": "Agregar canal",
+      "legal": "Escuchar es libre. Para transmitir en las bandas de radioaficionados hace falta licencia de ENACOM, salvo en una emergencia real con riesgo de vida.",
+      "tips": "Una radio de mano tipo Baofeng UV-5R recibe FM comercial (87,5 a 108 MHz) y las bandas de 2 m y 70 cm. Buscá las repetidoras de tu zona en el radio club más cercano.",
+      "frequencyHint": "Como en la radio: 146.520 o 98.7."
+    },
+    "shutoff": {
+      "utility": "Qué se corta",
+      "where": "Dónde está",
+      "how": "Cómo se cierra",
+      "space": "Lugar de la casa",
+      "spaceHint": "Opcional: lo une al lugar de Inventario.",
+      "utilities": {
+        "water": "Agua",
+        "gas": "Gas",
+        "power": "Luz"
+      },
+      "empty": "Todavía no anotaste dónde están.",
+      "add": "Agregar llave",
+      "openSpace": "Ver el lugar"
+    },
+    "doc": {
+      "name": "Qué documento es",
+      "member": "De quién",
+      "note": "Nota",
+      "everyone": "De la casa",
+      "empty": "Todavía no hay documentos.",
+      "add": "Agregar documento",
+      "privacy": "Las fotos quedan en este celular. Con la casa en la nube, viajan cifradas: el servidor no las puede ver. Cualquiera que abra la app en este celular las ve.",
+      "photos": "Fotos del documento"
+    },
+    "guides": {
+      "cpr": {
+        "title": "No responde y no respira",
+        "1": "Fijate que el lugar sea seguro para vos.",
+        "2": "Llamá al 107 y poné el altavoz. Pedí que alguien busque un desfibrilador (DEA).",
+        "3": "Manos en el centro del pecho, una sobre otra. Brazos rectos.",
+        "4": "Empujá fuerte y rápido: 5 cm de profundidad, unas 2 veces por segundo. Dejá que el pecho suba.",
+        "5": "No pares hasta que llegue la ayuda o vuelva a respirar. Si llega el DEA, prendelo y seguí lo que dice."
+      },
+      "choking": {
+        "title": "Atragantamiento",
+        "1": "Si tose, dejalo toser. No le pegues en la espalda.",
+        "2": "Si no puede hablar ni respirar: 5 golpes fuertes entre los omóplatos, con la persona inclinada hacia adelante.",
+        "3": "Después, 5 compresiones abdominales: desde atrás, puño arriba del ombligo, hacia adentro y arriba.",
+        "4": "Alterná 5 y 5 hasta que salga. Si se desmaya, llamá al 107 y empezá RCP.",
+        "5": "Bebés: boca abajo sobre tu brazo, 5 golpes en la espalda y 5 empujes en el pecho con dos dedos. Nunca en la panza."
+      },
+      "bleeding": {
+        "title": "Sangra mucho",
+        "1": "Apretá fuerte sobre la herida con una tela limpia.",
+        "2": "No la levantes para mirar. Si se empapa, poné otra encima.",
+        "3": "Si es un brazo o una pierna, levantalo por arriba del corazón.",
+        "4": "Llamá al 107 si no para o si sale a chorros.",
+        "5": "Si no para y corre peligro su vida, atá un torniquete 5 cm arriba de la herida y anotá la hora."
+      },
+      "burns": {
+        "title": "Quemaduras",
+        "1": "Enfriá con agua de la canilla durante 20 minutos. Sin hielo.",
+        "2": "Sacá anillos, relojes y ropa que no esté pegada.",
+        "3": "No revientes ampollas. Nada de cremas, manteca ni pasta de dientes.",
+        "4": "Tapá suelto con film o una tela limpia.",
+        "5": "Llamá al 107 si es grande, en la cara, manos o genitales, por electricidad, o en un chico."
+      },
+      "water": {
+        "title": "Agua segura para tomar",
+        "1": "Hervir: que hierva con burbujas 1 minuto. Dejala enfriar tapada.",
+        "2": "Sin fuego: 2 gotas de lavandina común (sin perfume ni aditivos) por cada litro. Mezclá y esperá 30 minutos.",
+        "3": "Si está turbia, filtrala antes con una tela limpia y dejala reposar. Después, 4 gotas por litro.",
+        "4": "Guardala en bidones limpios y tapados, lejos del sol.",
+        "5": "Calculá 3 litros por persona por día, solo para tomar y cocinar."
+      },
+      "gas": {
+        "title": "Olor a gas",
+        "1": "No prendas ni apagues luces ni aparatos. No uses fósforos.",
+        "2": "Abrí puertas y ventanas.",
+        "3": "Cerrá la llave de paso del gas (mirá Llaves de paso).",
+        "4": "Salgan todos de la casa.",
+        "5": "Llamá a la empresa de gas o al 100 desde afuera, lejos del olor."
+      },
+      "outage": {
+        "title": "Corte de luz",
+        "1": "Desenchufá heladera, computadora y tele: al volver la luz puede haber picos.",
+        "2": "Usá linternas. Velas solo a la vista y lejos de cortinas.",
+        "3": "No abras la heladera: aguanta unas 4 horas. Un freezer lleno, unas 48.",
+        "4": "Nunca uses un generador, brasero o parrilla adentro: el monóxido mata sin olor.",
+        "5": "Cuidá la batería: poné el celular en ahorro de energía."
+      }
+    },
+    "printSheet": {
+      "title": "Emergencias de la casa",
+      "updated": "Actualizada: {date}",
+      "print": "Imprimir",
+      "hint": "Imprimila y pegala en la heladera. Volvé a imprimirla cuando cambie algo.",
+      "numbers": "Números de emergencia",
+      "contacts": "Contactos",
+      "people": "Fichas médicas",
+      "plan": "Plan",
+      "shutoffs": "Llaves de paso",
+      "places": "Lugares cercanos",
+      "address": "Dirección de la casa"
+    },
+    "errors": {
+      "phone": "Ese teléfono no parece válido. Usá solo números, espacios, guiones y el + inicial.",
+      "phoneRequired": "Sumá al menos un teléfono: celular o fijo.",
+      "frequency": "Escribí la frecuencia en MHz, por ejemplo 146.520.",
+      "position": "Esa posición no es válida.",
+      "limit": "Llegaste al máximo de {max} en esta sección."
+    }
   },
 };
 

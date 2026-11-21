@@ -43,7 +43,7 @@ Sin cuenta, la casa queda en el dispositivo y no se sincroniza. Compartir texto 
 - Si se pierden la contraseña y el kit, los datos no se pueden recuperar.
 - Cada cuenta puede sumar un segundo paso: un código de una app autenticadora o una llave de acceso.
 
-Detalle técnico: [PLAN_PRODUCCION.md](../PLAN_PRODUCCION.md) y [SECURITY.md](../../SECURITY.md).
+Detalle técnico: [SECURITY.md](../../SECURITY.md) y [ADMIN.md](../ADMIN.md).
 
 ## Estado visible
 

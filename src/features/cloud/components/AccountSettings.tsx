@@ -114,10 +114,10 @@ function DeleteAccountForm({ onCancel }: { onCancel: () => void }) {
     };
   }, [session, message, t]);
 
-  async function onFinish({ email }: { email: string }) {
+  async function onFinish(values: { email: string; password?: string; code?: string }) {
     setBusy(true);
     try {
-      await service.deleteAccount(email);
+      await service.deleteAccount(session!, values);
       message.success(t("cloud.account.delete.done"));
       if (linked) {
         await leaveCloudOnDevice({ wipe: true });
@@ -169,6 +169,16 @@ function DeleteAccountForm({ onCancel }: { onCancel: () => void }) {
       >
         <Input type="email" autoComplete="off" autoFocus />
       </Form.Item>
+      {!session.user.device && (
+        <Form.Item name="password" label={t("cloud.account.delete.passwordLabel")} rules={[{ required: true, message: t("cloud.account.delete.passwordRequired") }]}>
+          <Input.Password autoComplete="current-password" />
+        </Form.Item>
+      )}
+      {session.user.twoFactorEnabled && (
+        <Form.Item name="code" label={t("cloud.account.delete.codeLabel")} rules={[{ required: true, pattern: /^\s*\d{3}\s?\d{3}\s*$/, message: t("cloud.account.delete.codeRequired") }]}>
+          <Input inputMode="numeric" autoComplete="one-time-code" maxLength={7} />
+        </Form.Item>
+      )}
       <Typography.Paragraph type="secondary" style={{ fontSize: token.fontSizeSM }}>
         {t("cloud.account.delete.final")}
       </Typography.Paragraph>

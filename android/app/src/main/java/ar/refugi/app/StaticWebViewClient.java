@@ -31,9 +31,10 @@ final class StaticWebViewClient extends BridgeWebViewClient {
         String path = url.getPath();
         if (!isAppOrigin(url) || isApi(path) || (path != null && path.startsWith("/admin"))) {
             String scheme = url.getScheme();
-            if ("https".equals(scheme) || "http".equals(scheme) || "mailto".equals(scheme) || "tel".equals(scheme)) {
+            if ("https".equals(scheme) || "http".equals(scheme) || "mailto".equals(scheme) || "tel".equals(scheme) ||
+                "sms".equals(scheme) || "smsto".equals(scheme) || "geo".equals(scheme)) {
                 try { bridge.getContext().startActivity(new Intent(Intent.ACTION_VIEW, url)); }
-                catch (ActivityNotFoundException ignored) { /* No navegador externo instalado. */ }
+                catch (ActivityNotFoundException ignored) { /* No hay app para abrirlo (navegador, mensajes o mapas). */ }
             }
             return true;
         }

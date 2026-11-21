@@ -12,12 +12,14 @@ const ALLOWED = {
   "src/components/providers/ThemeProvider.tsx": { color: 2 },
   // Etiqueta impresa: blanco y negro puros, para que el QR se lea en cualquier impresora.
   "src/features/storage/components/ContainerLabel.tsx": { color: 2 },
+  // Hoja de Emergencias impresa: igual, negro sobre blanco aunque la app esté en modo oscuro.
+  "src/features/emergency/components/PrintSheet.tsx": { color: 2 },
   // Ícono PNG generado (ImageResponse): no hay tema en el servidor.
   "src/lib/pwa/icon.tsx": { color: 3 },
 };
 
 /**
- * Deuda conocida al 2026-10-07 (ver docs/UNIFICACION_VISUAL.md). Solo puede bajar: al arreglar un
+ * Deuda conocida al 2026-10-07 (ver /design). Solo puede bajar: al arreglar un
  * archivo, bajá su número acá (o borralo). Un archivo nuevo o un número más alto hace fallar la prueba.
  */
 const DEBT = {
@@ -41,7 +43,7 @@ test("ningún componente suma colores fijos, textos por idioma, íconos con tama
       if (value > limit) problems.push(`${file}: ${value} ${FIX[rule]} (máximo ${limit})`);
     }
   }
-  assert.deepEqual(problems, [], `\n${problems.join("\n")}\nVer /design y docs/UNIFICACION_VISUAL.md.`);
+  assert.deepEqual(problems, [], `\n${problems.join("\n")}\nVer /design.`);
 });
 
 test("cada pieza de @/components/ui y @/components/motion está documentada en /design", () => {

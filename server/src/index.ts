@@ -9,6 +9,9 @@ import { weatherBrief, newsBrief } from "./brief";
  * Su trabajo es autenticar, autorizar (quién es miembro de qué casa, con qué rol) y ordenar.
  */
 import { betterAuth } from "better-auth";
+import { symmetricDecrypt } from "better-auth/crypto";
+import { createOTP } from "@better-auth/utils/otp";
+import { base32 } from "@better-auth/utils/base32";
 import { Hono, type Context } from "hono";
 import { cors } from "hono/cors";
 import { bodyLimit } from "hono/body-limit";
@@ -251,6 +254,26 @@ async function checkPassword(env: Env, userId: string, password: string) {
   const account = await env.DB.prepare(`select "password" from "account" where "userId" = ? and "providerId" = 'credential'`).bind(userId).first<{ password: string | null }>();
   if (!account?.password) return false;
   return (await createAuth(env).$context).password.verify({ hash: account.password, password });
+}
+
+async function hasPassword(env: Env, userId: string) {
+  const account = await env.DB.prepare(`select "password" from "account" where "userId" = ? and "providerId" = 'credential'`).bind(userId).first<{ password: string | null }>();
+  return Boolean(account?.password);
+}
+
+/** ¿Es un código vigente de su app autenticadora? Con el secreto que guarda Better Auth (cifrado con su clave). */
+async function checkTotp(env: Env, userId: string, code: string) {
+  const row = await env.DB.prepare(`select "secret" from "twoFactor" where "userId" = ?`).bind(userId).first<{ secret: string | null }>();
+  if (!row?.secret) return false;
+  try {
+    const context = await createAuth(env).$context;
+    const stored = await symmetricDecrypt({ key: context.secretConfig, data: row.secret });
+    // Los secretos importados de otra app vienen como `base32:<secreto>` (igual que en el plugin).
+    const secret = stored.startsWith("base32:") ? base32.decode(stored.slice(7).toUpperCase()) : stored;
+    return await createOTP(secret, { period: 30, digits: 6 }).verify(code);
+  } catch {
+    return false;
+  }
 }
 
 /** Cambia la contraseña: la sentencia va en el mismo lote (transacción) que el cambio de claves. */
@@ -556,6 +579,9 @@ app.post("/account/delete", async (c) => {
   const input = await parse(c, deleteUserInput);
   if (!input || input.confirm !== user.email.toLowerCase()) return c.json({ error: "confirmation-required" }, 400);
   if (await tooMany(c.env, `delete-account:${user.id}`, 5, RECOVERY_WINDOW)) return c.json({ error: "rate-limited" }, 429);
+  // Con una sesión robada no alcanza: pide la contraseña (si la cuenta tiene) y el código de dos pasos.
+  if (await hasPassword(c.env, user.id) && !(input.password && await checkPassword(c.env, user.id, input.password))) return c.json({ error: "wrong-password" }, 403);
+  if (user.twoFactorEnabled && !(input.code && await checkTotp(c.env, user.id, input.code))) return c.json({ error: "INVALID_CODE" }, 403);
 
   const homes = await c.env.DB.prepare(
     `select m.household_id as householdId, m.role,

@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="shortcut_shopping">Shopping</string>
+    <string name="shortcut_scan">Scan</string>
+    <string name="shortcut_calendar">Calendar</string>
+    <string name="shortcut_emergency">Emergency</string>
+</resources>

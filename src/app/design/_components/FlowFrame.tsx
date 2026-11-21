@@ -37,7 +37,7 @@ export function FlowFrame<T extends string>({ steps, step, onStep, status, scree
             Así se ve hoy en la app
           </Tag>
         ) : (
-          <Tooltip title="Es el objetivo. La pantalla real todavía no se migró: ver docs/UNIFICACION_VISUAL.md.">
+          <Tooltip title="Es el objetivo. La pantalla real todavía no se migró: ver docs/MAPA.md.">
             <Tag color="gold" variant="filled" icon={<Compass />} style={{ margin: 0, display: "inline-flex", alignItems: "center", gap: 6 }}>
               Referencia: falta migrar la pantalla real
             </Tag>

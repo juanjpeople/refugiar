@@ -7,6 +7,7 @@ import { DEMO_ENABLED } from "@/lib/demo";
 import { can } from "@/lib/auth/permissions";
 import { useCurrentUser } from "@/lib/auth/session";
 import { privateOrigin, useNetworkPolicy } from "@/lib/network/policy";
+import { isAndroidApp } from "@/lib/platform";
 import { BriefSettings } from "@/features/brief/BriefPanel";
 
 export function ConnectionSettings() {
@@ -15,7 +16,7 @@ export function ConnectionSettings() {
   const policy = useNetworkPolicy();
   const user = useCurrentUser();
   const [node, setNode] = useState(policy.node);
-  const [status, setStatus] = useState<"idle" | "checking" | "ready" | "failed" | "invalid">("idle");
+  const [status, setStatus] = useState<"idle" | "checking" | "ready" | "failed" | "invalid" | "saved">("idle");
   const admin = can(user, "settings.data");
   async function checkNode() {
     const origin = privateOrigin(node.trim());
@@ -30,7 +31,7 @@ export function ConnectionSettings() {
   }
   return <Flex vertical gap={token.marginLG}>
     <Typography.Paragraph>{t("connections.scope")}</Typography.Paragraph>
-    {(["products", "weather", "news"] as const).map(service => <SettingRow key={service} label={t(`connections.${service}`)} description={t(`connections.${service}Hint`)}>
+    {(["products", "weather", "news", "places"] as const).map(service => <SettingRow key={service} label={t(`connections.${service}`)} description={t(`connections.${service}Hint`)}>
       <Switch aria-label={t(`connections.${service}`)} disabled={!admin || DEMO_ENABLED} checked={policy[service]} onChange={value => policy.allow(service, value)} />
     </SettingRow>)}
     {!admin && <Typography.Text type="secondary">{t("connections.adminOnly")}</Typography.Text>}
@@ -40,7 +41,7 @@ export function ConnectionSettings() {
         <Input aria-label={t("connections.node")} value={node} maxLength={100} onChange={event => { setNode(event.target.value); setStatus("idle"); }} placeholder="https://192.168.1.50:8443" />
         <Flex gap={token.marginSM} wrap>
           <Button disabled={DEMO_ENABLED} loading={status === "checking"} onClick={checkNode}>{t("connections.checkNode")}</Button>
-          {policy.node && privateOrigin(policy.node) && <Button href={policy.node} target="_blank" rel="noopener noreferrer">{t("connections.openNode")}</Button>}
+          {policy.node && privateOrigin(policy.node) && <Button type={status === "saved" ? "primary" : "default"} href={policy.node} target="_blank" rel="noopener noreferrer">{t("connections.openNode")}</Button>}
           {policy.node && <Button onClick={() => { policy.setNode(""); setNode(""); setStatus("idle"); }}>{t("connections.forgetNode")}</Button>}
         </Flex>
         <Typography.Text role="status">{t(`connections.nodeState.${status}`)}</Typography.Text>

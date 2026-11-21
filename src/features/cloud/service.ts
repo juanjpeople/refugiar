@@ -585,8 +585,12 @@ export async function householdsBlockingDeletion(session: CloudSession): Promise
 }
 
 /** Borra la cuenta, las casas donde vive sola y su lugar en las compartidas. Ver `/api/account/delete`. */
-export async function deleteAccount(email: string) {
-  await api("POST", "/account/delete", { confirm: email.trim().toLowerCase() });
+export async function deleteAccount(session: CloudSession, input: { email: string; password?: string; code?: string }) {
+  const email = input.email.trim().toLowerCase();
+  // Igual que al entrar: al servidor va la clave derivada (con el email de la cuenta), nunca la contraseña.
+  const password = input.password ? (await derivePasswordKeys(session.user.email, input.password)).authKey : undefined;
+  const code = input.code?.replace(/\s+/g, "") || undefined;
+  await api("POST", "/account/delete", { confirm: email, password, code });
   await clearVault();
 }
 
