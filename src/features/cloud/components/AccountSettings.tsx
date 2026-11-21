@@ -117,7 +117,7 @@ function DeleteAccountForm({ onCancel }: { onCancel: () => void }) {
   async function onFinish(values: { email: string; password?: string; code?: string }) {
     setBusy(true);
     try {
-      await service.deleteAccount(values);
+      await service.deleteAccount(session!, values);
       message.success(t("cloud.account.delete.done"));
       if (linked) {
         await leaveCloudOnDevice({ wipe: true });

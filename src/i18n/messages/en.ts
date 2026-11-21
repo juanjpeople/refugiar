@@ -2597,7 +2597,7 @@ export const en: Messages = {
       sections: {
         steps: {
           title: "From the app",
-          body: "Go to {domain} or open the Android app with your account.\nGo to Settings → Account.\nTap \"Delete my account\" and type your email to confirm.\nIf you manage a home where other people live, first make someone else an admin.",
+          body: "Go to {domain} or open the Android app with your account.\nGo to Settings → Account.\nTap \"Delete my account\" and confirm with your email, your password and, if you use it, your two-step code.\nIf you manage a home where other people live, first make someone else an admin.",
         },
         deleted: {
           title: "What gets deleted",

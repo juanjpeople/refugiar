@@ -161,7 +161,7 @@ export function PlacesPane({ data, editable }: { data: EmergencyData; editable: 
           </>}
           trailing={<Flex gap="small">
             {place.phone && <Button size="large" href={telHref(place.phone)} icon={<Phone />} aria-label={t("emergency.calling", { name: place.name })} />}
-            <Button size="large" href={openMap(place, place.name)} target="_blank" rel="noreferrer" icon={<Navigation />} aria-label={t("emergency.openMap")} />
+            <Button size="large" href={openMap(place, place.name)} target={isAndroidApp() ? undefined : "_blank"} rel="noreferrer" icon={<Navigation />} aria-label={t("emergency.openMap")} />
           </Flex>}
           onOpen={editable ? () => { setDraft(null); setEditing(place); } : undefined}
           divider={index < sorted.length - 1}

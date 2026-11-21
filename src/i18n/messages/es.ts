@@ -2602,7 +2602,7 @@ export const es = {
       sections: {
         steps: {
           title: "Desde la app",
-          body: "Entrá a {domain} o abrí la app de Android con tu cuenta.\nAndá a Ajustes → Cuenta.\nTocá \"Borrar mi cuenta\" y escribí tu email para confirmar.\nSi administrás una casa donde vive más gente, antes pasale la administración a alguien.",
+          body: "Entrá a {domain} o abrí la app de Android con tu cuenta.\nAndá a Ajustes → Cuenta.\nTocá \"Borrar mi cuenta\" y confirmá con tu email, tu contraseña y, si la usás, el código de dos pasos.\nSi administrás una casa donde vive más gente, antes pasale la administración a alguien.",
         },
         deleted: {
           title: "Qué se borra",
