@@ -3,7 +3,7 @@
 Un relevo de cambios cifrados dentro de la casa. Los teléfonos dejan cambios en el ESP y los
 otros los levantan, sin internet. El ESP no guarda claves ni puede leer lo que pasa: solo ve bytes
 cifrados. Tiene un límite de espacio y es reemplazable; si se pierde, los datos siguen en los
-teléfonos. Ver F07 en [Cimientos del MVP](../../docs/CIMIENTOS_MVP.md).
+teléfonos. Estado y pendientes en [ROADMAP.md](../../ROADMAP.md).
 
 **Estado:** prototipo para medir la placa. La app todavía no lo usa. Eso se decide con los números
 de esta prueba (memoria, espacio, velocidad y qué pasa con un corte de luz).

@@ -1,8 +1,8 @@
 # Publicar en Google Play
 
-> La migración de TWA a Android autónomo está en curso. Antes de publicar se deben verificar arranque
-> offline, conservación de datos al actualizar y sincronización real, según
-> [Cimientos del MVP](CIMIENTOS_MVP.md). Firma y controles de versión siguen siendo necesarios.
+> **En pausa** (decisión del dueño, 2026-10-14): no se publica hasta que la app sea usable de punta
+> a punta. Antes de publicar: arranque sin red, datos conservados al actualizar y nube real en un
+> teléfono ([ANDROID.md](ANDROID.md#pruebas-y-entrega)).
 
 Guía de la primera subida y de cada actualización. Android empaqueta la interfaz de
 Refugiar y conserva la nube opcional ([ANDROID.md](ANDROID.md)). El acceso social y

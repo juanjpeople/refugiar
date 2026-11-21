@@ -19,9 +19,9 @@ npm run build      # sitio estático en out/
 npm run e2e        # pruebas de punta a punta sobre out/ (usa el Chrome instalado)
 ```
 
-En cada PR el CI corre tipos, lint, tests unitarios, build y el recorrido de la API (menos de 2 minutos).
-Las pruebas de punta a punta y la compilación de Android corren al mergear a main; antes de pedir el merge,
-corré `npm run e2e` en local si tocaste la interfaz.
+En cada PR el CI corre tipos, lint, tests unitarios, build, el recorrido de la API, las pruebas de punta a
+punta y un APK de prueba. Mergeá solo con todo en verde: Cloudflare publica `main` sin esperar al CI.
+Dónde está cada cosa: [docs/MAPA.md](docs/MAPA.md). Qué falta: [ROADMAP.md](ROADMAP.md).
 
 ## Cómo está organizado el código
 

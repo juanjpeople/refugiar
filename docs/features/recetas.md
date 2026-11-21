@@ -61,7 +61,6 @@ Android ofrece avisos locales optativos para los nuevos temporizadores. Desactiv
 
 Una cocinada registra los consumos que la integran. Deshacer desde la confirmación o el historial devuelve sus diferencias sobre el stock actual dentro de una transacción. Conserva compras posteriores, omite consumos ya deshechos y falla sin devolver parcialmente si falta un producto, cambió su unidad o excedería el límite de stock. Disponible durante 24 horas; las cocinadas antiguas sin agrupación conservan el deshacer individual. Evitar deshacer simultáneamente la misma operación en dos dispositivos sin sincronizar: la validación local no es un bloqueo distribuido.
 
-Validación local de la tanda: `npm run check` (245 aprobados), `npm run build` y recorrido de API aislada (3/3). La comprobación visual y de hardware sigue a cargo del dueño; CI ejecuta los recorridos existentes antes del merge.
 
 ## Ejemplos y portadas (octubre de 2026)
 

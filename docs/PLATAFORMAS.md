@@ -141,7 +141,7 @@ QR, uso offline, exportación y actualización en el teléfono que vas a usar.
 La migración Android empaqueta esa misma interfaz y reutiliza su lógica, con datos
 propios de la instalación y sincronización opcional. Un deploy web no actualiza el APK.
 Todavía se están validando autenticación y traslado desde la TWA anterior: conservar
-los datos de Chrome. Consultá [Android](ANDROID.md) y [Cimientos del MVP](CIMIENTOS_MVP.md).
+los datos de Chrome. Consultá [Android](ANDROID.md).
 El servidor de casa se usa desde el navegador; la app de Android sigue usando refugi.ar.
 
 ## Compartir información y proyectos

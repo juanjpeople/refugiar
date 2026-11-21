@@ -56,6 +56,8 @@ scripts en línea, por eso `'unsafe-inline'`, sin `eval`), conexiones solo a ref
 servicios optativos que la persona activa en Ajustes → Conexiones (Open Food Facts y Overpass de
 OpenStreetMap), sin marcos ni objetos. Cámara y ubicación quedan solo para la app y se piden al
 tocar el botón que las usa. Un servicio externo nuevo se suma en el mismo cambio que lo usa.
+Por eso, desde la web, "Nodo de tu casa" guarda la dirección y ofrece abrirla sin consultarla;
+la comprobación funciona en Android y en el paquete local.
 
 Las acciones de GitHub se fijan por SHA, no por etiqueta.
 

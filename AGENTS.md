@@ -41,5 +41,11 @@ recetas). Antes de tocar una pantalla, recorrela (casa demo → perfil Administr
 - Todo texto por `t()`; voseo, una idea por oración (ver "Voz y textos" en `/design`).
 - Ante una decisión de UI, gana la opción de mejor calidad visual, fiel a la firma original.
 - `scripts/design-lint.test.mjs` (corre con `npm test`) frena colores fijos, textos por idioma en
-  componentes, íconos con `size`, tamaños de letra fijos y piezas sin documentar. El plan y su estado están en
-  `docs/UNIFICACION_VISUAL.md`; repasá la lista "Revisión antes de un PR" de `/design`.
+  componentes, íconos con `size`, tamaños de letra fijos y piezas sin documentar. Repasá la lista
+  "Revisión antes de un PR" de `/design`.
+
+## Dónde está cada cosa
+
+- `docs/MAPA.md`: mapa de la app (secciones, rutas, código, datos, estado y qué doc leer). Empezá por acá.
+- `ROADMAP.md`: el único plan (lo abierto, lo congelado y el historial). Cada PR lo actualiza.
+- `docs/features/<sección>.md`: qué hace cada sección y sus límites. No crear planes sueltos en otros archivos.

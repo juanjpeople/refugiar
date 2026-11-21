@@ -90,7 +90,7 @@ const PRODUCT_FORMATS = ["ean_13", "ean_8", "upc_a"];
 
 /**
  * Si este navegador lee códigos de barras de envases con la cámara. Chrome y la app de Android sí;
- * Safari y Firefox no lo traen. Ahí el código se escribe a mano (ver docs/INVENTARIO.md).
+ * Safari y Firefox no lo traen. Ahí el código se escribe a mano (ver docs/features/inventario.md).
  */
 export async function productCodesSupported(): Promise<boolean> {
   const Native = (globalThis as { BarcodeDetector?: NativeDetectorClass }).BarcodeDetector;
