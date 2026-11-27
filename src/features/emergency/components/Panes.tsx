@@ -1,13 +1,14 @@
 "use client";
 
-import { Button, Collapse, Flex, Tag, Typography, theme } from "antd";
-import { BookUser, Droplet, FileText, Flame, HeartPulse, MapPin, MessageSquare, Phone, Plus, Radio, Wrench, Zap } from "lucide-react";
+import { Button, Collapse, Divider, Flex, Tag, Typography, theme } from "antd";
+import { BookUser, Dog, Droplet, FileText, Flame, HeartPulse, MapPin, MessageSquare, Phone, Plus, Radio, Wrench, Zap } from "lucide-react";
 import Link from "next/link";
 import { useLiveQuery } from "dexie-react-hooks";
 import { useState, type ReactNode } from "react";
-import { EmptyState, IconTile, ListRow, MemberAvatar } from "@/components/ui";
+import { EmergencyIllustration, EmptyState, IconTile, ListRow, MemberAvatar } from "@/components/ui";
 import { PhotoGallery } from "@/features/media/components/PhotoGallery";
 import { useMembers } from "@/features/members/hooks";
+import { usePets } from "@/features/pets/hooks";
 import { useI18n } from "@/i18n";
 import { db } from "@/lib/db";
 import { spaceHref } from "@/lib/navigation/routes";
@@ -16,6 +17,7 @@ import {
   CONTACT_ROLES,
   PLAN_ID,
   RADIO_USES,
+  REFERENCE_RADIO_STATIONS,
   UTILITIES,
   cardId,
   smsHref,
@@ -63,7 +65,9 @@ function CallButtons({ mobile, landline }: { mobile?: string; landline?: string 
 export function ContactsPane({ data, editable }: { data: EmergencyData; editable: boolean }) {
   const { t } = useI18n();
   const { save, remove } = useEmergencyActions();
+  const pets = usePets();
   const [editing, setEditing] = useState<EmergencyContact | "new" | null>(null);
+  const petGuards = (pets ?? []).filter((pet) => Boolean(pet.veterinarian?.emergencyPhone?.trim()));
   const fields: Field[] = [
     { name: "name", label: t("emergency.contact.name"), required: true },
     { name: "role", label: t("emergency.contact.role"), type: "select", required: true, options: CONTACT_ROLES.map((role) => ({ value: role, label: t(`emergency.contact.roles.${role}`) })) },
@@ -75,7 +79,7 @@ export function ContactsPane({ data, editable }: { data: EmergencyData; editable
   ];
   const current = editing && editing !== "new" ? editing : undefined;
   return <>
-    {data.contacts.length === 0 && <EmptyState icon={BookUser} title={t("emergency.contact.empty")} />}
+    {data.contacts.length === 0 && petGuards.length === 0 && <EmptyState icon={BookUser} title={t("emergency.contact.empty")} />}
     <Rows
       items={data.contacts}
       leading={() => <IconTile icon={BookUser} color="blue" size={40} />}
@@ -88,6 +92,21 @@ export function ContactsPane({ data, editable }: { data: EmergencyData; editable
       trailing={(contact) => <CallButtons mobile={contact.mobile} landline={contact.landline} />}
       onOpen={editable ? setEditing : undefined}
     />
+    {petGuards.map((pet, index) => (
+      <ListRow
+        key={pet.id}
+        index={data.contacts.length + index}
+        leading={<IconTile icon={Dog} color="gold" size={40} />}
+        title={t("emergency.contact.vetGuard", { pet: pet.name })}
+        wrapTitle
+        meta={<>
+          {pet.veterinarian?.clinic && <span>{pet.veterinarian.clinic}</span>}
+          {pet.veterinarian?.address && <span>{pet.veterinarian.address}</span>}
+        </>}
+        trailing={<CallButtons landline={pet.veterinarian?.emergencyPhone} />}
+        divider={index < petGuards.length - 1}
+      />
+    ))}
     {editable && <AddButton label={t("emergency.contact.add")} onClick={() => setEditing("new")} />}
     {editing && <RecordModal
       open
@@ -217,6 +236,28 @@ export function RadioPane({ data, editable }: { data: EmergencyData; editable: b
     />
     {data.radio.length > 0 && <Typography.Paragraph type="secondary" style={{ marginBlock: token.marginSM }}>{t("emergency.radio.tips")}</Typography.Paragraph>}
     {editable && <AddButton label={t("emergency.radio.add")} onClick={() => setEditing("new")} />}
+    <Divider style={{ marginBlock: token.marginSM }} />
+    <Flex vertical gap={token.marginXXS} style={{ marginBottom: token.marginXS }}>
+      <Typography.Text strong>{t("emergency.radio.referenceTitle")}</Typography.Text>
+      <Typography.Text type="secondary">{t("emergency.radio.referenceDescription")}</Typography.Text>
+    </Flex>
+    {REFERENCE_RADIO_STATIONS.map((station, index) => (
+      <ListRow
+        key={station.id}
+        index={index}
+        leading={<IconTile icon={Radio} color={station.listenOnly ? "blue" : "green"} size={40} />}
+        title={`${station.frequency} · ${station.name}`}
+        wrapTitle
+        meta={<>
+          <Tag bordered={false} color="blue">{station.band}</Tag>
+          <Tag bordered={false} color={station.listenOnly ? "default" : "green"}>
+            {station.listenOnly ? t("emergency.radio.listenOnly") : t("emergency.radio.freeUse")}
+          </Tag>
+          <span>{station.region}</span>
+        </>}
+        divider={index < REFERENCE_RADIO_STATIONS.length - 1}
+      />
+    ))}
     {editing && <RecordModal
       open
       title={current ? current.name : t("emergency.radio.add")}
@@ -332,6 +373,7 @@ export function GuidesPane() {
       key: guide,
       label: <Flex align="center" gap={token.marginSM}><IconTile icon={guide === "gas" || guide === "outage" ? Flame : HeartPulse} color={guide === "water" ? "cyan" : guide === "gas" || guide === "outage" ? "orange" : "red"} size={36} /><Typography.Text strong style={{ fontSize: token.fontSizeLG }}>{t(`emergency.guides.${guide}.title`)}</Typography.Text></Flex>,
       children: <Flex vertical gap={token.marginSM}>
+        <EmergencyIllustration kind={guide} label={t(`emergency.guides.${guide}.title`)} />
         <ol style={{ margin: 0, paddingInlineStart: token.paddingLG }}>
           {([1, 2, 3, 4, 5] as const).map((step) => <li key={step} style={{ marginBottom: token.marginXS, fontSize: token.fontSizeLG }}>{t(`emergency.guides.${guide}.${step}`)}</li>)}
         </ol>

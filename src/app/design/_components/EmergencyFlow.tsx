@@ -2,7 +2,7 @@
 
 import { App, Col, Flex, Row, Typography, theme } from "antd";
 import { Ambulance, MessageSquareHeart, Siren } from "lucide-react";
-import { EmergencyAction, PlaceRadar } from "@/components/ui";
+import { EmergencyAction, EmergencyIllustration, PlaceRadar, type EmergencyIllustrationKind } from "@/components/ui";
 import { DemoBlock, DemoLabel } from "./DemoBlock";
 
 const distance = (meters: number) => meters < 1000 ? `${Math.round(meters / 10) * 10} m` : `${(Math.round(meters / 100) / 10).toLocaleString("es-AR")} km`;
@@ -14,11 +14,12 @@ export function EmergencyFlow() {
   return (
     <DemoBlock
       id="flujo-emergencias"
-      title="Emergencias: EmergencyAction y PlaceRadar"
-      description="Para usar con nervios: un toque, área grande, texto grande y una sola acción. La principal (Estoy bien) va sólida y a todo el ancho; los números, de a dos por fila en el celular. PlaceRadar muestra lo guardado alrededor tuyo sin bajar mapas: distancia, rumbo y el norte arriba."
+      title="Emergencias: EmergencyAction, PlaceRadar y EmergencyIllustration"
+      description="Para usar con nervios: un toque, área grande, texto grande y una sola acción. La principal (Estoy bien) va sólida y a todo el ancho; los números, de a dos por fila en el celular. PlaceRadar muestra lo guardado alrededor tuyo sin bajar mapas: distancia, rumbo y el norte arriba. EmergencyIllustration suma dibujos vectoriales estilo manual de seguridad a las guías rápidas, 100 % offline y con los tokens del tema."
       code={`<EmergencyAction solid icon={MessageSquareHeart} color="green" title="Estoy bien" detail="Les avisa a 2 personas" onClick={…} />
 <EmergencyAction icon={Ambulance} color="red" title="107" detail="Ambulancia" href="tel:107" />
-<PlaceRadar points={[{ id, label, color, distance, bearing }]} centerLabel="Vos" formatDistance={…} aria-label="…" />`}
+<PlaceRadar points={[{ id, label, color, distance, bearing }]} centerLabel="Vos" formatDistance={…} aria-label="…" />
+<EmergencyIllustration kind="cpr" label="No responde y no respira" />`}
     >
       <Flex vertical gap={token.marginLG}>
         <div>
@@ -44,6 +45,24 @@ export function EmergencyFlow() {
             ]}
           />
           <Typography.Paragraph type="secondary">Sin rutas: cada fila dice «1,2 km al noreste» y abre el mapa del celular.</Typography.Paragraph>
+        </div>
+        <div>
+          <DemoLabel>Dibujos explicativos de las guías rápidas (EmergencyIllustration)</DemoLabel>
+          <Row gutter={[token.marginSM, token.marginSM]}>
+            {([
+              ["cpr", "RCP"],
+              ["choking", "Atragantamiento"],
+              ["bleeding", "Hemorragia"],
+              ["burns", "Quemaduras"],
+              ["water", "Agua segura"],
+              ["gas", "Olor a gas"],
+              ["outage", "Corte de luz"],
+            ] as readonly [EmergencyIllustrationKind, string][]).map(([kind, label]) => (
+              <Col key={kind} xs={12} sm={8} md={6}>
+                <EmergencyIllustration kind={kind} label={label} />
+              </Col>
+            ))}
+          </Row>
         </div>
       </Flex>
     </DemoBlock>

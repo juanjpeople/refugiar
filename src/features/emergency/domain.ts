@@ -23,6 +23,28 @@ export type PlaceCategory = (typeof PLACE_CATEGORIES)[number];
 export const RADIO_USES = ["broadcast", "family", "repeater", "emergency", "other"] as const;
 export type RadioUse = (typeof RADIO_USES)[number];
 
+export interface ReferenceRadioStation {
+  id: string;
+  name: string;
+  frequency: string;
+  band: "AM" | "FM" | "VHF" | "HF" | "FRS";
+  region: string;
+  listenOnly: boolean;
+}
+
+/** Emisoras públicas nacionales y frecuencias de emergencia precargadas (100 % offline). */
+export const REFERENCE_RADIO_STATIONS: readonly ReferenceRadioStation[] = [
+  { id: "lra1-am", name: "Radio Nacional LRA 1", frequency: "AM 870 kHz", band: "AM", region: "Buenos Aires · Alcance nacional nocturno", listenOnly: true },
+  { id: "lra1-fm", name: "Radio Nacional FM", frequency: "FM 98.7 MHz", band: "FM", region: "AMBA (consultar repetidora provincial)", listenOnly: true },
+  { id: "lra7", name: "Radio Nacional Córdoba (LRA 7)", frequency: "AM 750 kHz · FM 100.1 MHz", band: "AM", region: "Córdoba y centro del país", listenOnly: true },
+  { id: "lra5", name: "Radio Nacional Rosario (LRA 5)", frequency: "AM 1300 kHz · FM 104.5 MHz", band: "AM", region: "Santa Fe y litoral sur", listenOnly: true },
+  { id: "lra6", name: "Radio Nacional Mendoza (LRA 6)", frequency: "AM 960 kHz · FM 97.1 MHz", band: "AM", region: "Cuyo", listenOnly: true },
+  { id: "lra11", name: "Radio Nacional Patagonia (LRA 11 / LRA 10)", frequency: "AM 670 kHz · AM 780 kHz", band: "AM", region: "Comodoro Rivadavia · Ushuaia", listenOnly: true },
+  { id: "vhf-2m", name: "VHF 2 m — Llamada / Emergencia", frequency: "146.520 MHz (FM simplex)", band: "VHF", region: "Radioaficionados · Nacional", listenOnly: true },
+  { id: "hf-40m", name: "HF 40 m — Red de Emergencias", frequency: "7.060 – 7.110 kHz (LSB)", band: "HF", region: "Onda corta · Interprovincial", listenOnly: true },
+  { id: "frs-7", name: "Handies de uso libre (FRS / GMRS)", frequency: "Canal 7 · 462.7125 MHz", band: "FRS", region: "Corto alcance · Barrio / familia", listenOnly: false },
+];
+
 export const UTILITIES = ["water", "gas", "power"] as const;
 export type Utility = (typeof UTILITIES)[number];
 

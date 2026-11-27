@@ -3067,7 +3067,8 @@ export const es = {
         "other": "Otro"
       },
       "empty": "Todavía no hay contactos.",
-      "add": "Agregar contacto"
+      "add": "Agregar contacto",
+      "vetGuard": "Guardia veterinaria 24 hs ({pet})"
     },
     "card": {
       "member": "Persona",
@@ -3182,7 +3183,11 @@ export const es = {
       "add": "Agregar canal",
       "legal": "Escuchar es libre. Para transmitir en las bandas de radioaficionados hace falta licencia de ENACOM, salvo en una emergencia real con riesgo de vida.",
       "tips": "Una radio de mano tipo Baofeng UV-5R recibe FM comercial (87,5 a 108 MHz) y las bandas de 2 m y 70 cm. Buscá las repetidoras de tu zona en el radio club más cercano.",
-      "frequencyHint": "Como en la radio: 146.520 o 98.7."
+      "frequencyHint": "Como en la radio: 146.520 o 98.7.",
+      "referenceTitle": "Radio Nacional y frecuencias de emergencia",
+      "referenceDescription": "Emisoras públicas y frecuencias de referencia precargadas sin Internet.",
+      "listenOnly": "Solo escucha",
+      "freeUse": "Uso libre"
     },
     "shutoff": {
       "utility": "Qué se corta",
