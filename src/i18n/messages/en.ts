@@ -3061,7 +3061,8 @@ export const en: Messages = {
         "other": "Other"
       },
       "empty": "No contacts yet.",
-      "add": "Add contact"
+      "add": "Add contact",
+      "vetGuard": "24h Vet emergency ({pet})"
     },
     "card": {
       "member": "Person",
@@ -3176,7 +3177,11 @@ export const en: Messages = {
       "add": "Add channel",
       "legal": "Listening is free. Transmitting on amateur bands requires an ENACOM license, except in a real life-threatening emergency.",
       "tips": "A handheld like the Baofeng UV-5R receives commercial FM (87.5 to 108 MHz) and the 2 m and 70 cm bands. Ask the nearest radio club for local repeaters.",
-      "frequencyHint": "As on the radio: 146.520 or 98.7."
+      "frequencyHint": "As on the radio: 146.520 or 98.7.",
+      "referenceTitle": "National Radio & emergency frequencies",
+      "referenceDescription": "Preloaded public broadcasters and emergency references available offline.",
+      "listenOnly": "Listen only",
+      "freeUse": "License-free"
     },
     "shutoff": {
       "utility": "What it shuts off",

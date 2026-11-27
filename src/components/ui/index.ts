@@ -69,4 +69,5 @@ export { ShareCard } from "./ShareCard";
 export { ShareOptions, type ShareOptionsValue } from "./ShareOptions";
 
 export { EmergencyAction } from "./EmergencyAction";
+export { EmergencyIllustration, type EmergencyIllustrationKind } from "./EmergencyIllustration";
 export { PlaceRadar, type RadarPoint } from "./PlaceRadar";
